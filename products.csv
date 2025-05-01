@@ -1,0 +1,11 @@
+name,description,price,sku,image_url,category
+Espresso,"Rich single shot espresso",3.50,DRK-ESP-001,https://placehold.co/200x200/EEE/31343C?text=Espresso,Drinks
+Latte,"Espresso with steamed milk and a touch of foam",4.75,DRK-LAT-002,https://placehold.co/200x200/EEE/31343C?text=Latte,Drinks
+Cappuccino,"Espresso with equal parts steamed milk and foam",4.50,DRK-CAP-003,https://placehold.co/200x200/EEE/31343C?text=Cappuccino,Drinks
+Filter Coffee,"Freshly brewed drip coffee",3.00,DRK-FIL-004,https://placehold.co/200x200/EEE/31343C?text=Filter+Coffee,Drinks
+Iced Tea,"Refreshing brewed black tea served over ice",3.25,DRK-ICE-005,https://placehold.co/200x200/EEE/31343C?text=Iced+Tea,Drinks
+Croissant,"Buttery, flaky pastry",3.75,FOD-CRO-001,https://placehold.co/200x200/EEE/31343C?text=Croissant,Food
+Blueberry Muffin,"Classic muffin packed with blueberries",3.50,FOD-MUF-002,https://placehold.co/200x200/EEE/31343C?text=Muffin,Food
+Coffee Mug,"Ceramic mug with store logo",12.00,MRC-MUG-001,https://placehold.co/200x200/EEE/31343C?text=Mug,Merchandise
+Coffee Beans (250g),"House blend whole coffee beans",15.00,MRC-BEN-002,https://placehold.co/200x200/EEE/31343C?text=Beans,Merchandise
+POS T-Shirt,"Cotton T-shirt with elegant POS branding",25.00,MRC-TSH-003,https://placehold.co/200x200/EEE/31343C?text=T-Shirt,Merchandise
