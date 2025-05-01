@@ -2,6 +2,7 @@
 
 import RootLayout from "@/components/layout/RootLayout";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayout({
   return (
     <AuthProvider>
       <RootLayout>{children}</RootLayout>
+      <ToastProvider />
     </AuthProvider>
   );
 }

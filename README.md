@@ -1,8 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EasyFlow POS
+
+A modern point of sale system built with Next.js and Supabase.
 
 ## Getting Started
 
-First, run the development server:
+### Environment Setup
+
+1. Copy the `.env.example` file to `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+2. Update the environment variables in `.env.local` with your Supabase credentials:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+You can find these values in your Supabase project settings:
+- Go to your Supabase project dashboard
+- Click on "Project Settings" in the sidebar
+- Click on "API" in the submenu
+- Copy the "Project URL" for `NEXT_PUBLIC_SUPABASE_URL`
+- Copy the "anon public" key for `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Copy the "service_role" key for `SUPABASE_SERVICE_ROLE_KEY`
+
+> **Important**: The `SUPABASE_SERVICE_ROLE_KEY` is required for admin operations like user management. Without it, you won't be able to create, update, or delete users.
+
+### Running the Development Server
 
 ```bash
 npm run dev

@@ -24,7 +24,8 @@ export async function login(formData: FormData): Promise<{ error: AuthError | nu
   try {
     const supabase = await createClient()
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // First, authenticate the user
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -33,6 +34,34 @@ export async function login(formData: FormData): Promise<{ error: AuthError | nu
       return {
         error: {
           message: error.message
+        }
+      }
+    }
+
+    // If authentication was successful, check if the user is active
+    if (data.user) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_active')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError)
+        // If there's an error fetching the profile, we'll let the user in
+        // as the profile might not exist yet
+        return { error: null }
+      }
+
+      // If the user is not active, sign them out and return an error
+      if (profile && profile.is_active === false) {
+        // Sign the user out
+        await supabase.auth.signOut()
+
+        return {
+          error: {
+            message: 'Your account has been deactivated. Please contact an administrator.'
+          }
         }
       }
     }

@@ -1,27 +1,44 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from './actions'
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Lock, Mail } from 'lucide-react'
+import { AlertCircle, Lock, Mail } from 'lucide-react'
+import { toast } from 'sonner'
 
 function ClientLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  
+  const searchParams = useSearchParams()
+
+  // Check for error parameters in the URL
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    if (errorParam) {
+      if (errorParam === 'Account+deactivated') {
+        setError('Your account has been deactivated. Please contact an administrator.')
+        toast.error('Your account has been deactivated. Please contact an administrator.')
+      } else {
+        setError(decodeURIComponent(errorParam))
+        toast.error(decodeURIComponent(errorParam))
+      }
+    }
+  }, [searchParams])
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-md">
@@ -35,10 +52,13 @@ function ClientLogin() {
         </CardHeader>
         <form action={async (formData) => {
           setLoading(true)
+          setError(null) // Clear previous errors
           const result = await login(formData)
           setLoading(false)
-          
-          if (!result.error) {
+
+          if (result.error) {
+            setError(result.error.message)
+          } else {
             router.push('/')
             router.refresh()
           }
@@ -49,7 +69,14 @@ function ClientLogin() {
                 Signing in...
               </div>
             )}
-            
+
+            {error && (
+              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-start">
+                <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             <div className="space-y-2">
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -64,7 +91,7 @@ function ClientLogin() {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -80,16 +107,16 @@ function ClientLogin() {
               </div>
             </div>
           </CardContent>
-          
+
           <CardFooter className="flex flex-col space-y-4 pt-2">
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={loading || !email || !password}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
-            
+
             <div className="text-center text-sm">
               Don't have an account?{' '}
               <Link href="/signup" className="text-primary hover:underline">

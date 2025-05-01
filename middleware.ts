@@ -58,12 +58,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Get user profile with role information
+    // Get user profile with role and active status information
     let profileRole = 'cashier'; // Default role
+    let isActive = true; // Default active status
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_active')
       .eq('id', user.id)
       .single()
 
@@ -102,6 +103,17 @@ export async function middleware(request: NextRequest) {
       }
     } else if (profile) {
       profileRole = profile.role;
+      isActive = profile.is_active !== false; // If is_active is null or undefined, treat as active
+    }
+
+    // Check if the user is active
+    if (!isActive) {
+      console.log('Auth middleware: User account is deactivated')
+      // Sign the user out
+      await supabase.auth.signOut()
+      // Redirect to login with a message
+      const redirectUrl = new URL('/login?error=Account+deactivated', request.url)
+      return NextResponse.redirect(redirectUrl)
     }
 
     // Use the role we determined
