@@ -76,14 +76,25 @@ export async function login(formData: FormData): Promise<{ error: AuthError | nu
   }
 }
 
-export async function signup(formData: FormData): Promise<{ error: AuthError | null }> {
+export async function signup(formData: FormData): Promise<{ error: AuthError | null, success?: boolean }> {
+  const name = formData.get('name') as string
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const confirmPassword = formData.get('confirmPassword') as string
 
-  if (!email || !password) {
+  // Server-side validation
+  if (!name || !email || !password || !confirmPassword) {
     return {
       error: {
-        message: 'Email and password are required'
+        message: 'All fields are required'
+      }
+    }
+  }
+
+  if (password !== confirmPassword) {
+    return {
+      error: {
+        message: 'Passwords do not match'
       }
     }
   }
@@ -100,7 +111,7 @@ export async function signup(formData: FormData): Promise<{ error: AuthError | n
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
         data: {
           email: email,
-          name: email.split('@')[0] // Use part of email as initial name
+          name: name // Use the provided name
         }
       },
     })
@@ -115,13 +126,40 @@ export async function signup(formData: FormData): Promise<{ error: AuthError | n
     }
 
     console.log('Signup successful:', data)
-    return { error: null }
+
+    // If we have a user, update the profile with the name
+    if (data.user) {
+      try {
+        // Update the profile with the name
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            name: name,
+            email: email,
+            updated_at: new Date().toISOString()
+          })
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError)
+          // We don't return an error here as the signup was successful
+          // The profile will be updated when the user logs in
+        } else {
+          console.log('Profile updated successfully with name:', name)
+        }
+      } catch (profileErr) {
+        console.error('Unexpected error updating profile:', profileErr)
+      }
+    }
+
+    return { error: null, success: true }
   } catch (err: any) {
     console.error('Unexpected signup error:', err)
     return {
       error: {
         message: err.message || 'An error occurred during signup'
-      }
+      },
+      success: false
     }
   }
 }

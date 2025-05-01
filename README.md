@@ -1,4 +1,4 @@
-# EasyFlow POS
+# Callysta POS
 
 A modern point of sale system built with Next.js and Supabase.
 

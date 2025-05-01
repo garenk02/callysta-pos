@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
+import { getAppName } from "@/lib/supabase/server-settings";
+import HydrationFix from "@/components/HydrationFix";
+import { Toaster } from "sonner";
+
+// Force dynamic metadata to prevent caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,10 +19,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Login - EasyFlow POS",
-  description: "Sign in to your EasyFlow POS account",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // Get app name from Supabase
+  const appName = await getAppName();
+
+  return {
+    title: `Login - ${appName}`,
+    description: `Sign in to your ${appName} account`,
+  };
+}
 
 export default function LoginLayout({
   children,
@@ -24,7 +36,10 @@ export default function LoginLayout({
 }>) {
   return (
     <div className={`${geistSans.variable} ${geistMono.variable}`}>
-      {children}
+      <HydrationFix>
+        {children}
+        <Toaster position="top-right" />
+      </HydrationFix>
     </div>
   );
 }

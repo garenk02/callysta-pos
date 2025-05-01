@@ -9,7 +9,7 @@ export default function PageTitle() {
   const { settings } = useSettings()
   
   // Get app name from settings or use default
-  const appName = settings?.app_name || 'EasyFlow POS'
+  const appName = settings?.app_name || 'Callysta POS'
   
   // Convert pathname to title (e.g., "/dashboard" -> "Dashboard")
   const getPageTitle = () => {

@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, Lock, Mail } from 'lucide-react'
 import { toast } from 'sonner'
+import { usePublicSettings } from '@/hooks/usePublicSettings'
+import AuthHead from '@/components/auth/AuthHead'
 
 function ClientLogin() {
   const [email, setEmail] = useState('')
@@ -24,6 +26,18 @@ function ClientLogin() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { settings } = usePublicSettings()
+
+  // Debug logging for settings and update document title
+  useEffect(() => {
+    console.log('Login page public settings:', settings)
+
+    // Update document title directly
+    if (settings?.app_name) {
+      document.title = `Login - ${settings.app_name}`
+      console.log('Updated document title to:', document.title)
+    }
+  }, [settings])
 
   // Check for error parameters in the URL
   useEffect(() => {
@@ -41,10 +55,22 @@ function ClientLogin() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
+      {/* Add AuthHead component to update document title */}
+      <AuthHead pageType="login" />
+
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">
-            <span className="text-primary">EasyFlow</span> POS
+            {settings?.app_name ? (
+              <>
+                <span className="text-primary">{settings.app_name.split(' ')[0]}</span>
+                {' ' + settings.app_name.split(' ').slice(1).join(' ')}
+              </>
+            ) : (
+              <>
+                <span className="text-primary">Callysta</span> POS
+              </>
+            )}
           </CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to sign in

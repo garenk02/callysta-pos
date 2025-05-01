@@ -19,7 +19,7 @@ export default function Logo() {
   const logoStyle = !isMounted || isExpanded ? 'px-6' : 'px-0 justify-center';
 
   // Get app name from settings or use default
-  const appName = settings?.app_name || 'EasyFlow POS';
+  const appName = settings?.app_name || 'Callysta POS';
 
   // Split app name into parts (for primary/secondary styling)
   const nameParts = appName.split(' ');
