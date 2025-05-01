@@ -9,7 +9,7 @@ A modern point of sale system built with Next.js and Supabase.
 1. Copy the `.env.example` file to `.env.local`:
 
 ```bash
-cp .env.example .env.local
+cp env.example.txt .env.local
 ```
 
 2. Update the environment variables in `.env.local` with your Supabase credentials:
