@@ -15,6 +15,7 @@ import { LogOut, Settings, User, Shield } from 'lucide-react'
 import { logout } from '@/app/login/actions'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
+import CartSummary from '@/components/checkout/CartSummary'
 
 export default function UserPanel() {
   const router = useRouter()
@@ -27,16 +28,18 @@ export default function UserPanel() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {getInitial()}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
+    <div className="flex items-center gap-2">
+      <CartSummary />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {getInitial()}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
@@ -69,6 +72,7 @@ export default function UserPanel() {
         </form>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   )
 }
 

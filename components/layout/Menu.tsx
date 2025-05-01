@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,6 +11,7 @@ import {
   Users,
   Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSidebar } from "@/hooks/useSidebar";
 import { UserRole } from "@/types";
 
 // Define menu items with role-based access
@@ -64,24 +65,36 @@ export default function Menu() {
     return item.roles.includes(user.role as UserRole);
   });
 
+  const { isExpanded } = useSidebar();
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mark component as mounted after hydration
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <nav className="flex-1 py-4">
       <ul className="space-y-1">
         {filteredMenuItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          // Always use expanded style during SSR and hydration
+          const itemPadding = !isMounted || isExpanded ? 'px-6' : 'px-0 justify-center';
+          const iconMargin = !isMounted || isExpanded ? 'mr-3' : 'mx-auto';
 
           return (
             <li key={item.name}>
               <Link
                 href={item.href}
-                className={`flex items-center px-6 py-3 text-sm font-medium rounded-md
+                className={`flex items-center ${itemPadding} py-3 text-sm font-medium rounded-md
                   ${isActive
                     ? 'bg-primary/10 text-primary'
                     : 'hover:bg-secondary/50 hover:text-primary'
-                  }`}
+                  } transition-all duration-300`}
+                title={!isMounted || !isExpanded ? item.name : undefined}
               >
-                <item.icon className="h-5 w-5 mr-3" />
-                {item.name}
+                <item.icon className={`h-5 w-5 ${iconMargin}`} />
+                {(!isMounted || isExpanded) && item.name}
               </Link>
             </li>
           );

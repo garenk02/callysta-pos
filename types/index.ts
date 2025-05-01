@@ -35,3 +35,44 @@ export interface User {
   created_at?: string;
   is_active?: boolean;
 }
+
+// Cart and Checkout Types
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+export type PaymentMethod = 'cash' | 'card' | 'mobile_payment' | 'gift_card';
+export type CardType = 'visa' | 'mastercard' | 'amex' | 'discover' | 'other';
+
+export interface PaymentDetails {
+  amount_tendered?: number;
+  change_due?: number;
+  card_type?: CardType;
+  card_last_four?: string;
+  mobile_payment_provider?: string;
+  gift_card_number?: string;
+  gift_card_balance_remaining?: number;
+}
+
+export interface Order {
+  id: string;
+  user_id: string;
+  total: number;
+  subtotal: number;
+  tax: number;
+  payment_method: PaymentMethod;
+  payment_details?: PaymentDetails;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_name: string;
+  product_price: number;
+  quantity: number;
+  total: number;
+}

@@ -48,24 +48,42 @@ export async function getProducts(): Promise<ProductActionResult<Product[]>> {
 }
 
 /**
- * Get a single product by ID
+ * Get a single product by ID or SKU
  */
-export async function getProductById(productId: string): Promise<ProductActionResult<Product>> {
+export async function getProductById(idOrSku: string): Promise<ProductActionResult<Product>> {
   try {
     const supabase = await createClient()
+    let data, error
 
-    // Fetch the product
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single()
+    // First try to fetch by ID (assuming it's a UUID)
+    if (idOrSku.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      const result = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', idOrSku)
+        .single()
+
+      data = result.data
+      error = result.error
+    }
+
+    // If not found by ID or not a UUID, try by SKU
+    if (!data) {
+      const result = await supabase
+        .from('products')
+        .select('*')
+        .eq('sku', idOrSku)
+        .single()
+
+      data = result.data
+      error = result.error
+    }
 
     if (error) {
       console.error('Error fetching product:', error.message)
       return {
         data: null,
-        error: { message: error.message }
+        error: { message: `Product not found with ID or SKU: ${idOrSku}` }
       }
     }
 
