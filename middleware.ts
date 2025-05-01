@@ -8,7 +8,8 @@ import { UserRole } from '@/types'
 const routeAccessRules: Record<string, UserRole[]> = {
   '/users': ['admin'],
   '/settings': ['admin'],
-  '/products': ['admin'],
+  '/admin/products': ['admin'],
+  '/products': ['admin', 'cashier'], // Customer-facing products page
   '/orders': ['admin', 'cashier'],
   '/checkout': ['admin', 'cashier'],
   '/dashboard': ['admin', 'cashier'],

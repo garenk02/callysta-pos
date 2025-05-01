@@ -24,7 +24,7 @@ const menuItems = [
   {
     name: "Products",
     icon: Package,
-    href: "/products",
+    href: "/admin/products",
     roles: ['admin']
   },
   {

@@ -7,7 +7,21 @@ export interface Product {
   sku?: string;
   image_url?: string;
   category?: string;
+  stock_quantity: number;
+  low_stock_threshold?: number;
   created_at?: string;
+  updated_at?: string;
+}
+
+export interface InventoryLog {
+  id: string;
+  product_id: string;
+  quantity_change: number;
+  previous_quantity: number;
+  new_quantity: number;
+  reason: string;
+  created_by: string;
+  created_at: string;
 }
 
 export type UserRole = 'admin' | 'cashier';

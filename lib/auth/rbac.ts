@@ -4,7 +4,8 @@ import { UserRole } from '@/types'
 export const routeAccessRules: Record<string, UserRole[]> = {
   '/users': ['admin'],
   '/settings': ['admin'],
-  '/products': ['admin'],
+  '/admin/products': ['admin'],
+  '/products': ['admin', 'cashier'], // Customer-facing products page
   '/orders': ['admin', 'cashier'],
   '/checkout': ['admin', 'cashier'],
   '/dashboard': ['admin', 'cashier'],
@@ -22,14 +23,14 @@ export function hasRouteAccess(role: UserRole, path: string): boolean {
   if (routeAccessRules[path] && routeAccessRules[path].includes(role)) {
     return true
   }
-  
+
   // Check for parent path match (e.g., /products/123 should match /products rule)
   for (const [route, allowedRoles] of Object.entries(routeAccessRules)) {
     if (path.startsWith(`${route}/`) && allowedRoles.includes(role)) {
       return true
     }
   }
-  
+
   // Default to no access if no matching rule found
   return false
 }
