@@ -9,8 +9,9 @@ const routeAccessRules: Record<string, UserRole[]> = {
   '/users': ['admin'],
   '/settings': ['admin'],
   '/admin/products': ['admin'],
+  '/admin/orders': ['admin'],
   '/products': ['admin', 'cashier'], // Customer-facing products page
-  '/orders': ['admin', 'cashier'],
+  '/orders': ['admin', 'cashier'], // Allow both roles to access orders
   '/checkout': ['admin', 'cashier'],
   '/dashboard': ['admin', 'cashier'],
   '/': ['admin', 'cashier'],

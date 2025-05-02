@@ -27,7 +27,7 @@ export async function getServerSetting(key: SettingKey): Promise<string> {
   try {
     // Use admin client to bypass RLS policies
     const supabase = await createAdminClient();
-    console.log(`Fetching setting ${key} with admin client...`);
+    // console.log(`Fetching setting ${key} with admin client...`);
 
     // Use limit(1) to get at most one row
     const { data, error } = await supabase
@@ -42,11 +42,11 @@ export async function getServerSetting(key: SettingKey): Promise<string> {
     }
 
     // Log the full data for debugging
-    console.log(`Server setting ${key} data:`, JSON.stringify(data));
+    // console.log(`Server setting ${key} data:`, JSON.stringify(data));
 
     // Check if we have data and return the first item's value
     if (data && data.length > 0) {
-      console.log(`Server setting ${key} value:`, data[0].value);
+      // console.log(`Server setting ${key} value:`, data[0].value);
       return data[0].value;
     }
 
@@ -63,8 +63,6 @@ export async function getServerSetting(key: SettingKey): Promise<string> {
  * Get app name for use in metadata (server-side)
  */
 export async function getAppName(): Promise<string> {
-  console.log('Getting app name for metadata...');
   const appName = await getServerSetting('app_name');
-  console.log('App name for metadata:', appName);
   return appName;
 }

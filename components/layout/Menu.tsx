@@ -37,8 +37,14 @@ const menuItems = [
   {
     name: "Orders",
     icon: ClipboardList,
+    href: "/admin/orders",
+    roles: ['admin']
+  },
+  {
+    name: "Orders",
+    icon: ClipboardList,
     href: "/orders",
-    roles: ['admin', 'cashier']
+    roles: ['cashier']
   },
   {
     name: "Users",
