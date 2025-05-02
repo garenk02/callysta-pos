@@ -1,18 +1,16 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Order } from "@/types"
 import { OrderWithUser } from "@/app/api/orders/actions"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
-import { MoreHorizontal, Eye, Receipt, User } from "lucide-react"
+import { MoreHorizontal, Eye, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"

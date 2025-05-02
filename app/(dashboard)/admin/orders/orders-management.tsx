@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -19,8 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import {
   Receipt,
-  Loader2,
-  Search
+  Loader2
 } from "lucide-react"
 import { columns } from "./columns"
 import { getOrders, getOrderById, OrderWithUser } from "@/app/api/orders/actions"

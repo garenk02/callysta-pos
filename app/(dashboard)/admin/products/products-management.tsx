@@ -18,7 +18,6 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import {
-  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -33,9 +32,7 @@ import { FileUpload } from "@/components/ui/file-upload"
 import {
   Package,
   Plus,
-  Loader2,
-  Image as ImageIcon,
-  AlertCircle
+  Loader2
 } from "lucide-react"
 import { columns } from "./columns"
 import {
@@ -56,11 +53,8 @@ import { ProductsTableToolbar } from "./products-table-toolbar"
 import { uploadFile } from "@/lib/supabase/storage"
 import { EnhancedForm } from "@/components/ui/enhanced-form"
 import { EnhancedFormField } from "@/components/ui/enhanced-form-field"
-import { FormError } from "@/components/ui/form-error"
-import { FieldError } from "@/components/ui/field-error"
 import { productSchema, stockAdjustmentSchema } from "@/lib/validations/schemas"
 import { handleServerActionError, showErrorToast, showSuccessToast } from "@/lib/error-handling"
-import * as z from 'zod'
 
 // Use the original schemas
 const productFormSchema = productSchema;
@@ -75,6 +69,7 @@ export default function ProductsManagement() {
   const [isAdjustStockDialogOpen, setIsAdjustStockDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // These state variables are used in handleFileUpload function
   const [isUploading, setIsUploading] = useState(false)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
@@ -115,7 +110,7 @@ export default function ProductsManagement() {
 
   // Form for stock adjustment
   const stockAdjustmentForm = useForm({
-    resolver: zodResolver(stockAdjustmentFormSchema) as any,
+    resolver: zodResolver(stockAdjustmentFormSchema) as any, // Type assertion needed due to type mismatch
     defaultValues: {
       adjustmentType: 'add',
       quantity: 0,
@@ -138,12 +133,12 @@ export default function ProductsManagement() {
           {
             description: (
               <div className="space-y-2">
-                <p>Please ensure the 'product-images' bucket exists in your Supabase project.</p>
+                <p>Please ensure the &apos;product-images&apos; bucket exists in your Supabase project.</p>
                 <ol className="list-decimal pl-5 text-xs">
                   <li>Go to the Supabase dashboard</li>
                   <li>Navigate to Storage</li>
-                  <li>Create a bucket named 'product-images'</li>
-                  <li>Enable 'Public bucket' in the settings</li>
+                  <li>Create a bucket named &apos;product-images&apos;</li>
+                  <li>Enable &apos;Public bucket&apos; in the settings</li>
                 </ol>
               </div>
             ),
@@ -208,7 +203,7 @@ export default function ProductsManagement() {
   }
 
   // Handle adding a new product
-  const handleAddProduct = async (values: any) => {
+  const handleAddProduct = async (values: Record<string, unknown>) => {
     setIsSubmitting(true)
     setFormError(null)
 
@@ -253,7 +248,7 @@ export default function ProductsManagement() {
   }
 
   // Handle editing a product
-  const handleEditProduct = async (values: any) => {
+  const handleEditProduct = async (values: Record<string, unknown>) => {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
@@ -334,7 +329,7 @@ export default function ProductsManagement() {
   }
 
   // Handle stock adjustment
-  const handleAdjustStock = async (values: any) => {
+  const handleAdjustStock = async (values: Record<string, unknown>) => {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
@@ -342,19 +337,20 @@ export default function ProductsManagement() {
 
     try {
       // Calculate the quantity change based on the adjustment type
-      let quantityChange = values.quantity
+      const quantity = Number(values.quantity) || 0;
+      let quantityChange = quantity;
 
       if (values.adjustmentType === 'subtract') {
-        quantityChange = -values.quantity
+        quantityChange = -quantity;
       } else if (values.adjustmentType === 'set') {
-        quantityChange = values.quantity - (selectedProduct.stock_quantity || 0)
+        quantityChange = quantity - (selectedProduct.stock_quantity || 0);
       }
 
       // Use the server action to adjust the stock
       const { error } = await adjustStock(
         selectedProduct.id,
         quantityChange,
-        values.reason
+        String(values.reason || '')
       )
 
       if (error) {

@@ -77,7 +77,7 @@ export default function Dashboard() {
         {/* Today's Sales Card */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Today's Sales</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Today&apos;s Sales</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">

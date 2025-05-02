@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { startOfDay, endOfDay, format, parseISO, isValid, subDays } from 'date-fns'
-import { PaymentMethod, Product, InventoryLog } from '@/types'
+import { PaymentMethod } from '@/types'
 
 export type ReportActionError = {
   message: string
@@ -174,7 +174,7 @@ export async function getSalesSummary(
     const salesByDate = new Map<string, { total: number; orders: number }>()
 
     // Initialize the map with all dates in the range
-    let currentDate = new Date(fromDate)
+    const currentDate = new Date(fromDate)
     while (currentDate <= toDate) {
       const dateKey = format(currentDate, 'yyyy-MM-dd')
       salesByDate.set(dateKey, { total: 0, orders: 0 })

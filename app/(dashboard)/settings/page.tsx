@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Settings as SettingsIcon, Store, Phone, Mail, AlertCircle, Save, Loader2 } from 'lucide-react'
+import { Settings as SettingsIcon, Store, Phone, AlertCircle, Save, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
 
@@ -21,7 +21,7 @@ type SettingKey = 'app_name' | 'app_address' | 'app_phone' | 'app_email'
 type SettingsMap = Record<SettingKey, string>
 
 export default function SettingsPage() {
-  // State for settings
+  // State for settings - used throughout the component
   const [settings, setSettings] = useState<SettingsMap>({
     app_name: '',
     app_address: '',
@@ -31,6 +31,7 @@ export default function SettingsPage() {
 
   // UI state
   const [isLoading, setIsLoading] = useState(true)
+  // isAdmin is used to track if the user has admin permissions
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
