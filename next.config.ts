@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Configure output mode for better static/dynamic handling
-  output: 'standalone',
+  // Remove standalone output mode as it's causing issues with client-reference-manifest files
+  // output: 'standalone',
 
   // Disable static optimization for routes that need to be dynamic
   experimental: {

@@ -15,6 +15,8 @@ const routeAccessRules: Record<string, UserRole[]> = {
   '/checkout': ['admin', 'cashier'],
   '/dashboard': ['admin', 'cashier'],
   '/': ['admin', 'cashier'],
+  // Add any other routes that need protection
+  '/profile': ['admin', 'cashier'],
 }
 
 export async function middleware(request: NextRequest) {
@@ -46,7 +48,13 @@ export async function middleware(request: NextRequest) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookieStore }
+    {
+      cookies: {
+        get: cookieStore.get,
+        set: () => {},
+        remove: () => {}
+      }
+    }
   )
 
   try {
