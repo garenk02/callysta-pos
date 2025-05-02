@@ -120,7 +120,12 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <p className="text-muted-foreground mb-2">No results found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Try adjusting your search or filter criteria
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

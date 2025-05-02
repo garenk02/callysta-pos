@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { PaymentMethod, CardType, PaymentDetails } from '@/types'
+import { PaymentMethod, PaymentDetails } from '@/types'
 import { createOrder } from '@/lib/supabase/client-orders'
 import { useAuth } from '@/hooks/useAuth'
 import Receipt from './Receipt'
@@ -12,8 +12,6 @@ import {
   CreditCard,
   Banknote,
   CheckCircle2,
-  Smartphone,
-  Gift,
   AlertCircle,
   Loader2
 } from 'lucide-react'
@@ -23,20 +21,6 @@ import {
   TabsList,
   TabsTrigger
 } from '@/components/ui/tabs'
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { useCart } from '@/hooks/useCart'
 
@@ -76,14 +60,7 @@ export default function PaymentSection({
   const [formattedAmount, setFormattedAmount] = useState<string>('')
   const [changeDue, setChangeDue] = useState<number>(0)
 
-  // Hidden payment methods state (kept for future use)
-  const [cardType, setCardType] = useState<CardType>('visa')
-  const [cardNumber, setCardNumber] = useState<string>('')
-  const [cardExpiry, setCardExpiry] = useState<string>('')
-  const [cardCvv, setCardCvv] = useState<string>('')
-  const [mobileProvider, setMobileProvider] = useState<string>('apple_pay')
-  const [giftCardNumber, setGiftCardNumber] = useState<string>('')
-  const [giftCardPin, setGiftCardPin] = useState<string>('')
+  // Additional payment method states can be added here when needed
 
   // Reset form when total changes
   useEffect(() => {
@@ -95,18 +72,6 @@ export default function PaymentSection({
     // Reset cash payment
     setAmountTendered('')
     setChangeDue(0)
-
-    // Reset card payment
-    setCardNumber('')
-    setCardExpiry('')
-    setCardCvv('')
-
-    // Reset mobile payment
-    setMobileProvider('apple_pay')
-
-    // Reset gift card
-    setGiftCardNumber('')
-    setGiftCardPin('')
 
     // Reset validation
     setValidationError(null)
@@ -137,62 +102,7 @@ export default function PaymentSection({
     setChangeDue(change > 0 ? change : 0)
   }
 
-  // Format card number with spaces
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
-    const matches = v.match(/\d{4,16}/g)
-    const match = matches && matches[0] || ''
-    const parts = []
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4))
-    }
-
-    if (parts.length) {
-      return parts.join(' ')
-    } else {
-      return value
-    }
-  }
-
-  // Handle card number input
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValidationError(null)
-    const value = e.target.value
-    setCardNumber(formatCardNumber(value))
-
-    // Auto-detect card type
-    const cardNum = value.replace(/\s+/g, '')
-    if (cardNum.startsWith('4')) {
-      setCardType('visa')
-    } else if (cardNum.startsWith('5')) {
-      setCardType('mastercard')
-    } else if (cardNum.startsWith('3')) {
-      setCardType('amex')
-    } else if (cardNum.startsWith('6')) {
-      setCardType('discover')
-    } else {
-      setCardType('other')
-    }
-  }
-
-  // Format card expiry date (MM/YY)
-  const formatCardExpiry = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
-
-    if (v.length >= 2) {
-      return v.slice(0, 2) + (v.length > 2 ? '/' + v.slice(2, 4) : '')
-    }
-
-    return v
-  }
-
-  // Handle card expiry input
-  const handleCardExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValidationError(null)
-    const value = e.target.value
-    setCardExpiry(formatCardExpiry(value))
-  }
+  // Payment formatting and validation functions can be added here as needed
 
   // Validate the payment based on the selected method
   const validatePayment = (): boolean => {
@@ -202,35 +112,9 @@ export default function PaymentSection({
         setValidationError(`Amount tendered must be at least Rp. ${total.toLocaleString('id-ID')}`)
         return false
       }
-    } else if (paymentMethod === 'card') {
-      if (cardNumber.replace(/\s+/g, '').length < 13) {
-        setValidationError('Please enter a valid card number')
-        return false
-      }
-      if (cardExpiry.length < 5) {
-        setValidationError('Please enter a valid expiry date (MM/YY)')
-        return false
-      }
-      if (cardCvv.length < 3) {
-        setValidationError('Please enter a valid CVV code')
-        return false
-      }
-    } else if (paymentMethod === 'mobile_payment') {
-      if (!mobileProvider) {
-        setValidationError('Please select a mobile payment provider')
-        return false
-      }
-    } else if (paymentMethod === 'gift_card') {
-      if (giftCardNumber.length < 8) {
-        setValidationError('Please enter a valid gift card number')
-        return false
-      }
-      if (giftCardPin.length < 4) {
-        setValidationError('Please enter a valid PIN')
-        return false
-      }
     } else if (paymentMethod === 'bank_transfer') {
       // Bank transfer is always valid as it's just showing instructions
+      return true
     }
 
     return true
@@ -342,20 +226,6 @@ export default function PaymentSection({
       return tenderedAmount >= total
     }
 
-    if (paymentMethod === 'card') {
-      return cardNumber.replace(/\s+/g, '').length >= 13 &&
-             cardExpiry.length === 5 &&
-             cardCvv.length >= 3
-    }
-
-    if (paymentMethod === 'mobile_payment') {
-      return !!mobileProvider
-    }
-
-    if (paymentMethod === 'gift_card') {
-      return giftCardNumber.length >= 8 && giftCardPin.length >= 4
-    }
-
     if (paymentMethod === 'bank_transfer') {
       return true // Bank transfer is always valid as it's just showing instructions
     }
@@ -364,7 +234,7 @@ export default function PaymentSection({
   }
 
   return (
-    <div className="w-full mt-0">
+    <div className="w-full mt-2">
       {/* Receipt Modal */}
       {receiptData && (
         <Receipt
@@ -374,30 +244,30 @@ export default function PaymentSection({
         />
       )}
 
-      <div className="mb-2">
+      <div className="mb-3">
         <Tabs
           value={paymentMethod}
           onValueChange={handlePaymentMethodChange}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-2 h-8 mb-1">
-            <TabsTrigger value="cash" className="text-xs py-0 px-1 flex items-center">
-              <Banknote className="h-4 w-4 mr-1" />
+          <TabsList className="grid grid-cols-2 h-9 mb-2">
+            <TabsTrigger value="cash" className="text-sm py-0 px-2 flex items-center">
+              <Banknote className="h-4 w-4 mr-2" />
               Cash
             </TabsTrigger>
-            <TabsTrigger value="bank_transfer" className="text-xs py-0 px-1 flex items-center">
-              <CreditCard className="h-4 w-4 mr-1" />
+            <TabsTrigger value="bank_transfer" className="text-sm py-0 px-2 flex items-center">
+              <CreditCard className="h-4 w-4 mr-2" />
               Bank Transfer
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="cash" className="mt-0 pt-0">
-            <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <Label htmlFor="amount-tendered" className="text-xs block mb-1">Amount</Label>
+                <Label htmlFor="amount-tendered" className="text-sm block mb-1.5">Amount Tender</Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                    <span className="text-xs text-muted-foreground">Rp.</span>
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <span className="text-sm text-muted-foreground">Rp.</span>
                   </div>
                   <Input
                     id="amount-tendered"
@@ -406,29 +276,29 @@ export default function PaymentSection({
                     value={formattedAmount}
                     onChange={handleAmountTenderedChange}
                     disabled={disabled}
-                    className="h-8 text-xs pl-8 pr-2"
+                    className="h-9 text-sm pl-10 pr-3"
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="change-due" className="text-xs block mb-1">Change</Label>
+                <Label htmlFor="change-due" className="text-sm block mb-1.5">Change Due</Label>
                 <Input
                   id="change-due"
                   value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
                   disabled
-                  className="bg-muted h-8 text-xs px-2"
+                  className="bg-muted h-9 text-sm px-3"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
                 disabled={disabled}
-                className="h-8 text-xs"
+                className="h-9 text-sm"
               >
                 Exact: Rp. {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
               </Button>
@@ -438,46 +308,46 @@ export default function PaymentSection({
                 size="sm"
                 onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
                 disabled={disabled}
-                className="h-8 text-xs"
+                className="h-9 text-sm"
               >
                 Round: Rp. {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
               </Button>
             </div>
           </TabsContent>
 
-          {/* <TabsContent value="bank_transfer" className="mt-0 pt-0">
-            <div className="text-xs mb-2">
-              <p className="font-medium mb-1">Bank Transfer Instructions:</p>
-              <p className="mb-1">Transfer to: BCA 1234567890</p>
+          <TabsContent value="bank_transfer" className="mt-0 pt-0">
+            <div className="text-sm mb-3 p-3 bg-muted/50 rounded-md">
+              <p className="font-medium mb-1.5">Bank Transfer Instructions:</p>
+              {/* <p className="mb-1.5">Transfer to: BCA 1234567890</p> */}
               <p>Amount: Rp. {total.toLocaleString('id-ID')}</p>
             </div>
-          </TabsContent> */}
+          </TabsContent>
         </Tabs>
       </div>
 
       {validationError && (
-        <div className="flex items-center gap-1 text-destructive text-xs mb-1">
-          <AlertCircle className="h-3 w-3" />
+        <div className="flex items-center gap-1.5 text-destructive text-sm mb-2 p-2 bg-destructive/10 rounded-md">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
           <span>{validationError}</span>
         </div>
       )}
 
       <Button
         className="w-full"
-        size="default"
+        size="lg"
         onClick={handleCompleteSale}
         disabled={disabled || !isPaymentValid() || isProcessing}
-        style={{ height: "45px", backgroundColor: "#FF54BB", color: "white" }}
+        style={{ height: "48px", backgroundColor: "#FF54BB", color: "white" }}
       >
         {isProcessing ? (
           <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            <span className="text-base">Processing...</span>
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            <span className="text-base font-medium">Processing...</span>
           </>
         ) : (
           <>
-            <CheckCircle2 className="h-4 w-4 mr-2" />
-            <span className="text-base">Complete Sale</span>
+            <CheckCircle2 className="h-5 w-5 mr-2" />
+            <span className="text-base font-medium">Complete Sale</span>
           </>
         )}
       </Button>

@@ -27,12 +27,19 @@ export default function ProductGrid({
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="overflow-hidden">
+        {[...Array(9)].map((_, i) => (
+          <Card key={i} className="overflow-hidden shadow-sm">
             <CardContent className="p-4">
-              <Skeleton className="h-4 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-1/2 mb-4" />
-              <Skeleton className="h-4 w-1/4" />
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <Skeleton className="h-5 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-3" />
+                </div>
+                <div className="text-right">
+                  <Skeleton className="h-5 w-20 mb-2" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+              </div>
             </CardContent>
             <CardFooter className="p-4 pt-0">
               <Skeleton className="h-9 w-full" />
@@ -52,16 +59,25 @@ export default function ProductGrid({
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         {mightBeBarcode ? (
           <>
-            <Barcode className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-2">Barcode not found: {searchQuery}</p>
-            <p className="text-sm text-muted-foreground">
-              This barcode doesn't match any product in the system.
+            <Barcode className="h-16 w-16 text-muted-foreground mb-4 opacity-30" />
+            <p className="text-lg font-medium text-muted-foreground mb-2">Barcode not found</p>
+            <p className="text-muted-foreground mb-2">{searchQuery}</p>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              This barcode doesn't match any product in the system. Please check the barcode or add this product to your inventory.
             </p>
+          </>
+        ) : searchQuery ? (
+          <>
+            <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4 opacity-30" />
+            <p className="text-lg font-medium text-muted-foreground mb-2">No products found</p>
+            <p className="text-muted-foreground mb-2">No results for "{searchQuery}"</p>
+            <p className="text-sm text-muted-foreground">Try adjusting your search or filter criteria</p>
           </>
         ) : (
           <>
-            <p className="text-muted-foreground mb-2">No products found</p>
-            <p className="text-sm text-muted-foreground">Try adjusting your search or filter criteria</p>
+            <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4 opacity-30" />
+            <p className="text-lg font-medium text-muted-foreground mb-2">No products found</p>
+            <p className="text-sm text-muted-foreground">Try selecting a different category or adding products to your inventory</p>
           </>
         )}
       </div>
@@ -91,21 +107,42 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
     onAddToCart(product)
   }
 
+  // Determine product status
+  const isOutOfStock = product.stock_quantity <= 0;
+  const isInactive = product.is_active === false;
+  const isLowStock = product.low_stock_threshold !== undefined &&
+                    product.stock_quantity <= product.low_stock_threshold &&
+                    product.stock_quantity > 0;
+
   return (
-    <Card className="overflow-hidden flex flex-col">
+    <Card className={`overflow-hidden flex flex-col shadow-sm transition-all duration-200 hover:shadow-md ${isInactive ? 'opacity-70' : ''}`}>
       <CardContent className="p-4 flex-1">
         <div className="flex justify-between items-start">
-          <div>
+          <div className="flex-1 pr-2">
             <h3 className="font-medium line-clamp-2">{product.name}</h3>
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-              {product.sku && <span className="text-xs">SKU: {product.sku}</span>}
-            </p>
+            {product.sku && (
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                SKU: {product.sku}
+              </p>
+            )}
           </div>
           <div className="text-right">
             <p className="font-semibold">Rp. {product.price.toLocaleString('id-ID')}</p>
-            <p className="text-xs text-muted-foreground">
-              Stock: {product.stock_quantity}
-            </p>
+            <div className="flex items-center justify-end mt-1">
+              {isOutOfStock ? (
+                <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-sm">
+                  Out of stock
+                </span>
+              ) : isLowStock ? (
+                <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-sm">
+                  Low stock: {product.stock_quantity}
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  Stock: {product.stock_quantity}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
@@ -113,13 +150,14 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         <Button
           className="w-full"
           size="sm"
+          variant={isInactive || isOutOfStock ? "outline" : "default"}
           onClick={handleAddToCart}
-          disabled={product.stock_quantity <= 0 || product.is_active === false}
-          title={product.is_active === false ? "Product not available" :
-                 product.stock_quantity <= 0 ? "Out of stock" : "Add to cart"}
+          disabled={isOutOfStock || isInactive}
+          title={isInactive ? "Product not available" :
+                 isOutOfStock ? "Out of stock" : "Add to cart"}
         >
           <Plus className="h-4 w-4 mr-1" />
-          {product.is_active === false ? "Unavailable" : "Add"}
+          {isInactive ? "Unavailable" : isOutOfStock ? "Out of stock" : "Add to cart"}
         </Button>
       </CardFooter>
     </Card>

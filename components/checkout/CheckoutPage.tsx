@@ -7,26 +7,16 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  CardFooter
+  CardTitle
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger
 } from '@/components/ui/tabs'
 import {
-  ShoppingCart,
   Search,
-  Plus,
-  Minus,
-  Trash2,
-  CreditCard,
-  Banknote,
   Barcode,
   Loader2
 } from 'lucide-react'
@@ -44,12 +34,11 @@ export default function CheckoutPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   // Use our cart context
   const {
     addItem,
-    summary: { subtotal, total, itemCount }
+    summary: { total, itemCount }
   } = useCart()
 
   // Use our custom product search hook
@@ -76,8 +65,7 @@ export default function CheckoutPage() {
         const { products: fetchedProducts, error: fetchError } = await getProductsClient()
 
         if (fetchError) {
-          setError(fetchError.message)
-          toast.error('Failed to load products')
+          toast.error(`Failed to load products: ${fetchError.message}`)
         } else if (fetchedProducts) {
           setProducts(fetchedProducts)
 
@@ -89,8 +77,8 @@ export default function CheckoutPage() {
           setCategories(uniqueCategories)
         }
       } catch (err) {
-        setError('An unexpected error occurred')
-        toast.error('Failed to load products')
+        toast.error('Failed to load products: An unexpected error occurred')
+        console.error('Error loading products:', err)
       } finally {
         setIsLoading(false)
       }
@@ -116,9 +104,9 @@ export default function CheckoutPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <div className="flex flex-1 overflow-hidden">
         {/* Left side - Product Selection */}
-        <div className="w-2/3 p-4 overflow-hidden flex flex-col">
+        <div className="w-3/5 p-4 overflow-hidden flex flex-col">
           <Card className="flex-1 overflow-hidden">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 px-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <CardTitle>Products</CardTitle>
@@ -147,14 +135,14 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden">
+            <CardContent className="flex-1 overflow-hidden px-4">
               <Tabs
                 defaultValue="all"
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
                 className="h-full flex flex-col"
               >
-                <TabsList className="mb-4">
+                <TabsList className="mb-3">
                   <TabsTrigger value="all">All Products</TabsTrigger>
                   {categories.map(category => (
                     <TabsTrigger key={category} value={category}>
@@ -177,9 +165,9 @@ export default function CheckoutPage() {
         </div>
 
         {/* Right side - Cart and Payment */}
-        <div className="w-1/3 p-4 flex flex-col overflow-hidden">
+        <div className="w-2/5 p-4 flex flex-col overflow-hidden">
           <Card className="flex-1 overflow-hidden flex flex-col">
-            <CardHeader className="py-0 pb-0">
+            <CardHeader className="py-2 px-4">
               <div className="flex justify-between items-center">
                 <CardTitle>Current Order</CardTitle>
                 <Badge variant="outline" className="ml-1">
@@ -188,19 +176,15 @@ export default function CheckoutPage() {
               </div>
             </CardHeader>
 
-            <div style={{ height: "285px" }}>
-              <CardContent className="h-full overflow-auto py-0">
+            {/* Make cart area larger and more scrollable */}
+            <div className="flex-1 overflow-hidden min-h-0">
+              <CardContent className="h-full overflow-auto py-2 px-4">
                 <CartList />
               </CardContent>
             </div>
 
-            <div className="border-t">
-              <div className="px-6 py-1">
-                {/* <div className="flex justify-between py-1 text-xs">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>Rp. {subtotal.toLocaleString('id-ID')}</span>
-                </div>
-                <Separator className="my-1" /> */}
+            <div className="border-t mt-auto">
+              <div className="px-4 py-3">
                 <div className="flex justify-between py-1 font-bold text-md">
                   <span>Total</span>
                   <span>Rp. {total.toLocaleString('id-ID')}</span>

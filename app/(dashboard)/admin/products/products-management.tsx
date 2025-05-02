@@ -34,7 +34,8 @@ import {
   Package,
   Plus,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  AlertCircle
 } from "lucide-react"
 import { columns } from "./columns"
 import {
@@ -48,44 +49,24 @@ import {
 import { Product } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
 import { toast } from "sonner"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { DataTable } from "@/components/ui/data-table/data-table"
 import { ProductsTableToolbar } from "./products-table-toolbar"
 import { uploadFile } from "@/lib/supabase/storage"
+import { EnhancedForm } from "@/components/ui/enhanced-form"
+import { EnhancedFormField } from "@/components/ui/enhanced-form-field"
+import { FormError } from "@/components/ui/form-error"
+import { FieldError } from "@/components/ui/field-error"
+import { productSchema, stockAdjustmentSchema } from "@/lib/validations/schemas"
+import { handleServerActionError, showErrorToast, showSuccessToast } from "@/lib/error-handling"
 
 // Form schema for adding/editing products
-const productFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  description: z.string().optional(),
-  price: z.coerce.number().min(0.01, {
-    message: "Price must be greater than 0.",
-  }),
-  sku: z.string().optional(),
-  category: z.string().optional(),
-  image_url: z.string().optional(),
-  stock_quantity: z.coerce.number().min(0, {
-    message: "Stock quantity cannot be negative.",
-  }),
-  low_stock_threshold: z.coerce.number().min(1, {
-    message: "Low stock threshold must be at least 1.",
-  }).optional(),
-  is_active: z.boolean(),
-})
+// Use the enhanced schema from our validation library
+const productFormSchema = productSchema
 
-// Form schema for stock adjustment
-const stockAdjustmentFormSchema = z.object({
-  adjustmentType: z.enum(['add', 'subtract', 'set']),
-  quantity: z.coerce.number().min(0, {
-    message: "Quantity must be a positive number.",
-  }),
-  reason: z.string().min(3, {
-    message: "Please provide a reason for this adjustment.",
-  }),
-})
+// Use the enhanced schema from our validation library
+const stockAdjustmentFormSchema = stockAdjustmentSchema
 
 export default function ProductsManagement() {
   const [products, setProducts] = useState<Product[]>([])
@@ -98,6 +79,9 @@ export default function ProductsManagement() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [editFormError, setEditFormError] = useState<string | null>(null)
+  const [stockFormError, setStockFormError] = useState<string | null>(null)
 
   // Form for adding a new product
   const addProductForm = useForm<z.infer<typeof productFormSchema>>({
@@ -228,6 +212,7 @@ export default function ProductsManagement() {
   // Handle adding a new product
   const handleAddProduct = async (values: z.infer<typeof productFormSchema>) => {
     setIsSubmitting(true)
+    setFormError(null)
 
     try {
       // Use the server action to create the product
@@ -244,7 +229,9 @@ export default function ProductsManagement() {
       })
 
       if (error) {
-        throw new Error(error.message)
+        setFormError(error.message)
+        showErrorToast(`Failed to create product: ${error.message}`)
+        return
       }
 
       // Refresh the product list
@@ -252,15 +239,16 @@ export default function ProductsManagement() {
       setProducts(updatedProducts || [])
 
       // Show success toast
-      toast.success('Product created successfully')
+      showSuccessToast('Product created successfully')
 
       // Close the dialog and reset the form
       setIsAddDialogOpen(false)
       addProductForm.reset()
     } catch (err) {
       console.error('Error adding product:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add product'
-      toast.error(errorMessage)
+      const errorResponse = handleServerActionError(err)
+      setFormError(errorResponse.error)
+      showErrorToast(errorResponse.error)
     } finally {
       setIsSubmitting(false)
     }
@@ -271,6 +259,7 @@ export default function ProductsManagement() {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
+    setEditFormError(null)
 
     try {
       // Use the server action to update the product
@@ -287,7 +276,9 @@ export default function ProductsManagement() {
       })
 
       if (error) {
-        throw new Error(error.message)
+        setEditFormError(error.message)
+        showErrorToast(`Failed to update product: ${error.message}`)
+        return
       }
 
       // Refresh the product list
@@ -295,15 +286,16 @@ export default function ProductsManagement() {
       setProducts(updatedProducts || [])
 
       // Show success toast
-      toast.success('Product updated successfully')
+      showSuccessToast('Product updated successfully')
 
       // Close the dialog and reset the form
       setIsEditDialogOpen(false)
       setSelectedProduct(null)
     } catch (err) {
       console.error('Error updating product:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update product'
-      toast.error(errorMessage)
+      const errorResponse = handleServerActionError(err)
+      setEditFormError(errorResponse.error)
+      showErrorToast(errorResponse.error)
     } finally {
       setIsSubmitting(false)
     }
@@ -348,6 +340,7 @@ export default function ProductsManagement() {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
+    setStockFormError(null)
 
     try {
       // Calculate the quantity change based on the adjustment type
@@ -367,7 +360,9 @@ export default function ProductsManagement() {
       )
 
       if (error) {
-        throw new Error(error.message)
+        setStockFormError(error.message)
+        showErrorToast(`Failed to adjust stock: ${error.message}`)
+        return
       }
 
       // Refresh the product list
@@ -375,15 +370,16 @@ export default function ProductsManagement() {
       setProducts(updatedProducts || [])
 
       // Show success toast
-      toast.success('Stock adjusted successfully')
+      showSuccessToast('Stock adjusted successfully')
 
       // Close the dialog
       setIsAdjustStockDialogOpen(false)
       setSelectedProduct(null)
     } catch (err) {
       console.error('Error adjusting stock:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to adjust stock'
-      toast.error(errorMessage)
+      const errorResponse = handleServerActionError(err)
+      setStockFormError(errorResponse.error)
+      showErrorToast(errorResponse.error)
     } finally {
       setIsSubmitting(false)
     }
@@ -468,74 +464,46 @@ export default function ProductsManagement() {
                 </DialogDescription>
               </DialogHeader>
 
-              <Form {...addProductForm}>
-                <form onSubmit={addProductForm.handleSubmit(handleAddProduct)} className="space-y-4">
-                  <FormField
-                    control={addProductForm.control}
+              <EnhancedForm
+                form={addProductForm}
+                onSubmit={handleAddProduct}
+                error={formError}
+                submitText={isSubmitting ? "Creating..." : "Create Product"}
+                cancelText="Cancel"
+                onCancel={() => setIsAddDialogOpen(false)}
+                isSubmitting={isSubmitting}
+              >
+                <div className="space-y-4">
+                  <EnhancedFormField
                     name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Product name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Name"
+                    placeholder="Product name"
+                    required
                   />
-                  <FormField
-                    control={addProductForm.control}
+                  <EnhancedFormField
                     name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Product description" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Description"
+                    type="textarea"
+                    placeholder="Product description"
                   />
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={addProductForm.control}
+                    <EnhancedFormField
                       name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.01" min="0" placeholder="0.00" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="Price"
+                      type="number"
+                      placeholder="0.00"
+                      required
                     />
-                    <FormField
-                      control={addProductForm.control}
+                    <EnhancedFormField
                       name="sku"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>SKU</FormLabel>
-                          <FormControl>
-                            <Input placeholder="SKU" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="SKU"
+                      placeholder="SKU"
                     />
                   </div>
-                  <FormField
-                    control={addProductForm.control}
+                  <EnhancedFormField
                     name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Category" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Category"
+                    placeholder="Category"
                   />
                   <FormField
                     control={addProductForm.control}
@@ -566,18 +534,12 @@ export default function ProductsManagement() {
                     )}
                   />
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={addProductForm.control}
+                    <EnhancedFormField
                       name="stock_quantity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Stock Quantity</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="0" placeholder="0" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="Stock Quantity"
+                      type="number"
+                      placeholder="0"
+                      required
                     />
                     <FormField
                       control={addProductForm.control}
@@ -639,8 +601,8 @@ export default function ProductsManagement() {
                       Add Product
                     </Button>
                   </div>
-                </form>
-              </Form>
+                </div>
+              </EnhancedForm>
             </DialogContent>
           </Dialog>
 
@@ -654,8 +616,16 @@ export default function ProductsManagement() {
                 </DialogDescription>
               </DialogHeader>
 
-              <Form {...editProductForm}>
-                <form onSubmit={editProductForm.handleSubmit(handleEditProduct)} className="space-y-4">
+              <EnhancedForm
+                form={editProductForm}
+                onSubmit={handleEditProduct}
+                error={editFormError}
+                submitText={isSubmitting ? "Updating..." : "Update Product"}
+                cancelText="Cancel"
+                onCancel={() => setIsEditDialogOpen(false)}
+                isSubmitting={isSubmitting}
+              >
+                <div className="space-y-4">
                   <FormField
                     control={editProductForm.control}
                     name="name"
@@ -825,8 +795,8 @@ export default function ProductsManagement() {
                       Update Product
                     </Button>
                   </div>
-                </form>
-              </Form>
+                </div>
+              </EnhancedForm>
             </DialogContent>
           </Dialog>
 
@@ -847,8 +817,16 @@ export default function ProductsManagement() {
                 </DialogDescription>
               </DialogHeader>
 
-              <Form {...stockAdjustmentForm}>
-                <form onSubmit={stockAdjustmentForm.handleSubmit(handleAdjustStock)} className="space-y-4">
+              <EnhancedForm
+                form={stockAdjustmentForm}
+                onSubmit={handleAdjustStock}
+                error={stockFormError}
+                submitText={isSubmitting ? "Processing..." : "Adjust Stock"}
+                cancelText="Cancel"
+                onCancel={() => setIsAdjustStockDialogOpen(false)}
+                isSubmitting={isSubmitting}
+              >
+                <div className="space-y-4">
                   <FormField
                     control={stockAdjustmentForm.control}
                     name="adjustmentType"
@@ -896,39 +874,27 @@ export default function ProductsManagement() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={stockAdjustmentForm.control}
+                  <EnhancedFormField
                     name="quantity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Quantity</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" placeholder="0" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          {stockAdjustmentForm.watch('adjustmentType') === 'add' && 'Units to add to current stock'}
-                          {stockAdjustmentForm.watch('adjustmentType') === 'subtract' && 'Units to remove from current stock'}
-                          {stockAdjustmentForm.watch('adjustmentType') === 'set' && 'New total stock value'}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Quantity"
+                    type="number"
+                    placeholder="0"
+                    required
+                    description={
+                      stockAdjustmentForm.watch('adjustmentType') === 'add'
+                        ? 'Units to add to current stock'
+                        : stockAdjustmentForm.watch('adjustmentType') === 'subtract'
+                          ? 'Units to remove from current stock'
+                          : 'New total stock value'
+                    }
                   />
-                  <FormField
-                    control={stockAdjustmentForm.control}
+                  <EnhancedFormField
                     name="reason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Reason</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Reason for adjustment" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Provide a reason for this stock adjustment
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Reason"
+                    type="textarea"
+                    placeholder="Reason for adjustment"
+                    required
+                    description="Provide a reason for this stock adjustment"
                   />
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button
@@ -943,8 +909,8 @@ export default function ProductsManagement() {
                       Adjust Stock
                     </Button>
                   </div>
-                </form>
-              </Form>
+                </div>
+              </EnhancedForm>
             </DialogContent>
           </Dialog>
         </div>
@@ -958,20 +924,49 @@ export default function ProductsManagement() {
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="mb-4 p-4 border rounded bg-destructive/10 text-destructive">
-                <p>{error}</p>
+              <div className="mb-6 p-4 border rounded-md bg-destructive/10 text-destructive flex items-start gap-3">
+                <div className="mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-circle">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-1">Error Loading Products</h4>
+                  <p className="text-sm">{error}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => window.location.reload()}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw mr-1">
+                      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                      <path d="M21 3v5h-5"></path>
+                      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                      <path d="M3 21v-5h5"></path>
+                    </svg>
+                    Retry
+                  </Button>
+                </div>
               </div>
             )}
 
             {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="flex flex-col justify-center items-center py-12">
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">Loading products...</p>
               </div>
             ) : products.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <p>No products found</p>
-                <p className="text-sm mt-2">Click "Add Product" to create your first product</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <Package className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium mb-2">No products found</p>
+                <p className="text-sm mb-6">Your inventory is empty. Start by adding your first product.</p>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Your First Product
+                </Button>
               </div>
             ) : (
               <DataTable
