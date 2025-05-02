@@ -25,37 +25,54 @@ export interface SettingsMap {
  */
 export async function getServerSetting(key: SettingKey): Promise<string> {
   try {
+    // For static rendering compatibility, return default values
+    if (typeof window === 'undefined' && process.env.VERCEL) {
+      return getDefaultSettingValue(key);
+    }
+
     // Use admin client to bypass RLS policies
     const supabase = await createAdminClient();
-    // console.log(`Fetching setting ${key} with admin client...`);
 
     // Use limit(1) to get at most one row
     const { data, error } = await supabase
       .from('settings')
-      .select('*') // Select all columns for debugging
+      .select('value')
       .eq('key', key)
       .limit(1);
 
     if (error) {
       console.error(`Error fetching setting ${key}:`, error.message);
-      return key === 'app_name' ? 'Callysta POS' : '';
+      return getDefaultSettingValue(key);
     }
-
-    // Log the full data for debugging
-    // console.log(`Server setting ${key} data:`, JSON.stringify(data));
 
     // Check if we have data and return the first item's value
     if (data && data.length > 0) {
-      // console.log(`Server setting ${key} value:`, data[0].value);
       return data[0].value;
     }
 
     // Return default value if no data found
-    console.log(`No value found for setting ${key}, using default`);
-    return key === 'app_name' ? 'Callysta POS' : '';
+    return getDefaultSettingValue(key);
   } catch (err) {
     console.error(`Unexpected error fetching setting ${key}:`, err);
-    return key === 'app_name' ? 'Callysta POS' : '';
+    return getDefaultSettingValue(key);
+  }
+}
+
+/**
+ * Get default value for a setting
+ */
+function getDefaultSettingValue(key: SettingKey): string {
+  switch (key) {
+    case 'app_name':
+      return 'Callysta POS';
+    case 'app_address':
+      return '';
+    case 'app_phone':
+      return '';
+    case 'app_email':
+      return '';
+    default:
+      return '';
   }
 }
 

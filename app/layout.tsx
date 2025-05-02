@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { getAppName } from "@/lib/supabase/server-settings";
+
+// Force dynamic rendering to prevent caching issues with cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,15 +18,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  // Get app name from Supabase
-  const appName = await getAppName();
-
-  return {
-    title: appName,
-    description: `A modern point of sale system`,
-  };
-}
+export const metadata: Metadata = {
+  title: 'Callysta POS',
+  description: 'A modern point of sale system',
+};
 
 export default function AppLayout({
   children,

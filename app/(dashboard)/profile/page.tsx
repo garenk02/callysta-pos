@@ -1,5 +1,9 @@
 'use client'
 
+// Force dynamic rendering to prevent caching issues with cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,14 +11,14 @@ import { Shield, User, Mail } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, isAdmin } = useAuth();
-  
+
   return (
     <ProtectedRoute allowedRoles={['admin', 'cashier']}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">My Profile</h1>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
@@ -36,7 +40,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="border-t pt-6">
                 <dl className="divide-y">
                   <div className="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">

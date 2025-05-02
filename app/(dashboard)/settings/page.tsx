@@ -1,5 +1,9 @@
 'use client'
 
+// Force dynamic rendering to prevent caching issues with cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
