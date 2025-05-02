@@ -9,6 +9,7 @@ export interface Product {
   category?: string;
   stock_quantity: number;
   low_stock_threshold?: number;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }

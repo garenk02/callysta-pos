@@ -114,10 +114,12 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
           className="w-full"
           size="sm"
           onClick={handleAddToCart}
-          disabled={product.stock_quantity <= 0}
+          disabled={product.stock_quantity <= 0 || product.is_active === false}
+          title={product.is_active === false ? "Product not available" :
+                 product.stock_quantity <= 0 ? "Out of stock" : "Add to cart"}
         >
           <Plus className="h-4 w-4 mr-1" />
-          Add
+          {product.is_active === false ? "Unavailable" : "Add"}
         </Button>
       </CardFooter>
     </Card>

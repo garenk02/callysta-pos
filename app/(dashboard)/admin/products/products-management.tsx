@@ -40,7 +40,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  adjustStock
+  adjustStock,
+  bulkUpdateProducts
 } from "@/app/api/products/actions"
 import { Product } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -49,6 +50,7 @@ import * as z from "zod"
 import { toast } from "sonner"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { DataTable } from "@/components/ui/data-table/data-table"
+import { ProductsTableToolbar } from "./products-table-toolbar"
 
 // Form schema for adding/editing products
 const productFormSchema = z.object({
@@ -68,6 +70,7 @@ const productFormSchema = z.object({
   low_stock_threshold: z.coerce.number().min(1, {
     message: "Low stock threshold must be at least 1.",
   }).optional(),
+  is_active: z.boolean().default(true),
 })
 
 // Form schema for stock adjustment
@@ -103,6 +106,7 @@ export default function ProductsManagement() {
       image_url: "",
       stock_quantity: 0,
       low_stock_threshold: undefined,
+      is_active: true,
     },
   })
 
@@ -118,6 +122,7 @@ export default function ProductsManagement() {
       image_url: "",
       stock_quantity: 0,
       low_stock_threshold: undefined,
+      is_active: true,
     },
   })
 
@@ -168,6 +173,7 @@ export default function ProductsManagement() {
       image_url: product.image_url || "",
       stock_quantity: product.stock_quantity || 0,
       low_stock_threshold: product.low_stock_threshold,
+      is_active: product.is_active !== undefined ? product.is_active : true,
     })
     setIsEditDialogOpen(true)
   }
@@ -187,6 +193,7 @@ export default function ProductsManagement() {
         image_url: values.image_url,
         stock_quantity: values.stock_quantity || 0,
         low_stock_threshold: values.low_stock_threshold,
+        is_active: values.is_active,
       })
 
       if (error) {
@@ -229,6 +236,7 @@ export default function ProductsManagement() {
         image_url: values.image_url,
         stock_quantity: values.stock_quantity,
         low_stock_threshold: values.low_stock_threshold,
+        is_active: values.is_active,
       })
 
       if (error) {
@@ -331,6 +339,60 @@ export default function ProductsManagement() {
       toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Handle bulk activation of products
+  const handleBulkActivate = async (productIds: string[]) => {
+    if (!productIds.length) return
+
+    try {
+      // Use the server action to bulk update products
+      const { data, error } = await bulkUpdateProducts(productIds, {
+        is_active: true
+      })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // Refresh the product list
+      const { data: updatedProducts } = await getProducts()
+      setProducts(updatedProducts || [])
+
+      // Show success toast
+      toast.success(`${data?.count} products activated successfully`)
+    } catch (err) {
+      console.error('Error activating products:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to activate products'
+      toast.error(errorMessage)
+    }
+  }
+
+  // Handle bulk deactivation of products
+  const handleBulkDeactivate = async (productIds: string[]) => {
+    if (!productIds.length) return
+
+    try {
+      // Use the server action to bulk update products
+      const { data, error } = await bulkUpdateProducts(productIds, {
+        is_active: false
+      })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // Refresh the product list
+      const { data: updatedProducts } = await getProducts()
+      setProducts(updatedProducts || [])
+
+      // Show success toast
+      toast.success(`${data?.count} products deactivated successfully`)
+    } catch (err) {
+      console.error('Error deactivating products:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to deactivate products'
+      toast.error(errorMessage)
     }
   }
 
@@ -484,6 +546,26 @@ export default function ProductsManagement() {
                       )}
                     />
                   </div>
+                  <FormField
+                    control={addProductForm.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Active</FormLabel>
+                          <FormDescription>
+                            Product will be available for purchase when active
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button
                       type="button"
@@ -637,6 +719,26 @@ export default function ProductsManagement() {
                       )}
                     />
                   </div>
+                  <FormField
+                    control={editProductForm.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Active</FormLabel>
+                          <FormDescription>
+                            Product will be available for purchase when active
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button
                       type="button"
@@ -816,7 +918,41 @@ export default function ProductsManagement() {
                       value: category as string,
                     })),
                   },
+                  {
+                    id: "is_active",
+                    title: "Status",
+                    options: [
+                      { label: "Active", value: "true" },
+                      { label: "Inactive", value: "false" },
+                    ],
+                  },
                 ]}
+                tableToolbar={(table) => (
+                  <ProductsTableToolbar
+                    table={table}
+                    searchKey="name"
+                    filterableColumns={[
+                      {
+                        id: "category",
+                        title: "Category",
+                        options: categories.map(category => ({
+                          label: category as string,
+                          value: category as string,
+                        })),
+                      },
+                      {
+                        id: "is_active",
+                        title: "Status",
+                        options: [
+                          { label: "Active", value: "true" },
+                          { label: "Inactive", value: "false" },
+                        ],
+                      },
+                    ]}
+                    onBulkActivate={handleBulkActivate}
+                    onBulkDeactivate={handleBulkDeactivate}
+                  />
+                )}
               />
             )}
           </CardContent>

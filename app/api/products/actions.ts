@@ -390,6 +390,65 @@ export async function getInventoryLogs(
 }
 
 /**
+ * Bulk update products
+ */
+export async function bulkUpdateProducts(
+  productIds: string[],
+  updateData: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>
+): Promise<ProductActionResult<{ count: number }>> {
+  try {
+    if (!productIds.length) {
+      return {
+        data: { count: 0 },
+        error: null
+      }
+    }
+
+    const supabase = await createClient()
+
+    // Prepare update data with timestamp
+    const dataToUpdate = {
+      ...updateData,
+      updated_at: new Date().toISOString()
+    }
+
+    // Update all products with the given IDs
+    const result = await supabase
+      .from('products')
+      .update(dataToUpdate)
+      .in('id', productIds)
+
+    console.log('Bulk update result:', JSON.stringify(result))
+
+    if (result.error) {
+      console.error('Error bulk updating products:', result.error.message)
+      return {
+        data: null,
+        error: { message: result.error.message }
+      }
+    }
+
+    // Revalidate the products pages to update the UI
+    revalidatePath('/admin/products')
+    revalidatePath('/products')
+
+    // Get the actual count from the result
+    const updatedCount = productIds.length
+
+    return {
+      data: { count: updatedCount },
+      error: null
+    }
+  } catch (err) {
+    console.error('Unexpected error bulk updating products:', err)
+    return {
+      data: null,
+      error: { message: 'An unexpected error occurred while bulk updating products' }
+    }
+  }
+}
+
+/**
  * Get low stock products
  */
 export async function getLowStockProducts(): Promise<ProductActionResult<Product[]>> {

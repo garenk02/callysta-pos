@@ -235,6 +235,29 @@ export const columns = ({
     },
   },
   {
+    accessorKey: "is_active",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
+    cell: ({ row }) => {
+      const isActive = row.getValue("is_active") as boolean
+      return isActive !== false ? (
+        <span className="flex items-center text-green-600">
+          <Checkbox checked={true} disabled className="mr-2 h-4 w-4" />
+          Active
+        </span>
+      ) : (
+        <span className="flex items-center text-muted-foreground">
+          <Checkbox checked={false} disabled className="mr-2 h-4 w-4" />
+          Inactive
+        </span>
+      )
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(String(row.getValue(id)))
+    },
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const product = row.original

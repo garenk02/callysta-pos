@@ -7,10 +7,12 @@ export async function getProductsClient(): Promise<{ products: Product[] | null;
     // Create a browser client
     const supabase = createClient();
 
-    // Perform the database query
+    // Perform the database query - only fetch active products
+    // If is_active is null (for backward compatibility), treat it as true
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .or('is_active.is.null,is_active.eq.true')
       .order('name', { ascending: true });
 
     // Handle potential Supabase query errors
@@ -41,20 +43,22 @@ export async function getProductByIdClient(idOrSku: string): Promise<{ data: Pro
         .from('products')
         .select('*')
         .eq('id', idOrSku)
+        .or('is_active.is.null,is_active.eq.true') // Only fetch active products
         .single();
-      
+
       data = result.data;
       error = result.error;
     }
-    
+
     // If not found by ID or not a UUID, try by SKU
     if (!data) {
       const result = await supabase
         .from('products')
         .select('*')
         .eq('sku', idOrSku)
+        .or('is_active.is.null,is_active.eq.true') // Only fetch active products
         .single();
-      
+
       data = result.data;
       error = result.error;
     }
