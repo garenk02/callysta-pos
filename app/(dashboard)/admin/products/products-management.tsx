@@ -210,15 +210,15 @@ export default function ProductsManagement() {
     try {
       // Use the server action to create the product
       const { error } = await createProduct({
-        name: values.name,
-        description: values.description,
-        price: values.price,
-        sku: values.sku,
-        category: values.category,
-        image_url: values.image_url,
-        stock_quantity: values.stock_quantity || 0,
-        low_stock_threshold: values.low_stock_threshold,
-        is_active: values.is_active === undefined ? true : values.is_active,
+        name: String(values.name || ''),
+        description: values.description ? String(values.description) : undefined,
+        price: Number(values.price || 0),
+        sku: values.sku ? String(values.sku) : undefined,
+        category: values.category ? String(values.category) : undefined,
+        image_url: values.image_url ? String(values.image_url) : undefined,
+        stock_quantity: Number(values.stock_quantity || 0),
+        low_stock_threshold: values.low_stock_threshold ? Number(values.low_stock_threshold) : undefined,
+        is_active: values.is_active === undefined ? true : Boolean(values.is_active),
       })
 
       if (error) {
@@ -257,15 +257,15 @@ export default function ProductsManagement() {
     try {
       // Use the server action to update the product
       const { error } = await updateProduct(selectedProduct.id, {
-        name: values.name,
-        description: values.description,
-        price: values.price,
-        sku: values.sku,
-        category: values.category,
-        image_url: values.image_url,
-        stock_quantity: values.stock_quantity,
-        low_stock_threshold: values.low_stock_threshold,
-        is_active: values.is_active === undefined ? true : values.is_active,
+        name: String(values.name || ''),
+        description: values.description ? String(values.description) : undefined,
+        price: Number(values.price || 0),
+        sku: values.sku ? String(values.sku) : undefined,
+        category: values.category ? String(values.category) : undefined,
+        image_url: values.image_url ? String(values.image_url) : undefined,
+        stock_quantity: Number(values.stock_quantity || 0),
+        low_stock_threshold: values.low_stock_threshold ? Number(values.low_stock_threshold) : undefined,
+        is_active: values.is_active === undefined ? true : Boolean(values.is_active),
       })
 
       if (error) {
