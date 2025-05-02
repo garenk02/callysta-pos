@@ -9,7 +9,8 @@ import {
   Package,
   ClipboardList,
   Users,
-  Settings } from "lucide-react";
+  Settings,
+  BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/hooks/useSidebar";
 import { UserRole } from "@/types";
@@ -50,6 +51,12 @@ const menuItems = [
     name: "Users",
     icon: Users,
     href: "/users",
+    roles: ['admin']
+  },
+  {
+    name: "Reports",
+    icon: BarChart3,
+    href: "/admin/reports",
     roles: ['admin']
   },
   {
