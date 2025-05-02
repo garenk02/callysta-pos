@@ -60,13 +60,20 @@ import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { productSchema, stockAdjustmentSchema } from "@/lib/validations/schemas"
 import { handleServerActionError, showErrorToast, showSuccessToast } from "@/lib/error-handling"
+import * as z from 'zod'
 
 // Form schema for adding/editing products
 // Use the enhanced schema from our validation library
 const productFormSchema = productSchema
 
+// Define the type for the product form values
+type ProductFormValues = z.infer<typeof productFormSchema>
+
 // Use the enhanced schema from our validation library
 const stockAdjustmentFormSchema = stockAdjustmentSchema
+
+// Define the type for the stock adjustment form values
+type StockAdjustmentFormValues = z.infer<typeof stockAdjustmentFormSchema>
 
 export default function ProductsManagement() {
   const [products, setProducts] = useState<Product[]>([])
@@ -84,7 +91,7 @@ export default function ProductsManagement() {
   const [stockFormError, setStockFormError] = useState<string | null>(null)
 
   // Form for adding a new product
-  const addProductForm = useForm<z.infer<typeof productFormSchema>>({
+  const addProductForm = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: "",
@@ -100,7 +107,7 @@ export default function ProductsManagement() {
   })
 
   // Form for editing a product
-  const editProductForm = useForm<z.infer<typeof productFormSchema>>({
+  const editProductForm = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: "",
@@ -116,7 +123,7 @@ export default function ProductsManagement() {
   })
 
   // Form for stock adjustment
-  const stockAdjustmentForm = useForm<z.infer<typeof stockAdjustmentFormSchema>>({
+  const stockAdjustmentForm = useForm<StockAdjustmentFormValues>({
     resolver: zodResolver(stockAdjustmentFormSchema),
     defaultValues: {
       adjustmentType: 'add',
@@ -210,13 +217,13 @@ export default function ProductsManagement() {
   }
 
   // Handle adding a new product
-  const handleAddProduct = async (values: z.infer<typeof productFormSchema>) => {
+  const handleAddProduct = async (values: ProductFormValues) => {
     setIsSubmitting(true)
     setFormError(null)
 
     try {
       // Use the server action to create the product
-      const { data, error } = await createProduct({
+      const { error } = await createProduct({
         name: values.name,
         description: values.description,
         price: values.price,
@@ -255,7 +262,7 @@ export default function ProductsManagement() {
   }
 
   // Handle editing a product
-  const handleEditProduct = async (values: z.infer<typeof productFormSchema>) => {
+  const handleEditProduct = async (values: ProductFormValues) => {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
@@ -263,7 +270,7 @@ export default function ProductsManagement() {
 
     try {
       // Use the server action to update the product
-      const { data, error } = await updateProduct(selectedProduct.id, {
+      const { error } = await updateProduct(selectedProduct.id, {
         name: values.name,
         description: values.description,
         price: values.price,
@@ -304,7 +311,7 @@ export default function ProductsManagement() {
   // Handle deleting a product
   const handleDeleteProduct = async (productId: string) => {
     try {
-      const { data, error } = await deleteProduct(productId)
+      const { error } = await deleteProduct(productId)
 
       if (error) {
         throw new Error(error.message)
@@ -336,7 +343,7 @@ export default function ProductsManagement() {
   }
 
   // Handle stock adjustment
-  const handleAdjustStock = async (values: z.infer<typeof stockAdjustmentFormSchema>) => {
+  const handleAdjustStock = async (values: StockAdjustmentFormValues) => {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
@@ -353,7 +360,7 @@ export default function ProductsManagement() {
       }
 
       // Use the server action to adjust the stock
-      const { data, error } = await adjustStock(
+      const { error } = await adjustStock(
         selectedProduct.id,
         quantityChange,
         values.reason
