@@ -62,18 +62,9 @@ import { productSchema, stockAdjustmentSchema } from "@/lib/validations/schemas"
 import { handleServerActionError, showErrorToast, showSuccessToast } from "@/lib/error-handling"
 import * as z from 'zod'
 
-// Form schema for adding/editing products
-// Use the enhanced schema from our validation library
-const productFormSchema = productSchema
-
-// Define the type for the product form values
-type ProductFormValues = z.infer<typeof productFormSchema>
-
-// Use the enhanced schema from our validation library
-const stockAdjustmentFormSchema = stockAdjustmentSchema
-
-// Define the type for the stock adjustment form values
-type StockAdjustmentFormValues = z.infer<typeof stockAdjustmentFormSchema>
+// Use the original schemas
+const productFormSchema = productSchema;
+const stockAdjustmentFormSchema = stockAdjustmentSchema;
 
 export default function ProductsManagement() {
   const [products, setProducts] = useState<Product[]>([])
@@ -91,7 +82,7 @@ export default function ProductsManagement() {
   const [stockFormError, setStockFormError] = useState<string | null>(null)
 
   // Form for adding a new product
-  const addProductForm = useForm<ProductFormValues>({
+  const addProductForm = useForm({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: "",
@@ -107,7 +98,7 @@ export default function ProductsManagement() {
   })
 
   // Form for editing a product
-  const editProductForm = useForm<ProductFormValues>({
+  const editProductForm = useForm({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: "",
@@ -123,8 +114,8 @@ export default function ProductsManagement() {
   })
 
   // Form for stock adjustment
-  const stockAdjustmentForm = useForm<StockAdjustmentFormValues>({
-    resolver: zodResolver(stockAdjustmentFormSchema),
+  const stockAdjustmentForm = useForm({
+    resolver: zodResolver(stockAdjustmentFormSchema) as any,
     defaultValues: {
       adjustmentType: 'add',
       quantity: 0,
@@ -217,7 +208,7 @@ export default function ProductsManagement() {
   }
 
   // Handle adding a new product
-  const handleAddProduct = async (values: ProductFormValues) => {
+  const handleAddProduct = async (values: any) => {
     setIsSubmitting(true)
     setFormError(null)
 
@@ -232,7 +223,7 @@ export default function ProductsManagement() {
         image_url: values.image_url,
         stock_quantity: values.stock_quantity || 0,
         low_stock_threshold: values.low_stock_threshold,
-        is_active: values.is_active,
+        is_active: values.is_active === undefined ? true : values.is_active,
       })
 
       if (error) {
@@ -262,7 +253,7 @@ export default function ProductsManagement() {
   }
 
   // Handle editing a product
-  const handleEditProduct = async (values: ProductFormValues) => {
+  const handleEditProduct = async (values: any) => {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
@@ -279,7 +270,7 @@ export default function ProductsManagement() {
         image_url: values.image_url,
         stock_quantity: values.stock_quantity,
         low_stock_threshold: values.low_stock_threshold,
-        is_active: values.is_active,
+        is_active: values.is_active === undefined ? true : values.is_active,
       })
 
       if (error) {
@@ -343,7 +334,7 @@ export default function ProductsManagement() {
   }
 
   // Handle stock adjustment
-  const handleAdjustStock = async (values: StockAdjustmentFormValues) => {
+  const handleAdjustStock = async (values: any) => {
     if (!selectedProduct) return
 
     setIsSubmitting(true)
