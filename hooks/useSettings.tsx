@@ -83,7 +83,12 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         // Update local state with new settings
         setSettings(prev => {
           if (!prev) return newSettings as SettingsMap
-          return { ...prev, ...newSettings }
+          // Create a new object with all required properties
+          const updatedSettings = {
+            ...prev,
+            ...newSettings
+          } as SettingsMap
+          return updatedSettings
         })
 
         toast.success('Settings updated successfully')

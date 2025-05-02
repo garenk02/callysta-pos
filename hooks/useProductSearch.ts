@@ -44,7 +44,7 @@ export function useProductSearch({
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [isScanning, setIsScanning] = useState(false)
   const [scanBuffer, setScanBuffer] = useState('')
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null) as React.RefObject<HTMLInputElement>
 
   // Barcode scanner typically sends characters very quickly
   // and ends with an Enter key press

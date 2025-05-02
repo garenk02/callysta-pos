@@ -12,10 +12,11 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  type Table,
 } from "@tanstack/react-table"
 
 import {
-  Table,
+  Table as UITable,
   TableBody,
   TableCell,
   TableHead,
@@ -84,7 +85,7 @@ export function DataTable<TData, TValue>({
         />
       )}
       <div className="rounded-md border">
-        <Table>
+        <UITable>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -130,7 +131,7 @@ export function DataTable<TData, TValue>({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </UITable>
       </div>
       <DataTablePagination table={table} />
     </div>

@@ -38,7 +38,7 @@ export const productSchema = z.object({
     .min(1, { message: "Low stock threshold must be at least 1." })
     .max(1000000, { message: "Low stock threshold is too high." })
     .optional()
-    .transform(val => isNaN(val) ? undefined : val),
+    .transform(val => typeof val === 'number' && isNaN(val) ? undefined : val),
   is_active: z.boolean().default(true),
 });
 

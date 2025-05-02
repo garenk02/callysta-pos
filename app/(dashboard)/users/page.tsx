@@ -93,8 +93,8 @@ export default function UsersPage() {
   }, []);
 
   // Form for adding a new user
-  const addUserForm = useForm<z.infer<typeof userFormSchema>>({
-    resolver: zodResolver(userFormSchema),
+  const addUserForm = useForm({
+    resolver: zodResolver(userFormSchema) as any,
     defaultValues: {
       name: "",
       email: "",
@@ -105,8 +105,8 @@ export default function UsersPage() {
   });
 
   // Form for editing an existing user
-  const editUserForm = useForm<z.infer<typeof userFormSchema>>({
-    resolver: zodResolver(userFormSchema.omit({ password: true, email: true })),
+  const editUserForm = useForm({
+    resolver: zodResolver(userFormSchema.omit({ password: true, email: true })) as any,
     defaultValues: {
       name: "",
       role: "cashier",
@@ -115,7 +115,7 @@ export default function UsersPage() {
   });
 
   // Handle adding a new user
-  const handleAddUser = async (values: z.infer<typeof userFormSchema>) => {
+  const handleAddUser = async (values: any) => {
     setIsSubmitting(true);
 
     try {
@@ -154,7 +154,7 @@ export default function UsersPage() {
   };
 
   // Handle editing a user
-  const handleEditUser = async (values: z.infer<typeof userFormSchema>) => {
+  const handleEditUser = async (values: any) => {
     if (!selectedUser) return;
 
     setIsSubmitting(true);

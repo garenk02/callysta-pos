@@ -24,48 +24,48 @@ export default function SettingsPage() {
     app_phone: '',
     app_email: ''
   })
-  
+
   // UI state
   const [isLoading, setIsLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  
+
   // Load settings and check permissions
   useEffect(() => {
     async function initialize() {
       try {
         console.log('Initializing settings page...')
         const supabase = createClient()
-        
+
         // Check if user is admin
         const { data: { user } } = await supabase.auth.getUser()
-        
+
         if (!user) {
           console.log('No user found')
           setError('You must be logged in to access this page')
           setIsLoading(false)
           return
         }
-        
+
         console.log('User found:', user.id)
-        
+
         // Get user profile to check role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single()
-          
+
         if (profileError || !profile) {
           console.log('Profile error:', profileError)
           setError('Failed to load user profile')
           setIsLoading(false)
           return
         }
-        
+
         console.log('User role:', profile.role)
-        
+
         // Check if user is admin
         if (profile.role !== 'admin') {
           console.log('User is not admin')
@@ -73,42 +73,42 @@ export default function SettingsPage() {
           setIsLoading(false)
           return
         }
-        
+
         setIsAdmin(true)
         console.log('User is admin, loading settings...')
-        
+
         // Load settings
         const { data: settingsData, error: settingsError } = await supabase
           .from('settings')
           .select('key, value')
-          
+
         if (settingsError) {
           console.log('Settings error:', settingsError)
           setError('Failed to load settings')
           setIsLoading(false)
           return
         }
-        
+
         console.log('Settings loaded:', settingsData)
-        
+
         // Convert to map
         const settingsMap: Partial<SettingsMap> = {}
         settingsData.forEach(setting => {
-          if (setting.key === 'app_name' || 
-              setting.key === 'app_address' || 
-              setting.key === 'app_phone' || 
+          if (setting.key === 'app_name' ||
+              setting.key === 'app_address' ||
+              setting.key === 'app_phone' ||
               setting.key === 'app_email') {
-            settingsMap[setting.key] = setting.value
+            settingsMap[setting.key as SettingKey] = setting.value
           }
         })
-        
+
         console.log('Settings map:', settingsMap)
-        
+
         setSettings(prev => ({
           ...prev,
           ...settingsMap
         }))
-        
+
         setIsLoading(false)
       } catch (err) {
         console.error('Error initializing settings page:', err)
@@ -116,10 +116,10 @@ export default function SettingsPage() {
         setIsLoading(false)
       }
     }
-    
+
     initialize()
   }, [])
-  
+
   // Handle input changes
   const handleChange = (key: SettingKey, value: string) => {
     setSettings(prev => ({
@@ -127,14 +127,14 @@ export default function SettingsPage() {
       [key]: value
     }))
   }
-  
+
   // Save settings
   const handleSave = async () => {
     setIsSaving(true)
-    
+
     try {
       const supabase = createClient()
-      
+
       // Update each setting
       const updates = Object.entries(settings).map(([key, value]) => {
         return supabase
@@ -142,12 +142,12 @@ export default function SettingsPage() {
           .update({ value })
           .eq('key', key)
       })
-      
+
       const results = await Promise.all(updates)
-      
+
       // Check for errors
       const errors = results.filter(result => result.error)
-      
+
       if (errors.length > 0) {
         console.error('Errors saving settings:', errors)
         toast.error('Failed to save some settings')
@@ -161,7 +161,7 @@ export default function SettingsPage() {
       setIsSaving(false)
     }
   }
-  
+
   // Show loading state
   if (isLoading) {
     return (
@@ -170,7 +170,7 @@ export default function SettingsPage() {
       </div>
     )
   }
-  
+
   // Show error if not admin
   if (error) {
     return (
@@ -180,7 +180,7 @@ export default function SettingsPage() {
       </Alert>
     )
   }
-  
+
   // Show settings form
   return (
     <div className="space-y-6">
@@ -190,7 +190,7 @@ export default function SettingsPage() {
           Manage your application settings and preferences.
         </p>
       </div>
-      
+
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList>
           <TabsTrigger value="general">
@@ -206,7 +206,7 @@ export default function SettingsPage() {
             Contact
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
@@ -227,9 +227,9 @@ export default function SettingsPage() {
                   The name of your application that will be displayed in the header and receipts.
                 </p>
               </div>
-              
-              <Button 
-                onClick={handleSave} 
+
+              <Button
+                onClick={handleSave}
                 disabled={isSaving}
               >
                 {isSaving ? (
@@ -247,7 +247,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="business" className="space-y-4">
           <Card>
             <CardHeader>
@@ -269,9 +269,9 @@ export default function SettingsPage() {
                   Your business address that will be displayed on receipts and invoices.
                 </p>
               </div>
-              
-              <Button 
-                onClick={handleSave} 
+
+              <Button
+                onClick={handleSave}
                 disabled={isSaving}
               >
                 {isSaving ? (
@@ -289,7 +289,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="contact" className="space-y-4">
           <Card>
             <CardHeader>
@@ -310,7 +310,7 @@ export default function SettingsPage() {
                   Your business phone number that will be displayed on receipts and invoices.
                 </p>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="app_email">Email Address</Label>
                 <Input
@@ -322,9 +322,9 @@ export default function SettingsPage() {
                   Your business email address that will be displayed on receipts and invoices.
                 </p>
               </div>
-              
-              <Button 
-                onClick={handleSave} 
+
+              <Button
+                onClick={handleSave}
                 disabled={isSaving}
               >
                 {isSaving ? (

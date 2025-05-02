@@ -20,8 +20,8 @@ interface SettingsFormProps {
 
 export default function SettingsForm({
   settingKeys,
-  labels = {},
-  descriptions = {}
+  labels = {} as Record<SettingKey, string>,
+  descriptions = {} as Record<SettingKey, string>
 }: SettingsFormProps) {
   const [settings, setSettings] = useState<SettingsMap | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -117,10 +117,17 @@ export default function SettingsForm({
         toast.success('Settings updated successfully')
 
         // Update local settings state
-        setSettings(prev => ({
-          ...prev,
-          ...formValues
-        }))
+        setSettings(prev => {
+          if (!prev) return formValues as SettingsMap;
+
+          // Create a new object with all required properties
+          const updatedSettings = {
+            ...prev,
+            ...formValues
+          } as SettingsMap;
+
+          return updatedSettings;
+        })
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'

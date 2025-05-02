@@ -248,7 +248,7 @@ export async function toggleUserStatus(
 /**
  * Send a password reset email to a user
  */
-export async function resetUserPassword(email: string): Promise<UserActionResult> {
+export async function resetUserPassword(email: string): Promise<UserActionResult<{ success: boolean }>> {
   try {
     const supabase = await createClient()
 
@@ -281,7 +281,7 @@ export async function resetUserPassword(email: string): Promise<UserActionResult
  * Delete a user (admin only)
  * Note: This is a destructive action and should be used with caution
  */
-export async function deleteUser(userId: string): Promise<UserActionResult> {
+export async function deleteUser(userId: string): Promise<UserActionResult<{ success: boolean }>> {
   try {
     // Use the admin client for auth operations
     const adminClient = await createAdminClient()

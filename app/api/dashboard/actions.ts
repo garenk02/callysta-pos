@@ -215,7 +215,7 @@ export async function getTotalOrders(): Promise<DashboardActionResult<{
  */
 export async function getLowStockItems(): Promise<DashboardActionResult<{
   count: number
-  items: Array<{ id: string, name: string, stock_quantity: number }>
+  items: Array<{ id: string, name: string, stock_quantity: number, threshold: number }>
 }>> {
   try {
     const supabase = await createClient()
@@ -265,6 +265,7 @@ export async function getLowStockItems(): Promise<DashboardActionResult<{
  */
 export async function getDailySales(): Promise<DashboardActionResult<Array<{
   date: string
+  displayDate: string
   total: number
 }>>> {
   try {
