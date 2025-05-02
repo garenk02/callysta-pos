@@ -215,10 +215,7 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
                 <span>Subtotal</span>
                 <span>{formatCurrency(order.subtotal)}</span>
               </div>
-              <div className="receipt-total-row flex justify-between">
-                <span>Tax</span>
-                <span>{formatCurrency(order.tax)}</span>
-              </div>
+              {/* Tax row removed */}
               <Separator className="my-2" />
               <div className="receipt-total-row flex justify-between font-bold text-lg">
                 <span>Total</span>

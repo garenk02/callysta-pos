@@ -52,10 +52,12 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
 // Format currency
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('id-ID', {
     style: 'currency',
-    currency: 'USD',
-  }).format(amount)
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount).replace('Rp', 'Rp.')
 }
 
 export default function DashboardClient() {
@@ -274,10 +276,10 @@ export default function DashboardClient() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="displayDate" />
                     <YAxis
-                      tickFormatter={(value) => `$${value}`}
+                      tickFormatter={(value) => `Rp. ${value.toLocaleString('id-ID')}`}
                     />
                     <Tooltip
-                      formatter={(value) => [`$${value}`, 'Sales']}
+                      formatter={(value) => [`Rp. ${value.toLocaleString('id-ID')}`, 'Sales']}
                       labelFormatter={(label) => `Day: ${label}`}
                     />
                     <Bar dataKey="total" fill="#8884d8" />

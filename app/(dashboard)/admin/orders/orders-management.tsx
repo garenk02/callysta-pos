@@ -187,24 +187,30 @@ export default function OrdersManagement() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Subtotal</h3>
-                  <p>{new Intl.NumberFormat("en-US", {
+                  <p>{new Intl.NumberFormat("id-ID", {
                     style: "currency",
-                    currency: "USD",
-                  }).format(selectedOrder.subtotal)}</p>
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(selectedOrder.subtotal).replace('Rp', 'Rp.')}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Tax</h3>
-                  <p>{new Intl.NumberFormat("en-US", {
+                  <p>{new Intl.NumberFormat("id-ID", {
                     style: "currency",
-                    currency: "USD",
-                  }).format(selectedOrder.tax)}</p>
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(selectedOrder.tax).replace('Rp', 'Rp.')}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Total</h3>
-                  <p className="font-medium">{new Intl.NumberFormat("en-US", {
+                  <p className="font-medium">{new Intl.NumberFormat("id-ID", {
                     style: "currency",
-                    currency: "USD",
-                  }).format(selectedOrder.total)}</p>
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(selectedOrder.total).replace('Rp', 'Rp.')}</p>
                 </div>
               </div>
 
@@ -224,15 +230,19 @@ export default function OrdersManagement() {
                       {orderItems.map((item) => (
                         <tr key={item.id}>
                           <td className="px-4 py-2 text-sm">{item.product_name}</td>
-                          <td className="px-4 py-2 text-sm">{new Intl.NumberFormat("en-US", {
+                          <td className="px-4 py-2 text-sm">{new Intl.NumberFormat("id-ID", {
                             style: "currency",
-                            currency: "USD",
-                          }).format(item.product_price)}</td>
+                            currency: "IDR",
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                          }).format(item.product_price).replace('Rp', 'Rp.')}</td>
                           <td className="px-4 py-2 text-sm">{item.quantity}</td>
-                          <td className="px-4 py-2 text-sm text-right">{new Intl.NumberFormat("en-US", {
+                          <td className="px-4 py-2 text-sm text-right">{new Intl.NumberFormat("id-ID", {
                             style: "currency",
-                            currency: "USD",
-                          }).format(item.total)}</td>
+                            currency: "IDR",
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                          }).format(item.total).replace('Rp', 'Rp.')}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -244,17 +254,21 @@ export default function OrdersManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground">Amount Tendered</h3>
-                    <p>{new Intl.NumberFormat("en-US", {
+                    <p>{new Intl.NumberFormat("id-ID", {
                       style: "currency",
-                      currency: "USD",
-                    }).format(selectedOrder.payment_details.amount_tendered || 0)}</p>
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    }).format(selectedOrder.payment_details.amount_tendered || 0).replace('Rp', 'Rp.')}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground">Change Due</h3>
-                    <p>{new Intl.NumberFormat("en-US", {
+                    <p>{new Intl.NumberFormat("id-ID", {
                       style: "currency",
-                      currency: "USD",
-                    }).format(selectedOrder.payment_details.change_due || 0)}</p>
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    }).format(selectedOrder.payment_details.change_due || 0).replace('Rp', 'Rp.')}</p>
                   </div>
                 </div>
               )}

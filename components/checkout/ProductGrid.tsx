@@ -102,7 +102,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
             </p>
           </div>
           <div className="text-right">
-            <p className="font-semibold">${product.price.toFixed(2)}</p>
+            <p className="font-semibold">Rp. {product.price.toLocaleString('id-ID')}</p>
             <p className="text-xs text-muted-foreground">
               Stock: {product.stock_quantity}
             </p>

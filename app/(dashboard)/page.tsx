@@ -20,7 +20,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">$1893.84</p>
+                <p className="text-2xl font-bold">Rp. 1.893.840</p>
                 <p className="text-xs flex items-center text-green-500">
                   <ArrowUp className="h-3 w-3 mr-1" />
                   8% from last week
@@ -82,7 +82,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">$421.50</p>
+                <p className="text-2xl font-bold">Rp. 421.500</p>
                 <p className="text-xs text-muted-foreground">
                   8 transactions
                 </p>

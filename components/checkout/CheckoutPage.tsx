@@ -108,7 +108,7 @@ export default function CheckoutPage() {
   const handlePaymentComplete = (paymentMethod: PaymentMethod, paymentDetails?: PaymentDetails) => {
     // Show change due message for cash payments
     if (paymentMethod === 'cash' && paymentDetails?.change_due && paymentDetails.change_due > 0) {
-      toast.success(`Change due: $${paymentDetails.change_due.toFixed(2)}`)
+      toast.success(`Change due: Rp. ${paymentDetails.change_due.toLocaleString('id-ID')}`)
     }
   }
 
@@ -196,16 +196,13 @@ export default function CheckoutPage() {
               <div className="w-full">
                 <div className="flex justify-between py-1">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>Rp. {subtotal.toLocaleString('id-ID')}</span>
                 </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
+                {/* Tax row removed */}
                 <Separator className="my-2" />
                 <div className="flex justify-between py-1 font-bold">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>Rp. {total.toLocaleString('id-ID')}</span>
                 </div>
               </div>
 

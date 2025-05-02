@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 
 export default function CartSummary() {
   const { cart, summary, removeItem, clearCart } = useCart()
-  
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -23,8 +23,8 @@ export default function CartSummary() {
           <ShoppingCart className="h-4 w-4 mr-2" />
           <span>Cart</span>
           {summary.itemCount > 0 && (
-            <Badge 
-              variant="destructive" 
+            <Badge
+              variant="destructive"
               className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center"
             >
               {summary.itemCount}
@@ -37,9 +37,9 @@ export default function CartSummary() {
           <div className="flex justify-between items-center">
             <h4 className="font-medium">Shopping Cart</h4>
             {summary.itemCount > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-8 text-destructive"
                 onClick={clearCart}
               >
@@ -49,7 +49,7 @@ export default function CartSummary() {
             )}
           </div>
         </div>
-        
+
         {summary.itemCount === 0 ? (
           <div className="p-4 text-center">
             <p className="text-sm text-muted-foreground">Your cart is empty</p>
@@ -63,16 +63,16 @@ export default function CartSummary() {
                     <div className="flex-1">
                       <p className="text-sm font-medium line-clamp-1">{item.product.name}</p>
                       <div className="flex text-xs text-muted-foreground">
-                        <span>{item.quantity} × ${item.product.price.toFixed(2)}</span>
+                        <span>{item.quantity} × Rp. {item.product.price.toLocaleString('id-ID')}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">
-                        ${(item.quantity * item.product.price).toFixed(2)}
+                        Rp. {(item.quantity * item.product.price).toLocaleString('id-ID')}
                       </span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-6 w-6 text-destructive"
                         onClick={() => removeItem(item.product.id)}
                       >
@@ -83,20 +83,17 @@ export default function CartSummary() {
                 ))}
               </div>
             </ScrollArea>
-            
+
             <div className="p-4 border-t">
               <div className="flex justify-between py-1 text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>${summary.subtotal.toFixed(2)}</span>
+                <span>Rp. {summary.subtotal.toLocaleString('id-ID')}</span>
               </div>
-              <div className="flex justify-between py-1 text-sm">
-                <span className="text-muted-foreground">Tax</span>
-                <span>${summary.tax.toFixed(2)}</span>
-              </div>
+              {/* Tax row removed */}
               <Separator className="my-2" />
               <div className="flex justify-between py-1 font-medium">
                 <span>Total</span>
-                <span>${summary.total.toFixed(2)}</span>
+                <span>Rp. {summary.total.toLocaleString('id-ID')}</span>
               </div>
             </div>
           </>

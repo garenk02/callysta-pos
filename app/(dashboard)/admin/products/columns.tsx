@@ -237,10 +237,12 @@ export const columns = ({
     ),
     cell: ({ row }) => {
       const price = parseFloat(row.getValue("price"))
-      const formatted = new Intl.NumberFormat("en-US", {
+      const formatted = new Intl.NumberFormat("id-ID", {
         style: "currency",
-        currency: "USD",
-      }).format(price)
+        currency: "IDR",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(price).replace('Rp', 'Rp.')
       return <div>{formatted}</div>
     },
   },

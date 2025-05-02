@@ -4,12 +4,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import { Product, CartItem } from '@/types'
 import { toast } from 'sonner'
 
-// Default tax rate - could be moved to settings
-const DEFAULT_TAX_RATE = 0.07 // 7%
+// No tax is applied in this application
 
 interface CartSummary {
   subtotal: number
-  tax: number
   total: number
   itemCount: number
   uniqueItemCount: number
@@ -18,22 +16,18 @@ interface CartSummary {
 interface CartContextType {
   cart: CartItem[]
   summary: CartSummary
-  taxRate: number
   addItem: (product: Product, quantity?: number) => void
   updateItemQuantity: (productId: string, quantity: number) => void
   removeItem: (productId: string) => void
   clearCart: () => void
-  setTaxRate: (rate: number) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([])
-  const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE)
   const [summary, setSummary] = useState<CartSummary>({
     subtotal: 0,
-    tax: 0,
     total: 0,
     itemCount: 0,
     uniqueItemCount: 0
@@ -42,7 +36,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Load cart from localStorage on initial render
   useEffect(() => {
     const savedCart = localStorage.getItem('cart')
-    const savedTaxRate = localStorage.getItem('taxRate')
 
     if (savedCart) {
       try {
@@ -53,18 +46,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('cart')
       }
     }
-
-    if (savedTaxRate) {
-      try {
-        const parsedTaxRate = parseFloat(savedTaxRate)
-        if (!isNaN(parsedTaxRate)) {
-          setTaxRate(parsedTaxRate)
-        }
-      } catch (error) {
-        console.error('Failed to parse saved tax rate:', error)
-        localStorage.removeItem('taxRate')
-      }
-    }
   }, [])
 
   // Save cart to localStorage whenever it changes
@@ -72,12 +53,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('cart', JSON.stringify(cart))
   }, [cart])
 
-  // Save tax rate to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('taxRate', taxRate.toString())
-  }, [taxRate])
-
-  // Calculate summary whenever cart or tax rate changes
+  // Calculate summary whenever cart changes
   useEffect(() => {
     const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
     const uniqueItemCount = cart.length
@@ -86,17 +62,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return sum + (item.product.price * item.quantity)
     }, 0)
 
-    const tax = subtotal * taxRate
-    const total = subtotal + tax
+    // No tax calculation - total equals subtotal
+    const total = subtotal
 
     setSummary({
       subtotal,
-      tax,
       total,
       itemCount,
       uniqueItemCount
     })
-  }, [cart, taxRate])
+  }, [cart])
 
   // Add an item to the cart
   const addItem = (product: Product, quantity = 1) => {
@@ -186,25 +161,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     toast.info('Cart cleared')
   }
 
-  // Update the tax rate
-  const updateTaxRate = (rate: number) => {
-    if (rate < 0) {
-      toast.error('Tax rate cannot be negative')
-      return
-    }
-
-    setTaxRate(rate)
-  }
-
   const value = {
     cart,
     summary,
-    taxRate,
     addItem,
     updateItemQuantity,
     removeItem,
-    clearCart,
-    setTaxRate: updateTaxRate
+    clearCart
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

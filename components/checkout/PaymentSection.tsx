@@ -195,7 +195,7 @@ export default function PaymentSection({
     if (paymentMethod === 'cash') {
       const tenderedAmount = parseFloat(amountTendered) || 0
       if (tenderedAmount < total) {
-        setValidationError(`Amount tendered must be at least $${total.toFixed(2)}`)
+        setValidationError(`Amount tendered must be at least Rp. ${total.toLocaleString('id-ID')}`)
         return false
       }
     } else if (paymentMethod === 'card') {
@@ -263,7 +263,7 @@ export default function PaymentSection({
       const { orderId, error } = await createOrder({
         userId: user.id,
         subtotal: summary.subtotal,
-        tax: summary.tax,
+        tax: 0, // No tax
         total: summary.total,
         paymentMethod,
         paymentDetails,
@@ -294,7 +294,7 @@ export default function PaymentSection({
         date: new Date(),
         items: receiptItems,
         subtotal: summary.subtotal,
-        tax: summary.tax,
+        tax: 0, // No tax
         total: summary.total,
         paymentMethod,
         paymentDetails,
@@ -408,7 +408,7 @@ export default function PaymentSection({
                     <Label htmlFor="change-due">Change Due</Label>
                     <Input
                       id="change-due"
-                      value={`$${changeDue.toFixed(2)}`}
+                      value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
                       disabled
                       className="bg-muted"
                     />
@@ -418,7 +418,7 @@ export default function PaymentSection({
                 <div>
                   <Label>Quick Amounts</Label>
                   <div className="grid grid-cols-4 gap-2 mt-1">
-                    {[10, 20, 50, 100].map(amount => (
+                    {[10000, 20000, 50000, 100000].map(amount => (
                       <Button
                         key={amount}
                         type="button"
@@ -427,7 +427,7 @@ export default function PaymentSection({
                         onClick={() => handleQuickCashAmount(amount)}
                         disabled={disabled}
                       >
-                        ${amount}
+                        Rp. {amount.toLocaleString('id-ID')}
                       </Button>
                     ))}
                   </div>
@@ -436,19 +436,19 @@ export default function PaymentSection({
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleQuickCashAmount(Math.ceil(total))}
+                      onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
                       disabled={disabled}
                     >
-                      Exact: ${Math.ceil(total).toFixed(2)}
+                      Exact: Rp. {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleQuickCashAmount(Math.ceil(total / 5) * 5)}
+                      onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
                       disabled={disabled}
                     >
-                      Round: ${Math.ceil(total / 5) * 5}
+                      Round: Rp. {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
                     </Button>
                   </div>
                 </div>

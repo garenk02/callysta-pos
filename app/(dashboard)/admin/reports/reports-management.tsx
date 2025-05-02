@@ -279,10 +279,10 @@ export default function ReportsManagement() {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="displayDate" />
                                     <YAxis
-                                      tickFormatter={(value) => `$${value}`}
+                                      tickFormatter={(value) => `Rp. ${value.toLocaleString('id-ID')}`}
                                     />
                                     <Tooltip
-                                      formatter={(value) => [`$${value}`, 'Sales']}
+                                      formatter={(value) => [`Rp. ${(value as number).toLocaleString('id-ID')}`, 'Sales']}
                                       labelFormatter={(label) => `Day: ${label}`}
                                     />
                                     <Bar dataKey="total" fill="#8884d8" />
@@ -324,7 +324,7 @@ export default function ReportsManagement() {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                       ))}
                                     </Pie>
-                                    <Tooltip formatter={(value) => [formatCurrency(value as number), 'Sales']} />
+                                    <Tooltip formatter={(value) => [`Rp. ${(value as number).toLocaleString('id-ID')}`, 'Sales']} />
                                     <Legend />
                                   </PieChart>
                                 </ResponsiveContainer>
@@ -497,7 +497,7 @@ export default function ReportsManagement() {
                                     />
                                     <Tooltip
                                       formatter={(value, name) => [
-                                        name === 'total' ? formatCurrency(value as number) : value,
+                                        name === 'total' ? `Rp. ${(value as number).toLocaleString('id-ID')}` : value,
                                         name === 'total' ? 'Revenue' : 'Quantity'
                                       ]}
                                     />
@@ -542,7 +542,7 @@ export default function ReportsManagement() {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                       ))}
                                     </Pie>
-                                    <Tooltip formatter={(value) => [formatCurrency(value as number), 'Sales']} />
+                                    <Tooltip formatter={(value) => [`Rp. ${(value as number).toLocaleString('id-ID')}`, 'Sales']} />
                                     <Legend />
                                   </PieChart>
                                 </ResponsiveContainer>

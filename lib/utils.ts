@@ -9,12 +9,13 @@ export function cn(...inputs: ClassValue[]) {
  * Format a number as currency
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+  // Format with IDR but replace the symbol with Rp.
+  return new Intl.NumberFormat('id-ID', {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount)
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount).replace('Rp', 'Rp.')
 }
 
 /**

@@ -77,10 +77,10 @@ function CartItemRow({
       <div className="flex justify-between">
         <div className="flex-1">
           <h4 className="font-medium line-clamp-1">{name}</h4>
-          <p className="text-sm text-muted-foreground">${price.toFixed(2)} each</p>
+          <p className="text-sm text-muted-foreground">Rp. {price.toLocaleString('id-ID')} each</p>
         </div>
         <div className="text-right">
-          <p className="font-semibold">${itemTotal.toFixed(2)}</p>
+          <p className="font-semibold">Rp. {itemTotal.toLocaleString('id-ID')}</p>
         </div>
       </div>
 
