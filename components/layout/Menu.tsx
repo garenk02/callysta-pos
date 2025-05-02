@@ -27,7 +27,7 @@ const menuItems = [
     name: "Products",
     icon: Package,
     href: "/admin/products",
-    roles: ['admin']
+    roles: ['admin', 'cashier']
   },
   {
     name: "Checkout",
@@ -40,12 +40,6 @@ const menuItems = [
     icon: ClipboardList,
     href: "/admin/orders",
     roles: ['admin']
-  },
-  {
-    name: "Orders",
-    icon: ClipboardList,
-    href: "/orders",
-    roles: ['cashier']
   },
   {
     name: "Users",
@@ -90,7 +84,13 @@ export default function Menu() {
     <nav className="flex-1 py-4">
       <ul className="space-y-1">
         {filteredMenuItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          // Special case for Dashboard: active when on / or /dashboard
+          const isDashboard = item.href === "/" && item.name === "Dashboard";
+          const isActive =
+            pathname === item.href ||
+            pathname.startsWith(`${item.href}/`) ||
+            (isDashboard && pathname === "/dashboard");
+
           // Always use expanded style during SSR and hydration
           const itemPadding = !isMounted || isExpanded ? 'px-6' : 'px-0 justify-center';
           const iconMargin = !isMounted || isExpanded ? 'mr-3' : 'mx-auto';

@@ -338,7 +338,7 @@ export default function ProductsManagement() {
   const categories = [...new Set(products.map(product => product.category).filter(Boolean))]
 
   return (
-    <ProtectedRoute allowedRoles={['admin']}>
+    <ProtectedRoute allowedRoles={['admin', 'cashier']}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Product Management</h1>
