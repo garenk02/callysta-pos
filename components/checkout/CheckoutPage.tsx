@@ -49,7 +49,7 @@ export default function CheckoutPage() {
   // Use our cart context
   const {
     addItem,
-    summary: { subtotal, tax, total, itemCount }
+    summary: { subtotal, total, itemCount }
   } = useCart()
 
   // Use our custom product search hook
@@ -179,39 +179,40 @@ export default function CheckoutPage() {
         {/* Right side - Cart and Payment */}
         <div className="w-1/3 p-4 flex flex-col overflow-hidden">
           <Card className="flex-1 overflow-hidden flex flex-col">
-            <CardHeader className="pb-2">
+            <CardHeader className="py-0 pb-0">
               <div className="flex justify-between items-center">
                 <CardTitle>Current Order</CardTitle>
-                <Badge variant="outline" className="ml-2">
+                <Badge variant="outline" className="ml-1">
                   {itemCount} {itemCount === 1 ? 'item' : 'items'}
                 </Badge>
               </div>
             </CardHeader>
 
-            <CardContent className="flex-1 overflow-auto">
-              <CartList />
-            </CardContent>
+            <div style={{ height: "285px" }}>
+              <CardContent className="h-full overflow-auto py-0">
+                <CartList />
+              </CardContent>
+            </div>
 
-            <CardFooter className="flex-col border-t pt-4">
-              <div className="w-full">
-                <div className="flex justify-between py-1">
+            <div className="border-t">
+              <div className="px-6 py-1">
+                {/* <div className="flex justify-between py-1 text-xs">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>Rp. {subtotal.toLocaleString('id-ID')}</span>
                 </div>
-                {/* Tax row removed */}
-                <Separator className="my-2" />
-                <div className="flex justify-between py-1 font-bold">
+                <Separator className="my-1" /> */}
+                <div className="flex justify-between py-1 font-bold text-md">
                   <span>Total</span>
                   <span>Rp. {total.toLocaleString('id-ID')}</span>
                 </div>
-              </div>
 
-              <PaymentSection
-                total={total}
-                onPaymentComplete={handlePaymentComplete}
-                disabled={itemCount === 0}
-              />
-            </CardFooter>
+                <PaymentSection
+                  total={total}
+                  onPaymentComplete={handlePaymentComplete}
+                  disabled={itemCount === 0}
+                />
+              </div>
+            </div>
           </Card>
         </div>
       </div>

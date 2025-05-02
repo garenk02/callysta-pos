@@ -43,7 +43,7 @@ export interface CartItem {
   quantity: number;
 }
 
-export type PaymentMethod = 'cash' | 'card' | 'mobile_payment' | 'gift_card';
+export type PaymentMethod = 'cash' | 'card' | 'mobile_payment' | 'gift_card' | 'bank_transfer';
 export type CardType = 'visa' | 'mastercard' | 'amex' | 'discover' | 'other';
 
 export interface PaymentDetails {
@@ -54,6 +54,9 @@ export interface PaymentDetails {
   mobile_payment_provider?: string;
   gift_card_number?: string;
   gift_card_balance_remaining?: number;
+  bank_name?: string;
+  bank_account_number?: string;
+  bank_reference?: string;
 }
 
 export interface Order {

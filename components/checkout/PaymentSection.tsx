@@ -73,6 +73,7 @@ export default function PaymentSection({
 
   // Cash payment state
   const [amountTendered, setAmountTendered] = useState<string>('')
+  const [formattedAmount, setFormattedAmount] = useState<string>('')
   const [changeDue, setChangeDue] = useState<number>(0)
 
   // Hidden payment methods state (kept for future use)
@@ -118,17 +119,20 @@ export default function PaymentSection({
 
   const handleAmountTenderedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValidationError(null)
-    const value = e.target.value
-    setAmountTendered(value)
+    const value = e.target.value.replace(/[^\d]/g, '')
+    const numValue = parseInt(value) || 0
 
-    const numValue = parseFloat(value) || 0
+    setAmountTendered(numValue.toString())
+    setFormattedAmount(numValue.toLocaleString('id-ID'))
+
     const change = numValue - total
     setChangeDue(change > 0 ? change : 0)
   }
 
   // Set quick cash amount
   const handleQuickCashAmount = (amount: number) => {
-    setAmountTendered(amount.toFixed(2))
+    setAmountTendered(amount.toString())
+    setFormattedAmount(amount.toLocaleString('id-ID'))
     const change = amount - total
     setChangeDue(change > 0 ? change : 0)
   }
@@ -193,7 +197,7 @@ export default function PaymentSection({
   // Validate the payment based on the selected method
   const validatePayment = (): boolean => {
     if (paymentMethod === 'cash') {
-      const tenderedAmount = parseFloat(amountTendered) || 0
+      const tenderedAmount = parseInt(amountTendered) || 0
       if (tenderedAmount < total) {
         setValidationError(`Amount tendered must be at least Rp. ${total.toLocaleString('id-ID')}`)
         return false
@@ -225,6 +229,8 @@ export default function PaymentSection({
         setValidationError('Please enter a valid PIN')
         return false
       }
+    } else if (paymentMethod === 'bank_transfer') {
+      // Bank transfer is always valid as it's just showing instructions
     }
 
     return true
@@ -252,10 +258,16 @@ export default function PaymentSection({
       let paymentDetails: PaymentDetails = {}
 
       if (paymentMethod === 'cash') {
-        const tenderedAmount = parseFloat(amountTendered) || 0
+        const tenderedAmount = parseInt(amountTendered) || 0
         paymentDetails = {
           amount_tendered: tenderedAmount,
           change_due: changeDue
+        }
+      } else if (paymentMethod === 'bank_transfer') {
+        paymentDetails = {
+          // bank_name: 'BCA',
+          // bank_account_number: '1234567890',
+          bank_reference: `ORDER-${new Date().getTime()}`
         }
       }
 
@@ -326,7 +338,7 @@ export default function PaymentSection({
     if (disabled) return false
 
     if (paymentMethod === 'cash') {
-      const tenderedAmount = parseFloat(amountTendered) || 0
+      const tenderedAmount = parseInt(amountTendered) || 0
       return tenderedAmount >= total
     }
 
@@ -344,11 +356,15 @@ export default function PaymentSection({
       return giftCardNumber.length >= 8 && giftCardPin.length >= 4
     }
 
+    if (paymentMethod === 'bank_transfer') {
+      return true // Bank transfer is always valid as it's just showing instructions
+    }
+
     return true
   }
 
   return (
-    <div className="w-full mt-4">
+    <div className="w-full mt-0">
       {/* Receipt Modal */}
       {receiptData && (
         <Receipt
@@ -358,131 +374,110 @@ export default function PaymentSection({
         />
       )}
 
-      <Tabs
-        defaultValue="cash"
-        value={paymentMethod}
-        onValueChange={handlePaymentMethodChange}
-      >
-        <TabsList className="grid grid-cols-1 mb-4">
-          <TabsTrigger value="cash">
-            <Banknote className="h-4 w-4 mr-2" />
-            Cash
-          </TabsTrigger>
-          {/* Other payment methods hidden for now */}
-          {/*
-          <TabsTrigger value="card">
-            <CreditCard className="h-4 w-4 mr-2" />
-            Card
-          </TabsTrigger>
-          <TabsTrigger value="mobile_payment">
-            <Smartphone className="h-4 w-4 mr-2" />
-            Mobile
-          </TabsTrigger>
-          <TabsTrigger value="gift_card">
-            <Gift className="h-4 w-4 mr-2" />
-            Gift Card
-          </TabsTrigger>
-          */}
-        </TabsList>
+      <div className="mb-2">
+        <Tabs
+          value={paymentMethod}
+          onValueChange={handlePaymentMethodChange}
+          className="w-full"
+        >
+          <TabsList className="grid grid-cols-2 h-8 mb-1">
+            <TabsTrigger value="cash" className="text-xs py-0 px-1 flex items-center">
+              <Banknote className="h-4 w-4 mr-1" />
+              Cash
+            </TabsTrigger>
+            <TabsTrigger value="bank_transfer" className="text-xs py-0 px-1 flex items-center">
+              <CreditCard className="h-4 w-4 mr-1" />
+              Bank Transfer
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Cash Payment Tab */}
-        <TabsContent value="cash" className="mt-0">
-          <Card>
-            <CardContent className="pt-4 pb-2">
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="amount-tendered">Amount Tendered</Label>
-                    <Input
-                      id="amount-tendered"
-                      type="number"
-                      min={total}
-                      step="0.01"
-                      placeholder="0.00"
-                      value={amountTendered}
-                      onChange={handleAmountTenderedChange}
-                      disabled={disabled}
-                    />
+          <TabsContent value="cash" className="mt-0 pt-0">
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <Label htmlFor="amount-tendered" className="text-xs block mb-1">Amount</Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                    <span className="text-xs text-muted-foreground">Rp.</span>
                   </div>
-                  <div>
-                    <Label htmlFor="change-due">Change Due</Label>
-                    <Input
-                      id="change-due"
-                      value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Quick Amounts</Label>
-                  <div className="grid grid-cols-4 gap-2 mt-1">
-                    {[10000, 20000, 50000, 100000].map(amount => (
-                      <Button
-                        key={amount}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuickCashAmount(amount)}
-                        disabled={disabled}
-                      >
-                        Rp. {amount.toLocaleString('id-ID')}
-                      </Button>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
-                      disabled={disabled}
-                    >
-                      Exact: Rp. {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
-                      disabled={disabled}
-                    >
-                      Round: Rp. {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
-                    </Button>
-                  </div>
+                  <Input
+                    id="amount-tendered"
+                    type="text"
+                    placeholder="0"
+                    value={formattedAmount}
+                    onChange={handleAmountTenderedChange}
+                    disabled={disabled}
+                    className="h-8 text-xs pl-8 pr-2"
+                  />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <div>
+                <Label htmlFor="change-due" className="text-xs block mb-1">Change</Label>
+                <Input
+                  id="change-due"
+                  value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
+                  disabled
+                  className="bg-muted h-8 text-xs px-2"
+                />
+              </div>
+            </div>
 
-        {/* Other payment methods hidden for now */}
-        {/* Card Payment Tab, Mobile Payment Tab, and Gift Card Tab are hidden */}
-      </Tabs>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
+                disabled={disabled}
+                className="h-8 text-xs"
+              >
+                Exact: Rp. {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
+                disabled={disabled}
+                className="h-8 text-xs"
+              >
+                Round: Rp. {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* <TabsContent value="bank_transfer" className="mt-0 pt-0">
+            <div className="text-xs mb-2">
+              <p className="font-medium mb-1">Bank Transfer Instructions:</p>
+              <p className="mb-1">Transfer to: BCA 1234567890</p>
+              <p>Amount: Rp. {total.toLocaleString('id-ID')}</p>
+            </div>
+          </TabsContent> */}
+        </Tabs>
+      </div>
 
       {validationError && (
-        <div className="mt-2 flex items-center gap-2 text-destructive text-sm">
-          <AlertCircle className="h-4 w-4" />
+        <div className="flex items-center gap-1 text-destructive text-xs mb-1">
+          <AlertCircle className="h-3 w-3" />
           <span>{validationError}</span>
         </div>
       )}
 
       <Button
-        className="w-full mt-4"
-        size="lg"
+        className="w-full"
+        size="default"
         onClick={handleCompleteSale}
         disabled={disabled || !isPaymentValid() || isProcessing}
+        style={{ height: "45px", backgroundColor: "#FF54BB", color: "white" }}
       >
         {isProcessing ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Processing...
+            <span className="text-base">Processing...</span>
           </>
         ) : (
           <>
             <CheckCircle2 className="h-4 w-4 mr-2" />
-            Complete Sale
+            <span className="text-base">Complete Sale</span>
           </>
         )}
       </Button>
