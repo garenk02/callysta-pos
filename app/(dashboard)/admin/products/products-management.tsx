@@ -29,10 +29,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import { FileUpload } from "@/components/ui/file-upload"
 import {
   Package,
   Plus,
-  Loader2
+  Loader2,
+  Image as ImageIcon
 } from "lucide-react"
 import { columns } from "./columns"
 import {
@@ -51,6 +53,7 @@ import { toast } from "sonner"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { DataTable } from "@/components/ui/data-table/data-table"
 import { ProductsTableToolbar } from "./products-table-toolbar"
+import { uploadFile } from "@/lib/supabase/storage"
 
 // Form schema for adding/editing products
 const productFormSchema = z.object({
@@ -63,14 +66,14 @@ const productFormSchema = z.object({
   }),
   sku: z.string().optional(),
   category: z.string().optional(),
-  image_url: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  image_url: z.string().optional(),
   stock_quantity: z.coerce.number().min(0, {
     message: "Stock quantity cannot be negative.",
-  }).default(0),
+  }),
   low_stock_threshold: z.coerce.number().min(1, {
     message: "Low stock threshold must be at least 1.",
   }).optional(),
-  is_active: z.boolean().default(true),
+  is_active: z.boolean(),
 })
 
 // Form schema for stock adjustment
@@ -93,6 +96,8 @@ export default function ProductsManagement() {
   const [isAdjustStockDialogOpen, setIsAdjustStockDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
 
   // Form for adding a new product
   const addProductForm = useForm<z.infer<typeof productFormSchema>>({
@@ -135,6 +140,48 @@ export default function ProductsManagement() {
       reason: '',
     },
   })
+
+  // Handle file upload
+  const handleFileUpload = async (file: File): Promise<string | null> => {
+    setIsUploading(true);
+    try {
+      const imageUrl = await uploadFile(file);
+      if (imageUrl) {
+        setUploadedImageUrl(imageUrl);
+        return imageUrl;
+      } else {
+        // Show a detailed toast notification if the upload failed
+        toast.error(
+          "Failed to upload image",
+          {
+            description: (
+              <div className="space-y-2">
+                <p>Please ensure the 'product-images' bucket exists in your Supabase project.</p>
+                <ol className="list-decimal pl-5 text-xs">
+                  <li>Go to the Supabase dashboard</li>
+                  <li>Navigate to Storage</li>
+                  <li>Create a bucket named 'product-images'</li>
+                  <li>Enable 'Public bucket' in the settings</li>
+                </ol>
+              </div>
+            ),
+            duration: 8000,
+            action: {
+              label: "Open Dashboard",
+              onClick: () => window.open('https://supabase.com/dashboard/project/_/storage/buckets', '_blank')
+            }
+          }
+        );
+      }
+      return null;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error("An error occurred while uploading the image");
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Load products on component mount
   useEffect(() => {
@@ -413,7 +460,7 @@ export default function ProductsManagement() {
                 Add Product
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px]">
+            <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Product</DialogTitle>
                 <DialogDescription>
@@ -477,34 +524,47 @@ export default function ProductsManagement() {
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={addProductForm.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Category" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={addProductForm.control}
-                      name="image_url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Image URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/image.jpg" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={addProductForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Category" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addProductForm.control}
+                    name="image_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Image</FormLabel>
+                        <FormControl>
+                          <FileUpload
+                            onFileUpload={async (file) => {
+                              const url = await handleFileUpload(file);
+                              if (url) {
+                                field.onChange(url);
+                              }
+                              return url;
+                            }}
+                            onFileRemove={() => field.onChange('')}
+                            value={field.value}
+                            accept="image/*"
+                            maxSizeMB={2}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Upload a product image (max 2MB)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={addProductForm.control}
@@ -586,7 +646,7 @@ export default function ProductsManagement() {
 
           {/* Edit Product Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="sm:max-w-[550px]">
+            <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Edit Product</DialogTitle>
                 <DialogDescription>
@@ -650,34 +710,47 @@ export default function ProductsManagement() {
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={editProductForm.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Category" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={editProductForm.control}
-                      name="image_url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Image URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/image.jpg" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={editProductForm.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Category" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editProductForm.control}
+                    name="image_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Image</FormLabel>
+                        <FormControl>
+                          <FileUpload
+                            onFileUpload={async (file) => {
+                              const url = await handleFileUpload(file);
+                              if (url) {
+                                field.onChange(url);
+                              }
+                              return url;
+                            }}
+                            onFileRemove={() => field.onChange('')}
+                            value={field.value}
+                            accept="image/*"
+                            maxSizeMB={2}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Upload a product image (max 2MB)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={editProductForm.control}
@@ -759,7 +832,7 @@ export default function ProductsManagement() {
 
           {/* Stock Adjustment Dialog */}
           <Dialog open={isAdjustStockDialogOpen} onOpenChange={setIsAdjustStockDialogOpen}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Adjust Stock</DialogTitle>
                 <DialogDescription>

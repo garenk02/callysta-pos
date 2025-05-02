@@ -1,10 +1,12 @@
 "use client"
 
+import { useState, useEffect } from 'react'
 import { ColumnDef } from "@tanstack/react-table"
 import { Product } from "@/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { Tag, MoreHorizontal, Pencil, Trash2, ImageIcon, PackagePlus } from "lucide-react"
+import { getFileUrl } from "@/lib/supabase/storage"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 import {
@@ -133,6 +135,95 @@ export const columns = ({
     enableHiding: false,
   },
   {
+    accessorKey: "image_url",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Image" />
+    ),
+    cell: ({ row }) => {
+      const imageUrl = row.getValue("image_url") as string
+      const [imageLoaded, setImageLoaded] = useState(false);
+      const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+
+      // Process the image URL when the component mounts
+      useEffect(() => {
+        let isMounted = true;
+
+        if (imageUrl) {
+          // Try to get a valid URL for the image
+          const fetchImageUrl = async () => {
+            try {
+              const url = await getFileUrl(imageUrl);
+              if (isMounted) {
+                setProcessedUrl(url || imageUrl); // Use original URL as fallback
+              }
+            } catch (error) {
+              if (isMounted) {
+                console.error('Error getting image URL:', error);
+                setProcessedUrl(imageUrl); // Fallback to the original URL
+              }
+            }
+          };
+
+          fetchImageUrl();
+        } else {
+          setProcessedUrl(null);
+        }
+
+        // Cleanup function to prevent state updates on unmounted component
+        return () => {
+          isMounted = false;
+        };
+      }, [imageUrl]);
+
+      const [imgError, setImgError] = useState(false);
+
+      // Reset error state when image URL changes
+      useEffect(() => {
+        setImgError(false);
+        setImageLoaded(false);
+      }, [imageUrl, processedUrl]);
+
+      // If we have an image URL but loading failed, show placeholder with error state
+      if (imageUrl && imgError) {
+        return (
+          <div className="h-10 w-10 rounded-md bg-muted/50 border border-destructive/20 flex items-center justify-center">
+            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+          </div>
+        );
+      }
+
+      // If we have an image URL, try to display it
+      return imageUrl ? (
+        <div className="relative h-10 w-10 rounded-md overflow-hidden">
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+              <ImageIcon className="h-5 w-5 text-muted-foreground animate-pulse" />
+            </div>
+          )}
+          <img
+            src={processedUrl || imageUrl}
+            alt={row.getValue("name") as string || "Product image"}
+            className="object-cover h-full w-full"
+            onLoad={() => {
+              setImageLoaded(true);
+              setImgError(false);
+            }}
+            onError={() => {
+              // Don't log to console to avoid cluttering it
+              setImageLoaded(false);
+              setImgError(true);
+            }}
+          />
+        </div>
+      ) : (
+        <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
+          <ImageIcon className="h-5 w-5 text-muted-foreground" />
+        </div>
+      )
+    },
+    enableSorting: false,
+  },
+  {
     accessorKey: "name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
@@ -186,29 +277,6 @@ export const columns = ({
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
     },
-  },
-  {
-    accessorKey: "image_url",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Image" />
-    ),
-    cell: ({ row }) => {
-      const imageUrl = row.getValue("image_url") as string
-      return imageUrl ? (
-        <div className="relative h-10 w-10 rounded-md overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={row.getValue("name")}
-            className="object-cover h-full w-full"
-          />
-        </div>
-      ) : (
-        <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
-          <ImageIcon className="h-5 w-5 text-muted-foreground" />
-        </div>
-      )
-    },
-    enableSorting: false,
   },
   {
     accessorKey: "stock_quantity",
