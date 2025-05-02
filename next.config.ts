@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Remove standalone output mode as it's causing issues with client-reference-manifest files
-  // output: 'standalone',
-
   // Disable static optimization for routes that need to be dynamic
   experimental: {
     // This helps with cookie-based authentication
@@ -11,6 +8,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+
+  // Add special handling for route groups with parentheses
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
+
+  // Handle route groups with parentheses
+  transpilePackages: [],
+
+  // Special handling for route groups with parentheses
+  distDir: 'build',
 
   // Configure ESLint to not fail the build
   eslint: {

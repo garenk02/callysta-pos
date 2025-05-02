@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
   "buildCommand": "next build",
-  "outputDirectory": ".next",
+  "outputDirectory": "build",
   "regions": ["iad1"],
   "installCommand": "npm install --legacy-peer-deps",
   "headers": [
