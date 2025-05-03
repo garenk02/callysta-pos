@@ -172,7 +172,7 @@ export default function CheckoutPage() {
         {/* Right side - Cart and Payment */}
         <div className="w-2/5 p-4 flex flex-col overflow-hidden">
           <Card className="flex-1 overflow-hidden flex flex-col">
-            <CardHeader className="py-2 px-4">
+            <CardHeader className="py-1 px-4">
               <div className="flex justify-between items-center">
                 <CardTitle>Current Order</CardTitle>
                 <Badge variant="outline" className="ml-1">
@@ -182,15 +182,15 @@ export default function CheckoutPage() {
             </CardHeader>
 
             {/* Make cart area larger and more scrollable */}
-            <div className="flex-1 overflow-hidden min-h-0">
+            <div className="flex-1 overflow-hidden min-h-[300px]">
               <CardContent className="h-full overflow-auto py-2 px-4">
                 <CartList />
               </CardContent>
             </div>
 
             <div className="border-t mt-auto">
-              <div className="px-4 py-3">
-                <div className="flex justify-between py-1 font-bold text-md">
+              <div className="px-4 py-2">
+                <div className="flex justify-between py-0.5 font-bold text-sm">
                   <span>Total</span>
                   <span>Rp. {total.toLocaleString('id-ID')}</span>
                 </div>

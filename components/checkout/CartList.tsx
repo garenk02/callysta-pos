@@ -21,7 +21,7 @@ export default function CartList() {
 
   return (
     <ScrollArea className="h-full pr-2">
-      <div className="space-y-3">
+      <div className="space-y-2">
         {cart.map(item => (
           <CartItemRow
             key={item.product.id}
@@ -72,37 +72,37 @@ function CartItemRow({
   }
 
   return (
-    <div className="bg-white border rounded-lg p-4 shadow-sm" style={{ minHeight: "110px" }}>
+    <div className="bg-white border rounded-lg p-3 shadow-sm" style={{ minHeight: "90px" }}>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h4 className="text-base font-medium line-clamp-2">{name}</h4>
-          <p className="text-xs text-muted-foreground mt-1">Rp. {price.toLocaleString('id-ID')} each</p>
+          <h4 className="text-sm font-medium line-clamp-2">{name}</h4>
+          <p className="text-xs text-muted-foreground mt-0.5">Rp. {price.toLocaleString('id-ID')} each</p>
         </div>
         <div className="text-right">
-          <p className="text-base font-semibold">Rp. {itemTotal.toLocaleString('id-ID')}</p>
+          <p className="text-sm font-semibold">Rp. {itemTotal.toLocaleString('id-ID')}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-3">
+      <div className="flex items-center justify-between mt-2">
         <div className="flex items-center">
           <Button
             variant="outline"
             size="icon"
-            className="h-7 w-7 rounded-md"
+            className="h-6 w-6 rounded-md"
             onClick={handleDecrement}
             disabled={quantity <= 1}
-            style={{ minWidth: "30px", padding: 0 }}
+            style={{ minWidth: "24px", padding: 0 }}
           >
             <Minus className="h-3 w-3" />
           </Button>
-          <span className="mx-3 w-8 text-center text-base font-medium">{quantity}</span>
+          <span className="mx-2 w-6 text-center text-sm font-medium">{quantity}</span>
           <Button
             variant="outline"
             size="icon"
-            className="h-7 w-7 rounded-md"
+            className="h-6 w-6 rounded-md"
             onClick={handleIncrement}
             disabled={quantity >= maxQuantity}
-            style={{ minWidth: "30px", padding: 0 }}
+            style={{ minWidth: "24px", padding: 0 }}
           >
             <Plus className="h-3 w-3" />
           </Button>
@@ -110,11 +110,11 @@ function CartItemRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:bg-destructive/10"
+          className="h-6 w-6 text-destructive hover:bg-destructive/10"
           onClick={handleRemove}
-          style={{ minWidth: "30px", padding: 0 }}
+          style={{ minWidth: "24px", padding: 0 }}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>
