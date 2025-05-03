@@ -10,9 +10,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 interface StorageInitializerProps {
   bucketId: string
   isPublic?: boolean
+  onSuccess?: () => void
 }
 
-export function StorageInitializer({ bucketId, isPublic = true }: StorageInitializerProps) {
+export function StorageInitializer({ bucketId, isPublic = true, onSuccess }: StorageInitializerProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -47,6 +48,10 @@ export function StorageInitializer({ bucketId, isPublic = true }: StorageInitial
           } else if (details) {
             setBucketDetails(details)
             setSuccess(true)
+            // Call onSuccess callback if provided
+            if (onSuccess) {
+              onSuccess()
+            }
           }
         }
       }

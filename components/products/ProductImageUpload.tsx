@@ -25,6 +25,78 @@ export default function ProductImageUpload({
 }: ProductImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [fixedImageUrl, setFixedImageUrl] = useState<string | null>(null)
+
+  // Set preview from value if it exists and preview doesn't
+  useEffect(() => {
+    async function convertToSignedUrl() {
+      if (value && !preview) {
+        // Check if it's already a signed URL
+        const isSignedUrl = value.includes('/object/sign/') && value.includes('token=');
+
+        if (isSignedUrl) {
+          // If it's already a signed URL, use it as is
+          // console.log('URL is already a valid signed URL');
+          setFixedImageUrl(value);
+          setPreview(value);
+        } else if (value.includes('/storage/v1/object/public/')) {
+          // If it's a public URL, try to convert it to a signed URL
+          try {
+            // console.log('Converting public URL to signed URL:', value);
+
+            // Extract the bucket and file path from the URL
+            const urlObj = new URL(value);
+            const pathParts = urlObj.pathname.split('/storage/v1/object/public/');
+            if (pathParts.length < 2) {
+              setFixedImageUrl(value);
+              setPreview(value);
+              return;
+            }
+
+            const bucketAndPath = pathParts[1];
+            const slashIndex = bucketAndPath.indexOf('/');
+
+            if (slashIndex === -1) {
+              setFixedImageUrl(value);
+              setPreview(value);
+              return;
+            }
+
+            const bucket = bucketAndPath.substring(0, slashIndex);
+            const filePath = bucketAndPath.substring(slashIndex + 1);
+
+            // Create a signed URL
+            const supabase = createClient();
+            const { data, error } = await supabase.storage
+              .from(bucket)
+              .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10); // 10 years expiry
+
+            if (error) {
+              console.error('Error creating signed URL:', error);
+              setFixedImageUrl(value);
+            } else {
+              // console.log('Created signed URL:', data.signedUrl);
+              setFixedImageUrl(data.signedUrl);
+            }
+
+            setPreview(value);
+          } catch (err) {
+            console.error('Error converting to signed URL:', err);
+            setFixedImageUrl(value);
+            setPreview(value);
+          }
+        } else {
+          // If it's not a Supabase URL, use it as is
+          setFixedImageUrl(value);
+          setPreview(value);
+        }
+      } else if (!value) {
+        setFixedImageUrl(null);
+      }
+    }
+
+    convertToSignedUrl();
+  }, [value, preview, setPreview]);
 
   // Handle file selection
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,7 +156,7 @@ export default function ProductImageUpload({
       const filePath = `products/${fileName}`
 
       // Upload the file
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('product-images')
         .upload(filePath, file)
 
@@ -92,13 +164,23 @@ export default function ProductImageUpload({
         throw error
       }
 
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Get a signed URL instead of a public URL (valid for 10 years)
+      const { data: signedData, error: signError } = await supabase.storage
         .from('product-images')
-        .getPublicUrl(filePath)
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10) // 10 years expiry
 
-      // Update the form value
-      onChange(publicUrl)
+      if (signError) {
+        console.error('Error creating signed URL:', signError);
+        throw signError;
+      }
+
+      // console.log('Image uploaded successfully, signed URL:', signedData.signedUrl);
+
+      // Set the signed URL for display
+      setFixedImageUrl(signedData.signedUrl);
+
+      // Update the form value with the signed URL
+      onChange(signedData.signedUrl)
 
       toast.success('Image uploaded successfully')
     } catch (error: any) {
@@ -113,8 +195,10 @@ export default function ProductImageUpload({
 
   // Handle removing the image
   const handleRemoveImage = () => {
+    // console.log('Removing image, setting image_url to empty string')
     onChange('')
     setPreview(null)
+    setFixedImageUrl(null)
     onImageChange(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -138,12 +222,33 @@ export default function ProductImageUpload({
 
       {preview ? (
         <div className="relative w-full h-40 border rounded-md overflow-hidden">
-          <Image
-            src={preview}
-            alt="Product preview"
-            fill
-            className="object-contain"
-          />
+          {/* Use next/image with error handling */}
+          {fixedImageUrl ? (
+            <Image
+              src={fixedImageUrl}
+              alt="Product preview"
+              fill
+              className="object-contain"
+              onError={(e) => {
+                console.log('Image failed to load:', e);
+                // If the fixed URL fails, try falling back to an img tag
+                const imgElement = e.currentTarget;
+                if (imgElement.parentElement) {
+                  const fallbackImg = document.createElement('img');
+                  fallbackImg.src = fixedImageUrl;
+                  fallbackImg.alt = "Product preview";
+                  fallbackImg.className = "object-contain w-full h-full";
+                  imgElement.parentElement.appendChild(fallbackImg);
+                  imgElement.style.display = 'none';
+                }
+              }}
+              unoptimized={fixedImageUrl.startsWith('data:')} // Don't optimize data URLs
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full w-full bg-muted">
+              <p className="text-sm text-muted-foreground">Image URL not valid</p>
+            </div>
+          )}
           <Button
             type="button"
             variant="destructive"

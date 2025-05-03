@@ -535,7 +535,7 @@ export async function bulkUpdateProducts(
       .update(dataToUpdate)
       .in('id', productIds)
 
-    console.log('Bulk update result:', JSON.stringify(result))
+    // console.log('Bulk update result:', JSON.stringify(result))
 
     if (result.error) {
       console.error('Error bulk updating products:', result.error.message)
@@ -581,24 +581,33 @@ export async function getLowStockProducts(): Promise<ProductActionResult<Product
   try {
     const supabase = await createClient()
 
-    // Fetch products where stock_quantity is less than or equal to low_stock_threshold
+    // First, fetch all products with their stock_quantity and low_stock_threshold
     const { data, error } = await supabase
       .from('products')
       .select('*')
-      .not('low_stock_threshold', 'is', null)
-      .lt('stock_quantity', 10) // Use a fixed threshold for now
       .order('stock_quantity', { ascending: true })
 
     if (error) {
-      console.error('Error fetching low stock products:', error.message)
+      console.error('Error fetching products for low stock check:', error.message)
       return {
         data: null,
         error: { message: error.message }
       }
     }
 
+    // Filter products where stock_quantity is less than low_stock_threshold
+    // If low_stock_threshold is not set, use a default value of 10
+    const DEFAULT_LOW_STOCK_THRESHOLD = 10;
+    const lowStockProducts = data.filter(product => {
+      const threshold = product.low_stock_threshold !== null && product.low_stock_threshold !== undefined
+        ? product.low_stock_threshold
+        : DEFAULT_LOW_STOCK_THRESHOLD;
+
+      return product.stock_quantity < threshold;
+    });
+
     return {
-      data: data as Product[],
+      data: lowStockProducts as Product[],
       error: null
     }
   } catch (err) {

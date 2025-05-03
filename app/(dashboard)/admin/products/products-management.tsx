@@ -16,11 +16,12 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Package, PlusCircle, Loader2
+  Package, PlusCircle, Loader2, AlertCircle
 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { columns } from "./columns"
 import {
-  getProducts, createProduct, updateProduct, deleteProduct
+  getProducts, createProduct, updateProduct, deleteProduct, adjustStock
 } from "@/app/api/products/actions"
 import { Product } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -49,6 +50,16 @@ const productFormSchema = z.object({
   image_url: z.string().optional(),
 });
 
+// Form schema for stock adjustment
+const stockAdjustmentSchema = z.object({
+  quantityChange: z.coerce.number().refine(val => val !== 0, {
+    message: "Quantity change cannot be zero",
+  }),
+  reason: z.string().min(1, {
+    message: "Reason is required",
+  }),
+});
+
 export default function ProductsManagement() {
   const { isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
@@ -56,6 +67,7 @@ export default function ProductsManagement() {
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAdjustStockDialogOpen, setIsAdjustStockDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -168,10 +180,22 @@ export default function ProductsManagement() {
     },
   });
 
+  // Form for stock adjustment
+  const stockAdjustmentForm = useForm({
+    resolver: zodResolver(stockAdjustmentSchema),
+    defaultValues: {
+      quantityChange: 0,
+      reason: "",
+    },
+  });
+
   // Handle adding a new product
   const handleAddProduct = async (values: z.infer<typeof productFormSchema>) => {
     setIsSubmitting(true);
     try {
+      // Log the form values to verify the image_url is included
+      // console.log("Creating product with values:", values);
+
       const { data, error } = await createProduct({
         ...values,
       });
@@ -189,6 +213,7 @@ export default function ProductsManagement() {
       toast.success("Product created successfully");
       setIsAddDialogOpen(false);
       addProductForm.reset();
+      setImagePreview(null); // Reset the image preview
     } catch (err) {
       console.error("Error creating product:", err);
       toast.error("An unexpected error occurred while creating the product");
@@ -200,6 +225,14 @@ export default function ProductsManagement() {
   // Open edit dialog and populate form with product data
   const openEditDialog = (product: Product) => {
     setSelectedProduct(product);
+
+    // Set the image preview if the product has an image URL
+    if (product.image_url) {
+      setImagePreview(product.image_url);
+    } else {
+      setImagePreview(null);
+    }
+
     editProductForm.reset({
       name: product.name,
       description: product.description || "",
@@ -210,6 +243,7 @@ export default function ProductsManagement() {
       is_active: product.is_active !== false, // Default to true if undefined
       image_url: product.image_url || "",
     });
+
     setIsEditDialogOpen(true);
   };
 
@@ -219,6 +253,9 @@ export default function ProductsManagement() {
 
     setIsSubmitting(true);
     try {
+      // Log the form values to verify the image_url is included
+      // console.log("Updating product with values:", values);
+
       const { data, error } = await updateProduct(selectedProduct.id, {
         ...values,
       });
@@ -238,6 +275,7 @@ export default function ProductsManagement() {
       toast.success("Product updated successfully");
       setIsEditDialogOpen(false);
       setSelectedProduct(null);
+      setImagePreview(null); // Reset the image preview
     } catch (err) {
       console.error("Error updating product:", err);
       toast.error("An unexpected error occurred while updating the product");
@@ -263,6 +301,51 @@ export default function ProductsManagement() {
     } catch (err) {
       console.error("Error deleting product:", err);
       toast.error("An unexpected error occurred while deleting the product");
+    }
+  };
+
+  // Open stock adjustment dialog
+  const openAdjustStockDialog = (product: Product) => {
+    setSelectedProduct(product);
+    stockAdjustmentForm.reset({
+      quantityChange: 0,
+      reason: "",
+    });
+    setIsAdjustStockDialogOpen(true);
+  };
+
+  // Handle stock adjustment
+  const handleAdjustStock = async (values: z.infer<typeof stockAdjustmentSchema>) => {
+    if (!selectedProduct) return;
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await adjustStock(
+        selectedProduct.id,
+        values.quantityChange,
+        values.reason
+      );
+
+      if (error) {
+        toast.error(`Failed to adjust stock: ${error.message}`);
+        return;
+      }
+
+      // Update the product in the list
+      if (data) {
+        setProducts((prev) =>
+          prev.map((product) => (product.id === data.id ? data : product))
+        );
+      }
+
+      toast.success("Stock adjusted successfully");
+      setIsAdjustStockDialogOpen(false);
+      setSelectedProduct(null);
+    } catch (err) {
+      console.error("Error adjusting stock:", err);
+      toast.error("An unexpected error occurred while adjusting stock");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -637,7 +720,88 @@ export default function ProductsManagement() {
               </DialogContent>
             </Dialog>
           )}
+
+          <Dialog open={isAdjustStockDialogOpen} onOpenChange={setIsAdjustStockDialogOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Adjust Stock</DialogTitle>
+                <DialogDescription>
+                  Increase or decrease the stock quantity for this product.
+                </DialogDescription>
+              </DialogHeader>
+
+              {selectedProduct && (
+                <div className="mb-4 p-4 bg-muted rounded-md">
+                  <div className="font-medium">{selectedProduct.name}</div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    Current stock: <span className="font-medium">{selectedProduct.stock_quantity}</span>
+                  </div>
+                </div>
+              )}
+
+              <Form {...stockAdjustmentForm}>
+                <form
+                  onSubmit={stockAdjustmentForm.handleSubmit(handleAdjustStock)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={stockAdjustmentForm.control}
+                    name="quantityChange"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quantity Change</FormLabel>
+                        <FormDescription>
+                          Enter a positive number to add stock or a negative number to remove stock.
+                        </FormDescription>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="1"
+                            placeholder="0"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={stockAdjustmentForm.control}
+                    name="reason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reason</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Reason for adjustment" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <DialogFooter className="mt-4 pt-2 border-t">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsAdjustStockDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Adjust Stock
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
+
+        {/* Storage Initializer component hidden as requested */}
 
         <Card>
           <CardHeader>
@@ -669,6 +833,7 @@ export default function ProductsManagement() {
                 columns={columns({
                   onEdit: openEditDialog,
                   onDelete: handleDeleteProduct,
+                  onAdjustStock: openAdjustStockDialog,
                   isAdmin,
                 })}
                 data={products}

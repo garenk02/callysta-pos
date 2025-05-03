@@ -20,6 +20,21 @@ const nextConfig: NextConfig = {
     // Warning instead of error during build
     ignoreBuildErrors: true,
   },
+
+  // Configure allowed image domains for next/image
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'yflrgtbcgdefnocsnavq.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+    // Also keep domains for backward compatibility
+    domains: [
+      'yflrgtbcgdefnocsnavq.supabase.co', // Supabase storage domain
+    ],
+  },
 };
 
 export default nextConfig;

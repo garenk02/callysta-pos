@@ -219,30 +219,34 @@ export async function getLowStockItems(): Promise<DashboardActionResult<{
 }>> {
   try {
     const supabase = await createClient()
-    const LOW_STOCK_THRESHOLD = 10 // Items with stock below this are considered low
+    const DEFAULT_LOW_STOCK_THRESHOLD = 10 // Default threshold if not specified for a product
 
-    // Get products with low stock
+    // Get all products with their stock levels and thresholds
     const { data, error } = await supabase
       .from('products')
       .select('id, name, stock_quantity, low_stock_threshold')
-      .lt('stock_quantity', LOW_STOCK_THRESHOLD)
       .order('stock_quantity', { ascending: true })
 
     if (error) {
-      console.error('Error fetching low stock items:', error.message)
+      console.error('Error fetching products for low stock check:', error.message)
       return {
         data: null,
         error: { message: error.message }
       }
     }
 
-    // Use the product's low_stock_threshold if available, otherwise use the default
-    const lowStockItems = data.map(item => ({
-      id: item.id,
-      name: item.name,
-      stock_quantity: item.stock_quantity,
-      threshold: item.low_stock_threshold || LOW_STOCK_THRESHOLD
-    }));
+    // Filter products where stock_quantity is less than their specific low_stock_threshold
+    // or the default threshold if not specified
+    const lowStockItems = data
+      .map(item => ({
+        id: item.id,
+        name: item.name,
+        stock_quantity: item.stock_quantity,
+        threshold: item.low_stock_threshold !== null && item.low_stock_threshold !== undefined
+          ? item.low_stock_threshold
+          : DEFAULT_LOW_STOCK_THRESHOLD
+      }))
+      .filter(item => item.stock_quantity < item.threshold);
 
     return {
       data: {

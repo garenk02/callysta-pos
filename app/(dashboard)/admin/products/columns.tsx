@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Product } from "@/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
-import { MoreHorizontal, Edit, Trash2 } from "lucide-react"
+import { MoreHorizontal, Edit, Trash2, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -20,10 +20,11 @@ import Image from "next/image"
 interface ProductsColumnProps {
   onEdit: (product: Product) => void
   onDelete: (productId: string) => void
+  onAdjustStock: (product: Product) => void
   isAdmin: boolean
 }
 
-export const columns = ({ onEdit, onDelete, isAdmin }: ProductsColumnProps): ColumnDef<Product>[] => [
+export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsColumnProps): ColumnDef<Product>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -158,6 +159,10 @@ export const columns = ({ onEdit, onDelete, isAdmin }: ProductsColumnProps): Col
             <DropdownMenuItem onClick={() => onEdit(product)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAdjustStock(product)}>
+              <Package className="mr-2 h-4 w-4" />
+              Adjust Stock
             </DropdownMenuItem>
             {isAdmin && (
               <>

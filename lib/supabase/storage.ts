@@ -50,7 +50,7 @@ export async function uploadFile(
           .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year expiry
 
         if (!signedError && signedData) {
-          console.log('Generated signed URL:', signedData.signedUrl);
+          // console.log('Generated signed URL:', signedData.signedUrl);
           return signedData.signedUrl;
         }
       } catch (signedErr) {
@@ -63,7 +63,7 @@ export async function uploadFile(
         .getPublicUrl(filePath);
 
       // Log the URL for debugging
-      console.log('Generated public URL:', data.publicUrl);
+      // console.log('Generated public URL:', data.publicUrl);
 
       // Ensure the URL is correctly formatted
       // The correct format should be: https://<project-ref>.supabase.co/storage/v1/object/public/<bucket>/<filename>
@@ -71,7 +71,7 @@ export async function uploadFile(
       if (supabaseUrl && !data.publicUrl.startsWith(supabaseUrl)) {
         // If the URL doesn't start with the Supabase URL, construct it manually
         const correctUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${filePath}`;
-        console.log('Corrected URL:', correctUrl);
+        // console.log('Corrected URL:', correctUrl);
         return correctUrl;
       }
 
@@ -229,5 +229,37 @@ export async function deleteFile(
   } catch (err) {
     console.error('Unexpected error deleting file:', err);
     return false;
+  }
+}
+
+/**
+ * Fix a Supabase storage URL to ensure it's correctly formatted
+ * This is a synchronous function that can be used in components
+ * @param url The URL to fix
+ * @returns The fixed URL
+ */
+export function fixSupabaseStorageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+
+  try {
+    // If it's a data URL, return it as is
+    if (url.startsWith('data:')) return url;
+
+    // console.log('Checking Supabase URL:', url);
+
+    // If it's a signed URL (contains 'object/sign' and a token parameter), return it as is
+    if (url.includes('/object/sign/') && url.includes('token=')) {
+      // console.log('URL is already a valid signed URL');
+      return url;
+    }
+
+    // If it's a public URL, we need to create a signed URL instead
+    // But we can't do that here since this is a synchronous function
+    // We'll need to handle that in the component
+
+    return url;
+  } catch (err) {
+    console.error('Error checking Supabase storage URL:', err);
+    return url;
   }
 }

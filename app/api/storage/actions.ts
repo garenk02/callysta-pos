@@ -37,7 +37,6 @@ export async function checkBucketExists(
         }
 
         // For other errors, return the error
-        console.error('Error checking bucket:', error.message)
         return {
           data: null,
           error: { message: error.message }
@@ -54,7 +53,6 @@ export async function checkBucketExists(
       const { data: buckets, error: listError } = await supabase.storage.listBuckets()
 
       if (listError) {
-        console.error('Error listing buckets:', listError.message)
         return {
           data: null,
           error: { message: listError.message }
@@ -122,7 +120,6 @@ export async function getBucketDetails(
     const { data, error } = await supabase.storage.getBucket(bucketId)
 
     if (error) {
-      console.error('Error getting bucket details:', error.message)
       return {
         data: null,
         error: { message: error.message }
