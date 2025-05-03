@@ -1,6 +1,7 @@
 
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DropdownMenu,
@@ -11,20 +12,43 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { LogOut, Settings, User, Shield } from 'lucide-react'
+import { LogOut, Settings, User, Shield, Loader2 } from 'lucide-react'
 import { logout } from '@/app/login/actions'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import CartSummary from '@/components/checkout/CartSummary'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 
 export default function UserPanel() {
   const router = useRouter()
   const { user, isAdmin } = useAuth()
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Get first letter of email for avatar
   const getInitial = () => {
     if (!user?.email) return '?'
     return user.email.charAt(0).toUpperCase()
+  }
+
+  const handleLogout = async () => {
+    setIsLoading(true)
+
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Error logging out:', error)
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -62,14 +86,43 @@ export default function UserPanel() {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <form action={logout}>
-          <DropdownMenuItem asChild>
-            <button className="w-full flex items-center cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Logout</span>
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            setIsLogoutDialogOpen(true);
+          }}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Logout</span>
+        </DropdownMenuItem>
+
+        {/* Logout Confirmation Dialog */}
+        <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You will need to sign in again to access your account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleLogout}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing out...
+                  </>
+                ) : (
+                  'Sign out'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DropdownMenuContent>
     </DropdownMenu>
     </div>

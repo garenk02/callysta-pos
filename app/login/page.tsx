@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Lock, Mail } from 'lucide-react'
+import { AlertCircle, Lock, Mail, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePublicSettings } from '@/hooks/usePublicSettings'
 import AuthHead from '@/components/auth/AuthHead'
@@ -24,6 +24,7 @@ function ClientLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { settings } = usePublicSettings()
@@ -54,9 +55,23 @@ function ClientLogin() {
   }, [searchParams])
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background relative">
       {/* Add AuthHead component to update document title */}
       <AuthHead pageType="login" />
+
+      {/* Loading overlay */}
+      {(loading || redirecting) && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">
+              {redirecting
+                ? "Login successful! Redirecting to dashboard..."
+                : "Signing in..."}
+            </p>
+          </div>
+        </div>
+      )}
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
@@ -80,22 +95,24 @@ function ClientLogin() {
           setLoading(true)
           setError(null) // Clear previous errors
           const result = await login(formData)
-          setLoading(false)
 
           if (result.error) {
             setError(result.error.message)
+            setLoading(false)
           } else {
+            // Change to redirecting state
+            setLoading(false)
+            setRedirecting(true)
+
+            // Keep loading overlay visible during redirect
+            // The loading overlay will remain visible during navigation
             router.push('/')
             router.refresh()
+            // Note: We don't set redirecting to false here, as we want the loading state
+            // to persist during the redirect to the dashboard
           }
         }}>
           <CardContent className="space-y-4">
-            {loading && (
-              <div className="p-3 text-sm bg-primary/10 text-primary rounded-md">
-                Signing in...
-              </div>
-            )}
-
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-start">
                 <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
@@ -140,7 +157,12 @@ function ClientLogin() {
               className="w-full"
               disabled={loading || !email || !password}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : 'Sign In'}
             </Button>
 
             <div className="text-center text-sm">

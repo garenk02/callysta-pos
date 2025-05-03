@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Lock, Mail, User, AlertCircle } from 'lucide-react'
+import { Lock, Mail, User, AlertCircle, Loader2 } from 'lucide-react'
 import { usePublicSettings } from '@/hooks/usePublicSettings'
 import AuthHead from '@/components/auth/AuthHead'
 
@@ -26,6 +26,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordsMatch, setPasswordsMatch] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const { settings } = usePublicSettings()
@@ -53,9 +54,23 @@ export default function SignupPage() {
   // No longer needed as we're redirecting directly in the form submission handler
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background relative">
       {/* Add AuthHead component to update document title */}
       <AuthHead pageType="signup" />
+
+      {/* Loading overlay */}
+      {(loading || redirecting) && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">
+              {redirecting
+                ? "Account created! Redirecting to login page..."
+                : "Creating your account..."}
+            </p>
+          </div>
+        </div>
+      )}
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
@@ -100,6 +115,9 @@ export default function SignupPage() {
             console.log('Signup successful in component, redirecting to login')
             setSuccess(true)
 
+            // Change loading state to redirecting
+            setRedirecting(true)
+
             // Clear form fields
             setName('')
             setEmail('')
@@ -110,11 +128,12 @@ export default function SignupPage() {
             setTimeout(() => {
               console.log('Executing redirect to /login')
               router.push('/login')
+              // Note: We don't set loading to false here, as we want the loading state
+              // to persist during the redirect to the login page
             }, 1500)
           } catch (err: any) {
             console.error('Unexpected error in signup component:', err)
             setError(err.message || 'Failed to sign up')
-          } finally {
             setLoading(false)
           }
         }}>
@@ -209,7 +228,12 @@ export default function SignupPage() {
               className="w-full"
               disabled={loading || !name || !email || !password || !confirmPassword || !passwordsMatch}
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : 'Create Account'}
             </Button>
 
             <div className="text-center text-sm">
