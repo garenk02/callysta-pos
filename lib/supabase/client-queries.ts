@@ -2,18 +2,125 @@
 import { Product, User } from '@/types';
 import { createClient } from './client';
 
-export async function getProductsClient(): Promise<{ products: Product[] | null; error: Error | null }> {
+import cache from '@/lib/cache';
+
+export async function getProductsClient(options?: {
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  category?: string;
+  isActive?: boolean;
+  useCache?: boolean;
+  cacheTTL?: number;
+}): Promise<{
+  products: Product[] | null;
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  error: Error | null;
+}> {
   try {
+    const page = options?.page || 1;
+    const pageSize = options?.pageSize || 10;
+    const searchQuery = options?.searchQuery || '';
+    const category = options?.category;
+    const isActive = options?.isActive !== undefined ? options.isActive : true; // Default to active products
+    const useCache = options?.useCache !== false; // Default to using cache
+    const cacheTTL = options?.cacheTTL || 60; // Default cache TTL is 60 seconds
+
+    // Generate a cache key based on the query parameters
+    const cacheKey = `products:${page}:${pageSize}:${searchQuery}:${category}:${isActive}`;
+
+    // If using cache and the data is cached, return it
+    if (useCache && !searchQuery) { // Don't cache search queries
+      const cachedData = cache.get<{
+        products: Product[] | null;
+        totalCount: number;
+        page: number;
+        pageSize: number;
+        totalPages: number;
+      }>(cacheKey);
+
+      if (cachedData) {
+        return {
+          ...cachedData,
+          error: null
+        };
+      }
+    }
+
     // Create a browser client
     const supabase = createClient();
 
-    // Perform the database query - only fetch active products
-    // If is_active is null (for backward compatibility), treat it as true
-    const { data, error } = await supabase
+    // Calculate range for pagination
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    // Start building the query
+    let query = supabase
       .from('products')
-      .select('*')
-      .or('is_active.is.null,is_active.eq.true')
-      .order('name', { ascending: true });
+      .select('*', { count: 'exact' });
+
+    // Apply filters
+    if (searchQuery) {
+      query = query.ilike('name', `%${searchQuery}%`);
+    }
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    // Handle active status - if isActive is true, include null values for backward compatibility
+    if (isActive) {
+      query = query.or('is_active.is.null,is_active.eq.true');
+    } else if (isActive === false) {
+      query = query.eq('is_active', false);
+    }
+
+    // Get total count first using a separate query
+    let count = 0;
+    try {
+      // Create a separate query for counting
+      const countQuery = supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true });
+
+      // Apply the same filters as the main query
+      if (searchQuery) {
+        countQuery.ilike('name', `%${searchQuery}%`);
+      }
+
+      if (category) {
+        countQuery.eq('category', category);
+      }
+
+      // Handle active status - if isActive is true, include null values for backward compatibility
+      if (isActive) {
+        countQuery.or('is_active.is.null,is_active.eq.true');
+      } else if (isActive === false) {
+        countQuery.eq('is_active', false);
+      }
+
+      // Execute the count query
+      const { count: totalCount, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Supabase count error:", countError.message);
+        return { products: null, error: new Error(countError.message) };
+      }
+
+      // Set the count from the result
+      count = totalCount || 0;
+    } catch (countErr) {
+      console.error("Error getting count:", countErr);
+      // Continue with count = 0, we'll still try to get the data
+    }
+
+    // Then get paginated data
+    const { data, error } = await query
+      .order('name', { ascending: true })
+      .range(from, to);
 
     // Handle potential Supabase query errors
     if (error) {
@@ -21,8 +128,28 @@ export async function getProductsClient(): Promise<{ products: Product[] | null;
       return { products: null, error: new Error(error.message) };
     }
 
-    // Return successful data
-    return { products: data, error: null };
+    // Calculate total pages
+    const totalPages = Math.ceil((count || 0) / pageSize);
+
+    // Prepare the result
+    const result = {
+      products: data,
+      totalCount: count || 0,
+      page,
+      pageSize,
+      totalPages,
+    };
+
+    // Cache the result if using cache and not a search query
+    if (useCache && !searchQuery) {
+      cache.set(cacheKey, result, cacheTTL);
+    }
+
+    // Return successful data with pagination info
+    return {
+      ...result,
+      error: null
+    };
 
   } catch (err) {
     // Catch any other unexpected errors during the process
@@ -32,8 +159,28 @@ export async function getProductsClient(): Promise<{ products: Product[] | null;
   }
 }
 
-export async function getProductByIdClient(idOrSku: string): Promise<{ data: Product | null; error: Error | null }> {
+export async function getProductByIdClient(
+  idOrSku: string,
+  options?: { useCache?: boolean; cacheTTL?: number }
+): Promise<{ data: Product | null; error: Error | null }> {
   try {
+    const useCache = options?.useCache !== false; // Default to using cache
+    const cacheTTL = options?.cacheTTL || 300; // Default cache TTL is 5 minutes for individual products
+
+    // Generate a cache key
+    const cacheKey = `product:${idOrSku}`;
+
+    // If using cache and the data is cached, return it
+    if (useCache) {
+      const cachedData = cache.get<Product>(cacheKey);
+      if (cachedData) {
+        return {
+          data: cachedData,
+          error: null
+        };
+      }
+    }
+
     const supabase = createClient();
     let data, error;
 
@@ -69,6 +216,11 @@ export async function getProductByIdClient(idOrSku: string): Promise<{ data: Pro
         data: null,
         error: new Error(`Product not found with ID or SKU: ${idOrSku}`)
       };
+    }
+
+    // Cache the result if using cache
+    if (useCache && data) {
+      cache.set(cacheKey, data, cacheTTL);
     }
 
     return {

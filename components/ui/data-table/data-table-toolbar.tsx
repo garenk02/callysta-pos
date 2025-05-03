@@ -19,14 +19,56 @@ interface DataTableToolbarProps<TData> {
       value: string
     }[]
   }[]
+  onSearch?: (value: string) => void
+  onFilterChange?: (columnId: string, value: string | undefined) => void
 }
 
 export function DataTableToolbar<TData>({
   table,
   searchKey,
   filterableColumns = [],
+  onSearch,
+  onFilterChange,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
+
+  // Handle search input changes
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    if (onSearch) {
+      onSearch(value);
+    } else if (searchKey) {
+      table.getColumn(searchKey)?.setFilterValue(value);
+    }
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (columnId: string, value: string | undefined) => {
+    if (onFilterChange) {
+      onFilterChange(columnId, value);
+    } else {
+      if (value === undefined) {
+        table.getColumn(columnId)?.setFilterValue(undefined);
+      } else {
+        table.getColumn(columnId)?.setFilterValue(value);
+      }
+    }
+  };
+
+  // Handle reset filters
+  const handleResetFilters = () => {
+    if (onSearch && searchKey) {
+      onSearch('');
+    }
+
+    if (onFilterChange) {
+      filterableColumns.forEach(column => {
+        onFilterChange(column.id, undefined);
+      });
+    } else {
+      table.resetColumnFilters();
+    }
+  };
 
   return (
     <div className="flex items-center justify-between">
@@ -34,10 +76,8 @@ export function DataTableToolbar<TData>({
         {searchKey && (
           <Input
             placeholder={`Search by ${searchKey}...`}
-            value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
+            value={onSearch ? '' : ((table.getColumn(searchKey)?.getFilterValue() as string) ?? "")}
+            onChange={handleSearchChange}
             className="h-9 w-[250px]"
           />
         )}
@@ -49,14 +89,22 @@ export function DataTableToolbar<TData>({
                   key={column.id}
                   column={table.getColumn(column.id)}
                   title={column.title}
-                  options={column.options}
+                  options={column.options.map(option => ({
+                    ...option,
+                    // Ensure value is never an empty string
+                    value: option.value || "undefined"
+                  }))}
+                  onValueChange={(value) => {
+                    if (value === "undefined") value = undefined;
+                    handleFilterChange(column.id, value);
+                  }}
                 />
               )
           )}
         {isFiltered && (
           <Button
             variant="ghost"
-            onClick={() => table.resetColumnFilters()}
+            onClick={handleResetFilters}
             className="h-9 px-2 lg:px-3"
           >
             Reset

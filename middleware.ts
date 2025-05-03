@@ -15,7 +15,6 @@ const routeAccessRules: Record<string, UserRole[]> = {
   '/checkout': ['admin', 'cashier'],
   '/dashboard': ['admin', 'cashier'],
   '/': ['admin', 'cashier'],
-  // Add any other routes that need protection
   '/profile': ['admin', 'cashier'],
 }
 

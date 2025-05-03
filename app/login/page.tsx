@@ -30,12 +30,12 @@ function ClientLogin() {
 
   // Debug logging for settings and update document title
   useEffect(() => {
-    console.log('Login page public settings:', settings)
+    // console.log('Login page public settings:', settings)
 
     // Update document title directly
     if (settings?.app_name) {
       document.title = `Login - ${settings.app_name}`
-      console.log('Updated document title to:', document.title)
+      // console.log('Updated document title to:', document.title)
     }
   }, [settings])
 

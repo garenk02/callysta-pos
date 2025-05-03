@@ -3,8 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { User } from "@/types"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DataTableColumnHeader } from "./data-table-column-header"
-import { Shield, User as UserIcon, MoreHorizontal, Check, X, Pencil, KeyRound, Trash2 } from "lucide-react"
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { MoreHorizontal, Edit, Key, Power, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,107 +14,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { format } from "date-fns"
 
-interface UserActionsProps {
-  user: User
+interface UsersColumnProps {
   onEdit: (user: User) => void
   onResetPassword: (email: string) => void
   onToggleStatus: (userId: string, isActive: boolean) => void
   onDelete: (userId: string) => void
 }
 
-export function UserActions({ 
-  user, 
-  onEdit, 
-  onResetPassword, 
-  onToggleStatus, 
-  onDelete 
-}: UserActionsProps) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onEdit(user)}>
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onResetPassword(user.email)}>
-          <KeyRound className="mr-2 h-4 w-4" />
-          Reset Password
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onToggleStatus(user.id, !!user.is_active)}>
-          {user.is_active ? (
-            <>
-              <X className="mr-2 h-4 w-4" />
-              Deactivate
-            </>
-          ) : (
-            <>
-              <Check className="mr-2 h-4 w-4" />
-              Activate
-            </>
-          )}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Trash2 className="mr-2 h-4 w-4 text-destructive" />
-              <span className="text-destructive">Delete</span>
-            </DropdownMenuItem>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the user
-                account and remove all associated data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={() => onDelete(user.id)}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-export const columns = ({
-  onEdit,
-  onResetPassword,
-  onToggleStatus,
-  onDelete,
-}: {
-  onEdit: (user: User) => void
-  onResetPassword: (email: string) => void
-  onToggleStatus: (userId: string, isActive: boolean) => void
-  onDelete: (userId: string) => void
-}): ColumnDef<User>[] => [
+export const columns = ({ onEdit, onResetPassword, onToggleStatus, onDelete }: UsersColumnProps): ColumnDef<User>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -142,14 +52,19 @@ export const columns = ({
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
-    cell: ({ row }) => <div className="font-medium">{row.getValue("name") || "Unnamed"}</div>,
+    cell: ({ row }) => {
+      const name = row.getValue("name") as string
+      return <div className="font-medium">{name || "Unnamed User"}</div>
+    },
   },
   {
     accessorKey: "email",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Email" />
     ),
-    cell: ({ row }) => <div>{row.getValue("email")}</div>,
+    cell: ({ row }) => {
+      return <div className="text-sm">{row.getValue("email")}</div>
+    },
   },
   {
     accessorKey: "role",
@@ -159,19 +74,9 @@ export const columns = ({
     cell: ({ row }) => {
       const role = row.getValue("role") as string
       return (
-        <div className="flex items-center">
-          {role === "admin" ? (
-            <>
-              <Shield className="mr-1 h-3 w-3 text-primary" />
-              <span>Administrator</span>
-            </>
-          ) : (
-            <>
-              <UserIcon className="mr-1 h-3 w-3 text-secondary-foreground" />
-              <span>Cashier</span>
-            </>
-          )}
-        </div>
+        <Badge variant={role === "admin" ? "default" : "outline"} className="capitalize">
+          {role}
+        </Badge>
       )
     },
     filterFn: (row, id, value) => {
@@ -185,34 +90,66 @@ export const columns = ({
     ),
     cell: ({ row }) => {
       const isActive = row.getValue("is_active") as boolean
-      return isActive ? (
-        <span className="flex items-center text-green-600">
-          <Check className="mr-1 h-3 w-3" />
-          Active
-        </span>
-      ) : (
-        <span className="flex items-center text-red-600">
-          <X className="mr-1 h-3 w-3" />
-          Inactive
-        </span>
+      return (
+        <Badge variant={isActive ? "success" : "destructive"}>
+          {isActive ? "Active" : "Inactive"}
+        </Badge>
       )
     },
     filterFn: (row, id, value) => {
-      return value.includes(String(row.getValue(id)))
+      const isActive = row.getValue(id) as boolean
+      return value.includes(String(isActive))
+    },
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Created" />
+    ),
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("created_at") as string)
+      return <div className="text-sm">{format(date, "MMM d, yyyy")}</div>
     },
   },
   {
     id: "actions",
     cell: ({ row }) => {
       const user = row.original
+
       return (
-        <UserActions
-          user={user}
-          onEdit={onEdit}
-          onResetPassword={onResetPassword}
-          onToggleStatus={onToggleStatus}
-          onDelete={onDelete}
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onEdit(user)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onResetPassword(user.email)}>
+              <Key className="mr-2 h-4 w-4" />
+              Reset Password
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onToggleStatus(user.id, !user.is_active)}
+            >
+              <Power className="mr-2 h-4 w-4" />
+              {user.is_active ? "Deactivate" : "Activate"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onDelete(user.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )
     },
   },

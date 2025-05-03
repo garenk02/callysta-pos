@@ -19,7 +19,7 @@ export default function AuthHead({ pageType }: AuthHeadProps) {
         : `Sign Up - ${settings.app_name}`
         
       document.title = title
-      console.log('AuthHead updated document title to:', document.title)
+      // console.log('AuthHead updated document title to:', document.title)
     }
   }, [settings, pageType])
   

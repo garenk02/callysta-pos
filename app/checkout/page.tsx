@@ -1,5 +1,6 @@
-// app/(dashboard)/checkout/page.tsx
+// app/checkout/page.tsx
 import CheckoutPage from "@/components/checkout/CheckoutPage";
+import RootLayout from "@/components/layout/RootLayout";
 
 // Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic';
@@ -7,5 +8,9 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default function Checkout() {
-  return <CheckoutPage />;
+  return (
+    <RootLayout>
+      <CheckoutPage />
+    </RootLayout>
+  );
 }

@@ -30,10 +30,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   const [settings, setSettings] = useState<SettingsMap | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
-  const [isMounted, setIsMounted] = useState<boolean>(false)
+  const [hydrated, setHydrated] = useState<boolean>(false)
 
   const fetchSettings = async () => {
-    if (!isMounted) return
+    if (!hydrated) return
 
     setIsLoading(true)
     try {
@@ -55,21 +55,21 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }
   }
 
-  // First mark component as mounted (client-side only)
+  // Mark component as hydrated after client-side hydration is complete
   useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
+    setHydrated(true)
+    return () => setHydrated(false)
   }, [])
 
-  // Then load settings once mounted
+  // Then load settings once hydrated
   useEffect(() => {
-    if (isMounted) {
+    if (hydrated) {
       fetchSettings()
     }
-  }, [isMounted])
+  }, [hydrated])
 
   const updateAppSettings = async (newSettings: Partial<SettingsMap>): Promise<boolean> => {
-    if (!isMounted) return false
+    if (!hydrated) return false
 
     try {
       const { success, error: updateError } = await updateSettings(newSettings)
@@ -104,7 +104,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   }
 
   const refreshSettings = async () => {
-    if (isMounted) {
+    if (hydrated) {
       await fetchSettings()
     }
   }

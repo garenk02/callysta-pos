@@ -16,39 +16,12 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 
-interface OrderActionsProps {
-  order: OrderWithUser
-  onViewDetails: (order: OrderWithUser) => void
+interface OrdersColumnProps {
+  onView: (orderId: string) => void
+  onViewReceipt: (order: OrderWithUser) => void
 }
 
-export function OrderActions({
-  order,
-  onViewDetails,
-}: OrderActionsProps) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => onViewDetails(order)}>
-          <Eye className="mr-2 h-4 w-4" />
-          View Details
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-export const columns = ({
-  onViewDetails,
-}: {
-  onViewDetails: (order: OrderWithUser) => void
-}): ColumnDef<OrderWithUser>[] => [
+export const columns = ({ onView, onViewReceipt }: OrdersColumnProps): ColumnDef<OrderWithUser>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -78,44 +51,29 @@ export const columns = ({
     ),
     cell: ({ row }) => {
       const id = row.getValue("id") as string
-      return <div className="font-medium">{id.substring(0, 8)}...</div>
+      return <div className="font-medium">#{id.substring(0, 8)}</div>
     },
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "user",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date" />
+      <DataTableColumnHeader column={column} title="Customer" />
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at") as string)
-      return <div>{format(date, "PPP p")}</div>
-    },
-  },
-  {
-    id: "user",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" />
-    ),
-    cell: ({ row }) => {
-      const order = row.original
-      const userEmail = order.user?.email
-      const userName = order.user?.name
-      const displayName = userName || userEmail || 'Unknown User'
-
+      const user = row.getValue("user") as { email: string; name?: string } | undefined
       return (
         <div className="flex items-center">
-          <User className="mr-1 h-3 w-3 text-muted-foreground" />
-          <span title={userEmail}>{displayName}</span>
+          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mr-2">
+            <User className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div>
+            <div className="font-medium">{user?.name || 'Guest'}</div>
+            <div className="text-xs text-muted-foreground">{user?.email || ''}</div>
+          </div>
         </div>
       )
     },
-    filterFn: (row, id, value) => {
-      const order = row.original
-      const userEmail = order.user?.email || ''
-      const userName = order.user?.name || ''
-      return userEmail.toLowerCase().includes(value.toLowerCase()) ||
-             userName.toLowerCase().includes(value.toLowerCase())
-    },
+    enableSorting: false,
   },
   {
     accessorKey: "total",
@@ -124,12 +82,7 @@ export const columns = ({
     ),
     cell: ({ row }) => {
       const total = parseFloat(row.getValue("total"))
-      const formatted = new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(total).replace('Rp', 'Rp.')
+      const formatted = `Rp.${total.toLocaleString('id-ID')}`
       return <div className="font-medium">{formatted}</div>
     },
   },
@@ -147,18 +100,45 @@ export const columns = ({
       )
     },
     filterFn: (row, id, value) => {
+      if (!value || value.length === 0) return true;
       return value.includes(row.getValue(id))
+    },
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("created_at") as string)
+      return <div>{format(date, "MMM d, yyyy h:mm a")}</div>
     },
   },
   {
     id: "actions",
     cell: ({ row }) => {
       const order = row.original
+
       return (
-        <OrderActions
-          order={order}
-          onViewDetails={onViewDetails}
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onView(order.id)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewReceipt(order)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Receipt
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )
     },
   },

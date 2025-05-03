@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User, UserRole } from '@/types'
 import { useRouter, usePathname } from 'next/navigation'
@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
+  const hasMounted = useRef(false)
 
   // Check if user is admin
   const isAdmin = user?.role === 'admin'
@@ -40,6 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    // Mark as mounted to track client-side rendering
+    hasMounted.current = true
+
     const fetchUser = async () => {
       setIsLoading(true)
 
@@ -55,7 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false)
 
           // Only redirect if not already on login or signup page
+          // And only after component has mounted (client-side)
           if (
+            hasMounted.current &&
             pathname !== '/login' &&
             pathname !== '/signup' &&
             !pathname.startsWith('/auth/callback')
@@ -65,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        console.log('Authenticated user found:', authUser.id)
+        // console.log('Authenticated user found:', authUser.id)
 
         // Get user profile with role information
         const { data: profile, error: profileError } = await supabase
@@ -118,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Profile not found but no error was returned')
           setUser(null)
         } else {
-          console.log('User profile found:', profile.role)
+          // console.log('User profile found:', profile.role)
           // Create user object with role
           setUser({
             id: authUser.id,

@@ -109,7 +109,11 @@ export function useProductSearch({
 
     // If not found locally, try to fetch from the database
     try {
-      const { data, error } = await getProductByIdClient(barcode)
+      // Use cache for better performance
+      const { data, error } = await getProductByIdClient(barcode, {
+        useCache: true,
+        cacheTTL: 300 // 5 minutes
+      })
 
       if (error) {
         toast.error(`Product not found: ${barcode}`)

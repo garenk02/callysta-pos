@@ -9,15 +9,6 @@ const nextConfig: NextConfig = {
     },
   },
 
-  // Add special handling for route groups with parentheses
-  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
-
-  // Handle route groups with parentheses
-  transpilePackages: [],
-
-  // Special handling for route groups with parentheses
-  distDir: 'build',
-
   // Configure ESLint to not fail the build
   eslint: {
     // Warning instead of error during build

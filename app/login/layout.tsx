@@ -5,9 +5,8 @@ import { getAppName } from "@/lib/supabase/server-settings";
 import HydrationFix from "@/components/HydrationFix";
 import { Toaster } from "sonner";
 
-// Force dynamic metadata to prevent caching
+// Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

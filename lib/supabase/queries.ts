@@ -29,11 +29,11 @@ export async function getProducts(): Promise<{ products: Product[] | null; error
       .select('*')
       .order('name', { ascending: true });
 
-    console.log("Supabase response:", {
-      dataReceived: !!data,
-      dataLength: data?.length || 0,
-      errorReceived: !!error
-    });
+    // console.log("Supabase response:", {
+    //   dataReceived: !!data,
+    //   dataLength: data?.length || 0,
+    //   errorReceived: !!error
+    // });
 
     // Handle potential Supabase query errors
     if (error) {

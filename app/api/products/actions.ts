@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Product, InventoryLog } from '@/types'
 import { revalidatePath } from 'next/cache'
+import { invalidateProductCache, invalidateProductById } from '@/lib/cache-utils'
 
 export type ProductActionError = {
   message: string
@@ -14,17 +15,94 @@ export type ProductActionResult<T = void> = {
 }
 
 /**
- * Get all products
+ * Get all products with pagination support
  */
-export async function getProducts(): Promise<ProductActionResult<Product[]>> {
+export async function getProducts(options?: {
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  category?: string;
+  isActive?: boolean;
+}): Promise<ProductActionResult<{
+  products: Product[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>> {
   try {
     const supabase = await createClient()
+    const page = options?.page || 1
+    const pageSize = options?.pageSize || 10
+    const searchQuery = options?.searchQuery || ''
+    const category = options?.category
+    const isActive = options?.isActive
 
-    // Fetch products from the products table
-    const { data, error } = await supabase
+    // Calculate range for pagination
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
+    // Start building the query
+    let query = supabase
       .from('products')
-      .select('*')
+      .select('*', { count: 'exact' })
+
+    // Apply filters if provided
+    if (searchQuery) {
+      query = query.ilike('name', `%${searchQuery}%`)
+    }
+
+    if (category) {
+      query = query.eq('category', category)
+    }
+
+    if (isActive !== undefined) {
+      query = query.eq('is_active', isActive)
+    }
+
+    // Get total count first using a separate query
+    let count = 0;
+    try {
+      // Create a separate query for counting
+      const countQuery = supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true });
+
+      // Apply the same filters as the main query
+      if (searchQuery) {
+        countQuery.ilike('name', `%${searchQuery}%`);
+      }
+
+      if (category) {
+        countQuery.eq('category', category);
+      }
+
+      if (isActive !== undefined) {
+        countQuery.eq('is_active', isActive);
+      }
+
+      // Execute the count query
+      const { count: totalCount, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Supabase count error:", countError.message);
+        return {
+          data: null,
+          error: { message: countError.message }
+        };
+      }
+
+      // Set the count from the result
+      count = totalCount || 0;
+    } catch (countErr) {
+      console.error("Error getting count:", countErr);
+      // Continue with count = 0, we'll still try to get the data
+    }
+
+    // Then get paginated data
+    const { data, error } = await query
       .order('name', { ascending: true })
+      .range(from, to)
 
     if (error) {
       console.error('Error fetching products:', error.message)
@@ -34,8 +112,17 @@ export async function getProducts(): Promise<ProductActionResult<Product[]>> {
       }
     }
 
+    // Calculate total pages
+    const totalPages = Math.ceil((count || 0) / pageSize)
+
     return {
-      data: data as Product[],
+      data: {
+        products: data as Product[],
+        totalCount: count || 0,
+        page,
+        pageSize,
+        totalPages
+      },
       error: null
     }
   } catch (err) {
@@ -140,6 +227,9 @@ export async function createProduct(
     revalidatePath('/admin/products')
     revalidatePath('/products')
 
+    // Invalidate product cache
+    invalidateProductCache()
+
     return {
       data: data as Product,
       error: null
@@ -199,6 +289,15 @@ export async function updateProduct(
     revalidatePath('/admin/products')
     revalidatePath('/products')
 
+    // Invalidate product cache
+    try {
+      invalidateProductById(productId)
+      invalidateProductCache()
+    } catch (cacheError) {
+      console.error('Error invalidating cache:', cacheError)
+      // Continue execution even if cache invalidation fails
+    }
+
     return {
       data: data as Product,
       error: null
@@ -236,6 +335,15 @@ export async function deleteProduct(productId: string): Promise<ProductActionRes
     // Revalidate the products pages to update the UI
     revalidatePath('/admin/products')
     revalidatePath('/products')
+
+    // Invalidate product cache
+    try {
+      invalidateProductById(productId)
+      invalidateProductCache()
+    } catch (cacheError) {
+      console.error('Error invalidating cache:', cacheError)
+      // Continue execution even if cache invalidation fails
+    }
 
     return {
       data: { success: true },
@@ -339,6 +447,15 @@ export async function adjustStock(
     revalidatePath('/admin/products')
     revalidatePath('/products')
 
+    // Invalidate product cache
+    try {
+      invalidateProductById(productId)
+      invalidateProductCache()
+    } catch (cacheError) {
+      console.error('Error invalidating cache:', cacheError)
+      // Continue execution even if cache invalidation fails
+    }
+
     return {
       data: updatedProduct as Product,
       error: null
@@ -431,6 +548,15 @@ export async function bulkUpdateProducts(
     // Revalidate the products pages to update the UI
     revalidatePath('/admin/products')
     revalidatePath('/products')
+
+    // Invalidate product cache for all updated products
+    try {
+      productIds.forEach(id => invalidateProductById(id))
+      invalidateProductCache()
+    } catch (cacheError) {
+      console.error('Error invalidating cache:', cacheError)
+      // Continue execution even if cache invalidation fails
+    }
 
     // Get the actual count from the result
     const updatedCount = productIds.length

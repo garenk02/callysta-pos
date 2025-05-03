@@ -39,6 +39,16 @@ interface DataTableProps<TData, TValue> {
     }[]
   }[]
   tableToolbar?: (table: Table<TData>) => React.ReactNode
+  pagination?: {
+    page: number
+    pageSize: number
+    totalItems: number
+    totalPages: number
+    onPageChange: (page: number) => void
+    onPageSizeChange: (pageSize: number) => void
+  }
+  onSearch?: (query: string) => void
+  onFilterChange?: (columnId: string, value: string | undefined) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -47,11 +57,72 @@ export function DataTable<TData, TValue>({
   searchKey,
   filterableColumns = [],
   tableToolbar,
+  pagination,
+  onSearch,
+  onFilterChange,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
+
+  // Handle search input changes
+  const handleSearchChange = React.useCallback(
+    (value: string) => {
+      if (onSearch) {
+        onSearch(value);
+      } else if (searchKey) {
+        // Fall back to local filtering if no onSearch callback
+        setColumnFilters(prev => {
+          const existing = prev.filter(filter => filter.id !== searchKey);
+          return value ? [...existing, { id: searchKey, value }] : existing;
+        });
+      }
+    },
+    [onSearch, searchKey]
+  );
+
+  // Handle filter changes
+  const handleFilterChange = React.useCallback(
+    (columnId: string, value: string) => {
+      if (onFilterChange) {
+        onFilterChange(columnId, value || undefined);
+      } else {
+        // Fall back to local filtering if no onFilterChange callback
+        setColumnFilters(prev => {
+          const existing = prev.filter(filter => filter.id !== columnId);
+          return value ? [...existing, { id: columnId, value }] : existing;
+        });
+      }
+    },
+    [onFilterChange]
+  );
+
+  // Configure pagination options
+  const paginationOptions = pagination
+    ? {
+        manualPagination: true,
+        pageCount: pagination.totalPages,
+        state: {
+          pagination: {
+            pageIndex: pagination.page - 1, // TanStack Table uses 0-based indexing
+            pageSize: pagination.pageSize,
+          },
+        },
+        onPaginationChange: (updater) => {
+          if (typeof updater === 'function') {
+            const newPagination = updater({
+              pageIndex: pagination.page - 1,
+              pageSize: pagination.pageSize,
+            });
+            pagination.onPageChange(newPagination.pageIndex + 1);
+            if (newPagination.pageSize !== pagination.pageSize) {
+              pagination.onPageSizeChange(newPagination.pageSize);
+            }
+          }
+        },
+      }
+    : {};
 
   const table = useReactTable({
     data,
@@ -71,6 +142,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    ...paginationOptions,
   })
 
   return (
@@ -82,6 +154,8 @@ export function DataTable<TData, TValue>({
           table={table}
           filterableColumns={filterableColumns}
           searchKey={searchKey}
+          onSearch={handleSearchChange}
+          onFilterChange={handleFilterChange}
         />
       )}
       <div className="rounded-md border">
@@ -133,7 +207,10 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </UITable>
       </div>
-      <DataTablePagination table={table} />
+      <DataTablePagination
+        table={table}
+        customPagination={pagination}
+      />
     </div>
   )
 }

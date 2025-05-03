@@ -62,7 +62,12 @@ export default function CheckoutPage() {
     async function loadProducts() {
       setIsLoading(true)
       try {
-        const { products: fetchedProducts, error: fetchError } = await getProductsClient()
+        // Use cache with a 5-minute TTL for better performance
+        const { products: fetchedProducts, error: fetchError } = await getProductsClient({
+          useCache: true,
+          cacheTTL: 300, // 5 minutes
+          pageSize: 1000 // Load more products for checkout page
+        })
 
         if (fetchError) {
           toast.error(`Failed to load products: ${fetchError.message}`)

@@ -30,12 +30,14 @@ interface DataTableFacetedFilterProps<TData, TValue> {
     value: string
     icon?: React.ComponentType<{ className?: string }>
   }[]
+  onValueChange?: (value: string | undefined) => void
 }
 
 export function DataTableFacetedFilter<TData, TValue>({
   column,
   title,
   options,
+  onValueChange,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues()
   const selectedValues = new Set(column?.getFilterValue() as string[])
@@ -92,6 +94,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                 return (
                   <CommandItem
                     key={option.value}
+                    value={option.value} // Ensure value is always set
                     onSelect={() => {
                       if (isSelected) {
                         selectedValues.delete(option.value)
@@ -99,9 +102,16 @@ export function DataTableFacetedFilter<TData, TValue>({
                         selectedValues.add(option.value)
                       }
                       const filterValues = Array.from(selectedValues)
-                      column?.setFilterValue(
-                        filterValues.length ? filterValues : undefined
-                      )
+
+                      if (onValueChange) {
+                        // For single-select filters, just pass the value
+                        onValueChange(filterValues.length ? filterValues[0] : undefined);
+                      } else if (column) {
+                        // For multi-select filters, pass the array
+                        column.setFilterValue(
+                          filterValues.length ? filterValues : undefined
+                        );
+                      }
                     }}
                   >
                     <div
@@ -132,7 +142,14 @@ export function DataTableFacetedFilter<TData, TValue>({
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
-                    onSelect={() => column?.setFilterValue(undefined)}
+                    value="clear-filters" // Ensure value is always set
+                    onSelect={() => {
+                      if (onValueChange) {
+                        onValueChange(undefined);
+                      } else if (column) {
+                        column.setFilterValue(undefined);
+                      }
+                    }}
                     className="justify-center text-center"
                   >
                     Clear filters

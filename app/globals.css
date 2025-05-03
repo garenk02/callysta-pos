@@ -64,14 +64,14 @@
   --border: oklch(0.9 0.03 350); /* Light pink border */
   --input: oklch(0.9 0.03 350); /* Light pink input */
   --ring: oklch(0.7 0.25 350); /* Pink ring (same as primary) */
-  
+
   /* Chart colors */
   --chart-1: oklch(0.7 0.25 350); /* Pink */
   --chart-2: oklch(0.2 0.02 350); /* Dark pink */
   --chart-3: oklch(0.129 0.042 264.695); /* Dark */
   --chart-4: oklch(0.5 0.15 350); /* Medium pink */
   --chart-5: oklch(0.85 0.1 350); /* Light pink */
-  
+
   /* Sidebar colors */
   --sidebar: oklch(0.129 0.042 264.695); /* Dark sidebar */
   --sidebar-foreground: oklch(1 0 0); /* White text on sidebar */
@@ -103,14 +103,14 @@
   --border: oklch(0.4 0.1 350); /* Medium-dark pink border */
   --input: oklch(0.4 0.1 350); /* Medium-dark pink input */
   --ring: oklch(0.7 0.25 350); /* Pink ring */
-  
+
   /* Chart colors */
   --chart-1: oklch(0.7 0.25 350); /* Pink */
   --chart-2: oklch(0.85 0.1 350); /* Light pink */
   --chart-3: oklch(1 0 0); /* White */
   --chart-4: oklch(0.5 0.15 350); /* Medium pink */
   --chart-5: oklch(0.3 0.1 350); /* Medium-dark pink */
-  
+
   /* Sidebar colors */
   --sidebar: oklch(0.2 0.02 350); /* Dark pink sidebar */
   --sidebar-foreground: oklch(1 0 0); /* White text on sidebar */
@@ -129,5 +129,31 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.3s ease-in-out forwards;
 }
 

@@ -9,20 +9,18 @@ import { Button } from "@/components/ui/button";
 
 export default function Sidebar() {
   const { isExpanded, toggleSidebar } = useSidebar();
-  const [isMounted, setIsMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Mark component as mounted after hydration
+  // Mark component as hydrated after client-side hydration is complete
   useEffect(() => {
-    setIsMounted(true);
+    setHydrated(true);
   }, []);
-
-  // Use useEffect to log the sidebar state for debugging
-  useEffect(() => {
-    console.log('Sidebar state:', isExpanded ? 'expanded' : 'collapsed');
-  }, [isExpanded]);
 
   // Add a click handler to the document to close the sidebar on mobile when clicking outside
   useEffect(() => {
+    // Skip during server-side rendering and hydration
+    if (!hydrated) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       // Only handle this on mobile
       if (window.innerWidth >= 768) return;
@@ -40,13 +38,13 @@ export default function Sidebar() {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [isExpanded, toggleSidebar]);
+  }, [isExpanded, toggleSidebar, hydrated]);
 
   // Always render the expanded sidebar on the server and during hydration
   // Only apply collapsed state after client-side hydration is complete
-  const sidebarWidth = !isMounted || isExpanded ? 'w-64' : 'w-20';
-  const sidebarVisibility = !isMounted || isExpanded ? 'fixed md:relative inset-y-0 z-50' : 'hidden';
-  const toggleButtonPosition = !isMounted || isExpanded ? 'left-64' : 'left-20';
+  const sidebarWidth = !hydrated || isExpanded ? 'w-64' : 'w-20';
+  const sidebarVisibility = !hydrated || isExpanded ? 'fixed md:relative inset-y-0 z-50' : 'hidden md:block md:w-20';
+  const toggleButtonPosition = !hydrated || isExpanded ? 'left-64' : 'left-20';
 
   return (
     <>
@@ -58,7 +56,7 @@ export default function Sidebar() {
         <Menu />
 
         {/* Mobile overlay - rendered outside the aside to avoid positioning issues */}
-        {(isExpanded && isMounted) && (
+        {(isExpanded && hydrated) && (
           <div
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
             onClick={toggleSidebar}

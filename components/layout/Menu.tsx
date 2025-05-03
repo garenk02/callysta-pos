@@ -73,11 +73,11 @@ export default function Menu() {
   });
 
   const { isExpanded } = useSidebar();
-  const [isMounted, setIsMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Mark component as mounted after hydration
+  // Mark component as hydrated after client-side hydration is complete
   useEffect(() => {
-    setIsMounted(true);
+    setHydrated(true);
   }, []);
 
   return (
@@ -92,8 +92,8 @@ export default function Menu() {
             (isDashboard && pathname === "/dashboard");
 
           // Always use expanded style during SSR and hydration
-          const itemPadding = !isMounted || isExpanded ? 'px-6' : 'px-0 justify-center';
-          const iconMargin = !isMounted || isExpanded ? 'mr-3' : 'mx-auto';
+          const itemPadding = !hydrated || isExpanded ? 'px-6' : 'px-0 justify-center';
+          const iconMargin = !hydrated || isExpanded ? 'mr-3' : 'mx-auto';
 
           return (
             <li key={item.name}>
@@ -104,10 +104,10 @@ export default function Menu() {
                     ? 'bg-primary/10 text-primary'
                     : 'hover:bg-secondary/50 hover:text-primary'
                   } transition-all duration-300`}
-                title={!isMounted || !isExpanded ? item.name : undefined}
+                title={!hydrated || !isExpanded ? item.name : undefined}
               >
                 <item.icon className={`h-5 w-5 ${iconMargin}`} />
-                {(!isMounted || isExpanded) && item.name}
+                {(!hydrated || isExpanded) && item.name}
               </Link>
             </li>
           );

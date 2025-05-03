@@ -12,14 +12,14 @@ export function usePublicSettings() {
     async function fetchPublicSettings() {
       setIsLoading(true)
       try {
-        const response = await fetch('/api/settings')
-        
+        const response = await fetch('/api/app-settings')
+
         if (!response.ok) {
           throw new Error(`Failed to fetch settings: ${response.statusText}`)
         }
-        
+
         const data = await response.json()
-        console.log('Public settings loaded:', data)
+        // console.log('Public settings loaded:', data)
         setSettings(data)
         setError(null)
       } catch (err) {

@@ -14,7 +14,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <HydrationFix>
+    <HydrationFix skipFallback={true}>
       <SettingsProvider>
         <SidebarProvider>
           {/* PageTitle component updates document title based on current route */}

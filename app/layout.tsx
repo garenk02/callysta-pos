@@ -6,7 +6,6 @@ import { Toaster } from "sonner";
 
 // Force dynamic rendering to prevent caching issues with cookies
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +28,10 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
         <Toaster position="top-right" />

@@ -66,6 +66,7 @@ export interface InventoryItem {
   low_stock_threshold?: number
   is_low_stock: boolean
   stock_status: 'out_of_stock' | 'low_stock' | 'in_stock'
+  price: number
 }
 
 export interface InventoryMovement {
@@ -460,7 +461,8 @@ export async function getInventoryReport(
         stock_quantity: stockQuantity,
         low_stock_threshold: lowStockThreshold,
         is_low_stock: isLowStock,
-        stock_status: stockStatus
+        stock_status: stockStatus,
+        price: product.price || 0
       }
     })
 

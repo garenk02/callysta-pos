@@ -1,10 +1,4 @@
-// app/(dashboard)/page.tsx
 'use client'
-
-// Force dynamic rendering to prevent caching issues
-export const dynamic = 'force-dynamic';
-// Add revalidation to ensure fresh data
-export const revalidate = 0;
 
 import {
   Card,
@@ -15,7 +9,7 @@ import {
 import { ShoppingCart} from "lucide-react";
 import { ArrowUp, DollarSign, AlertTriangle } from "lucide-react";
 
-export default function Dashboard() {
+export default function DashboardClient() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

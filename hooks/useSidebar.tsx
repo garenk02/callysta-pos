@@ -27,21 +27,24 @@ interface SidebarProviderProps {
 let globalSidebarState: boolean | null = null;
 
 export function SidebarProvider({ children }: SidebarProviderProps) {
-  // Always start with expanded sidebar for server-side rendering
-  // to avoid hydration mismatch
+  // Use a ref to track hydration status to avoid state updates during hydration
+  const [hydrated, setHydrated] = useState(false)
+
+  // Always start with expanded sidebar for server-side rendering and during hydration
+  // This ensures server and client render the same content initially
   const [isExpanded, setIsExpanded] = useState<boolean>(true)
   const [isInitialized, setIsInitialized] = useState<boolean>(false)
-  const [isMounted, setIsMounted] = useState<boolean>(false)
 
-  // First mark component as mounted (client-side only)
+  // Mark component as hydrated (client-side only)
   useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
+    // This runs after hydration is complete
+    setHydrated(true)
   }, [])
 
-  // Initialize state from localStorage or global variable on mount
+  // Initialize state from localStorage or global variable after hydration
   useEffect(() => {
-    if (!isMounted) return
+    // Skip during server-side rendering and hydration phase
+    if (!hydrated) return
 
     // If we already have a global state, use it
     if (globalSidebarState !== null) {
@@ -66,12 +69,12 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     }
 
     setIsInitialized(true)
-  }, [isMounted])
+  }, [hydrated])
 
   // Save state to localStorage and global variable whenever it changes
   // But only after initialization to avoid overwriting with default value
   useEffect(() => {
-    if (!isMounted || !isInitialized) return
+    if (!hydrated || !isInitialized) return
 
     try {
       localStorage.setItem('sidebarExpanded', isExpanded.toString())
@@ -79,20 +82,20 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     } catch (error) {
       console.error('Error writing to localStorage:', error)
     }
-  }, [isExpanded, isInitialized, isMounted])
+  }, [isExpanded, isInitialized, hydrated])
 
   const toggleSidebar = () => {
-    if (!isMounted) return
+    if (!hydrated) return
     setIsExpanded(prev => !prev)
   }
 
   const collapseSidebar = () => {
-    if (!isMounted) return
+    if (!hydrated) return
     setIsExpanded(false)
   }
 
   const expandSidebar = () => {
-    if (!isMounted) return
+    if (!hydrated) return
     setIsExpanded(true)
   }
 
