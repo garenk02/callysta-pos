@@ -30,8 +30,15 @@ export default function Logo() {
   const shortName = primaryPart.charAt(0);
 
   return (
-    <div className={`h-16 flex items-center ${logoStyle} border-b border-border transition-all duration-300`}>
-      <Link href="/" className="flex items-center">
+    <div className={`h-16 flex items-center ${logoStyle} border-b border-border transition-all duration-300 relative z-50`}>
+      <Link
+        href="/"
+        className="flex items-center relative z-50"
+        onClick={(e) => {
+          // Prevent event propagation to ensure the click isn't captured by the overlay
+          e.stopPropagation();
+        }}
+      >
         {!hydrated || isExpanded ? (
           <>
             <span className="text-xl font-bold text-primary">{primaryPart}</span>

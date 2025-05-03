@@ -311,7 +311,7 @@ export default function ProductsManagement() {
 
     // Set the image preview if the product has an image URL
     if (product.image_url) {
-      console.log("Setting image preview to:", product.image_url);
+      // console.log("Setting image preview to:", product.image_url);
       setImagePreview(product.image_url);
     } else {
       setImagePreview(null);

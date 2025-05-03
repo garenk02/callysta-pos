@@ -23,6 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Power } from "lucide-react"
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
 
@@ -52,6 +54,9 @@ interface DataTableProps<TData, TValue> {
   onSortingChange?: (column: string, direction: 'asc' | 'desc') => void
   onColumnVisibilityChange?: (visibility: Record<string, boolean>) => void
   columnVisibility?: Record<string, boolean>
+  onActivate?: (selectedRows: TData[]) => void
+  onDeactivate?: (selectedRows: TData[]) => void
+  onRowSelectionChange?: (selectedRows: TData[]) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -66,11 +71,16 @@ export function DataTable<TData, TValue>({
   onSortingChange,
   onColumnVisibilityChange,
   columnVisibility: initialColumnVisibility,
+  onActivate,
+  onDeactivate,
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
     initialColumnVisibility || {}
   )
+
+  // We'll handle row selection changes after table initialization
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
 
@@ -161,6 +171,7 @@ export function DataTable<TData, TValue>({
     [onColumnVisibilityChange, columnVisibility]
   );
 
+  // Initialize table
   const table = useReactTable({
     data,
     columns,
@@ -183,8 +194,17 @@ export function DataTable<TData, TValue>({
     ...paginationOptions,
   })
 
+  // Handle row selection changes after table initialization
+  React.useEffect(() => {
+    if (onRowSelectionChange) {
+      const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original)
+      onRowSelectionChange(selectedRows)
+    }
+  }, [rowSelection, onRowSelectionChange, table])
+
   return (
     <div className="space-y-4">
+
       {tableToolbar ? (
         tableToolbar(table)
       ) : (
@@ -194,6 +214,8 @@ export function DataTable<TData, TValue>({
           searchKey={searchKey}
           onSearch={handleSearchChange}
           onFilterChange={handleFilterChange}
+          onActivate={onActivate}
+          onDeactivate={onDeactivate}
         />
       )}
       <div className="rounded-md border">
@@ -222,6 +244,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={row.getIsSelected() ? "bg-muted/50" : ""}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

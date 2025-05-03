@@ -72,14 +72,17 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
               margin-bottom: 1rem;
             }
             .receipt-header h1 {
-              font-size: 1.2rem;
+              font-size: 1.1rem;
               font-weight: bold;
               margin: 0;
             }
             .receipt-header p {
               margin: 0;
-              font-size: 0.8rem;
+              font-size: 0.7rem;
               color: #666;
+            }
+            .receipt-header p.date-info {
+              font-size: 0.8rem;
             }
             .receipt-items {
               margin: 1rem 0;
@@ -109,11 +112,8 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
               display: flex;
               justify-content: space-between;
               margin-bottom: 0.25rem;
-            }
-            .receipt-total-row.grand-total {
               font-weight: bold;
               font-size: 1.1rem;
-              margin-top: 0.5rem;
             }
             .receipt-payment {
               margin-top: 1rem;
@@ -179,18 +179,18 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
         <ScrollArea className="max-h-[60vh]">
           <div ref={receiptRef} className="receipt-content p-4">
             <div className="receipt-header text-center mb-4">
-              <h1 className="text-xl font-bold">{settings?.app_name || 'Elegant POS'}</h1>
-              <p className="text-sm text-muted-foreground">{settings?.app_address || '123 Main Street, City'}</p>
-              <p className="text-sm text-muted-foreground">Tel: {settings?.app_phone || '(123) 456-7890'}</p>
+              <h1 className="text-lg font-bold">{settings?.app_name || 'Elegant POS'}</h1>
+              <p className="text-xs text-muted-foreground">{settings?.app_address || '123 Main Street, City'}</p>
+              <p className="text-xs text-muted-foreground">Tel: {settings?.app_phone || '(123) 456-7890'}</p>
               {settings?.app_email && (
-                <p className="text-sm text-muted-foreground">Email: {settings.app_email}</p>
+                <p className="text-xs text-muted-foreground">Email: {settings.app_email}</p>
               )}
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground mt-2 date-info">
                 {formatDate(order.date)}
               </p>
-              <p className="text-sm mt-1">Receipt #{order.id.slice(0, 8)}</p>
+              <p className="text-sm mt-1 date-info">Receipt #{order.id.slice(0, 8)}</p>
               {order.cashierName && (
-                <p className="text-sm text-muted-foreground mt-1">Cashier: {order.cashierName}</p>
+                <p className="text-sm text-muted-foreground mt-1 date-info">Cashier: {order.cashierName}</p>
               )}
             </div>
 
@@ -215,12 +215,6 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
             <Separator className="my-4" />
 
             <div className="receipt-totals space-y-1">
-              <div className="receipt-total-row flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatCurrency(order.subtotal)}</span>
-              </div>
-              {/* Tax row removed */}
-              <Separator className="my-2" />
               <div className="receipt-total-row flex justify-between font-bold text-lg">
                 <span>Total</span>
                 <span>{formatCurrency(order.total)}</span>

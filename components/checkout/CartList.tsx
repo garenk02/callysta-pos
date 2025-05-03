@@ -72,49 +72,49 @@ function CartItemRow({
   }
 
   return (
-    <div className="bg-white border rounded-lg p-3 shadow-sm" style={{ minHeight: "90px" }}>
+    <div className="bg-white border rounded-lg p-2 shadow-sm" style={{ minHeight: "80px" }}>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h4 className="text-sm font-medium line-clamp-2">{name}</h4>
+          <h4 className="text-xs font-medium line-clamp-2">{name}</h4>
           <p className="text-xs text-muted-foreground mt-0.5">Rp. {price.toLocaleString('id-ID')} each</p>
         </div>
         <div className="text-right">
-          <p className="text-sm font-semibold">Rp. {itemTotal.toLocaleString('id-ID')}</p>
+          <p className="text-xs font-semibold">Rp. {itemTotal.toLocaleString('id-ID')}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-2">
+      <div className="flex items-center justify-between mt-1.5">
         <div className="flex items-center">
           <Button
             variant="outline"
             size="icon"
-            className="h-6 w-6 rounded-md"
+            className="h-5 w-5 rounded-md"
             onClick={handleDecrement}
             disabled={quantity <= 1}
-            style={{ minWidth: "24px", padding: 0 }}
+            style={{ minWidth: "20px", padding: 0 }}
           >
-            <Minus className="h-3 w-3" />
+            <Minus className="h-2.5 w-2.5" />
           </Button>
-          <span className="mx-2 w-6 text-center text-sm font-medium">{quantity}</span>
+          <span className="mx-1.5 w-5 text-center text-xs font-medium">{quantity}</span>
           <Button
             variant="outline"
             size="icon"
-            className="h-6 w-6 rounded-md"
+            className="h-5 w-5 rounded-md"
             onClick={handleIncrement}
             disabled={quantity >= maxQuantity}
-            style={{ minWidth: "24px", padding: 0 }}
+            style={{ minWidth: "20px", padding: 0 }}
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-2.5 w-2.5" />
           </Button>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 text-destructive hover:bg-destructive/10"
+          className="h-5 w-5 text-destructive hover:bg-destructive/10"
           onClick={handleRemove}
-          style={{ minWidth: "24px", padding: 0 }}
+          style={{ minWidth: "20px", padding: 0 }}
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </Button>
       </div>
     </div>

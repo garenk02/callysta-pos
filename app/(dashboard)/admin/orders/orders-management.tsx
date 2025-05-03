@@ -221,14 +221,6 @@ export default function OrdersManagement() {
                     </tbody>
                     <tfoot>
                       <tr className="bg-muted/50">
-                        <td colSpan={3} className="px-4 py-2 text-sm font-medium text-right">Subtotal:</td>
-                        <td className="px-4 py-2 text-sm text-right">{formatCurrency(selectedOrder.subtotal)}</td>
-                      </tr>
-                      <tr className="bg-muted/50">
-                        <td colSpan={3} className="px-4 py-2 text-sm font-medium text-right">Tax:</td>
-                        <td className="px-4 py-2 text-sm text-right">{formatCurrency(selectedOrder.tax)}</td>
-                      </tr>
-                      <tr className="bg-muted/50">
                         <td colSpan={3} className="px-4 py-2 text-sm font-medium text-right">Total:</td>
                         <td className="px-4 py-2 text-sm font-medium text-right">{formatCurrency(selectedOrder.total)}</td>
                       </tr>

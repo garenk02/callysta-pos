@@ -244,29 +244,29 @@ export default function PaymentSection({
         />
       )}
 
-      <div className="mb-2">
+      <div className="mb-1">
         <Tabs
           value={paymentMethod}
           onValueChange={handlePaymentMethodChange}
           className="w-full"
         >
-          <TabsList className="grid grid-cols-2 h-8 mb-1.5">
+          <TabsList className="grid grid-cols-2 h-7 mb-1">
             <TabsTrigger value="cash" className="text-xs py-0 px-2 flex items-center">
-              <Banknote className="h-3.5 w-3.5 mr-1.5" />
+              <Banknote className="h-3 w-3 mr-1" />
               Cash
             </TabsTrigger>
             <TabsTrigger value="bank_transfer" className="text-xs py-0 px-2 flex items-center">
-              <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+              <CreditCard className="h-3 w-3 mr-1" />
               Bank Transfer
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="cash" className="mt-0 pt-0">
-            <div className="grid grid-cols-2 gap-2 mb-1.5">
+            <div className="grid grid-cols-2 gap-2 mb-1">
               <div>
                 <Label htmlFor="amount-tendered" className="text-xs block mb-0.5">Amount Tender</Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
                     <span className="text-xs text-muted-foreground">Rp.</span>
                   </div>
                   <Input
@@ -276,7 +276,7 @@ export default function PaymentSection({
                     value={formattedAmount}
                     onChange={handleAmountTenderedChange}
                     disabled={disabled}
-                    className="h-8 text-xs pl-10 pr-3"
+                    className="h-7 text-xs pl-8 pr-2"
                   />
                 </div>
               </div>
@@ -286,7 +286,7 @@ export default function PaymentSection({
                   id="change-due"
                   value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
                   disabled
-                  className="bg-muted h-8 text-xs px-3"
+                  className="bg-muted h-7 text-xs px-2"
                 />
               </div>
             </div>
@@ -298,7 +298,7 @@ export default function PaymentSection({
                 size="sm"
                 onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
                 disabled={disabled}
-                className="h-7 text-xs"
+                className="h-6 text-xs px-2"
               >
                 Exact: Rp. {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
               </Button>
@@ -308,7 +308,7 @@ export default function PaymentSection({
                 size="sm"
                 onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
                 disabled={disabled}
-                className="h-7 text-xs"
+                className="h-6 text-xs px-2"
               >
                 Round: Rp. {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
               </Button>
@@ -316,9 +316,8 @@ export default function PaymentSection({
           </TabsContent>
 
           <TabsContent value="bank_transfer" className="mt-0 pt-0">
-            <div className="text-xs mb-1 p-2 bg-muted/50 rounded-md">
+            <div className="text-xs mb-1 p-1.5 bg-muted/50 rounded-md">
               <p className="font-medium mb-0.5">Bank Transfer Instructions:</p>
-              {/* <p className="mb-0.5">Transfer to: BCA 1234567890</p> */}
               <p>Amount: Rp. {total.toLocaleString('id-ID')}</p>
             </div>
           </TabsContent>
@@ -326,28 +325,28 @@ export default function PaymentSection({
       </div>
 
       {validationError && (
-        <div className="flex items-center gap-1 text-destructive text-xs mb-1 p-1.5 bg-destructive/10 rounded-md">
-          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+        <div className="flex items-center gap-1 text-destructive text-xs mb-1 p-1 bg-destructive/10 rounded-md">
+          <AlertCircle className="h-3 w-3 flex-shrink-0" />
           <span>{validationError}</span>
         </div>
       )}
 
       <Button
         className="w-full mt-0.5"
-        size="lg"
+        size="sm"
         onClick={handleCompleteSale}
         disabled={disabled || !isPaymentValid() || isProcessing}
-        style={{ height: "38px", backgroundColor: "#FF54BB", color: "white" }}
+        style={{ height: "34px", backgroundColor: "#FF54BB", color: "white" }}
       >
         {isProcessing ? (
           <>
-            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-            <span className="text-sm font-medium">Processing...</span>
+            <Loader2 className="h-3.5 w-3.5 mr-1" />
+            <span className="text-xs font-medium">Processing...</span>
           </>
         ) : (
           <>
-            <CheckCircle2 className="h-4 w-4 mr-1.5" />
-            <span className="text-sm font-medium">Complete Sale</span>
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+            <span className="text-xs font-medium">Complete Sale</span>
           </>
         )}
       </Button>

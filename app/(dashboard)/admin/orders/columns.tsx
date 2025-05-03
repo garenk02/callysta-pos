@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { OrderWithUser } from "@/app/api/orders/actions"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { MoreHorizontal, Eye, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -23,28 +22,6 @@ interface OrdersColumnProps {
 
 export const columns = ({ onView, onViewReceipt }: OrdersColumnProps): ColumnDef<OrderWithUser>[] => [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     accessorKey: "id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Order ID" />
@@ -57,7 +34,7 @@ export const columns = ({ onView, onViewReceipt }: OrdersColumnProps): ColumnDef
   {
     accessorKey: "user",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Customer" />
+      <DataTableColumnHeader column={column} title="Cashier" />
     ),
     cell: ({ row }) => {
       const user = row.getValue("user") as { email: string; name?: string } | undefined

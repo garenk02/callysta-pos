@@ -1,7 +1,7 @@
 "use client"
 
 import { Table } from "@tanstack/react-table"
-import { X } from "lucide-react"
+import { X, Power } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,8 @@ interface DataTableToolbarProps<TData> {
   }[]
   onSearch?: (value: string) => void
   onFilterChange?: (columnId: string, value: string | undefined) => void
+  onActivate?: (selectedRows: TData[]) => void
+  onDeactivate?: (selectedRows: TData[]) => void
 }
 
 export function DataTableToolbar<TData>({
@@ -29,6 +31,8 @@ export function DataTableToolbar<TData>({
   filterableColumns = [],
   onSearch,
   onFilterChange,
+  onActivate,
+  onDeactivate,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -70,6 +74,11 @@ export function DataTableToolbar<TData>({
     }
   };
 
+  // Get selected rows
+  const selectedRows = table.getFilteredSelectedRowModel().rows
+  const selectedCount = selectedRows.length
+  const hasSelection = selectedCount > 0 && onActivate && onDeactivate
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
@@ -81,6 +90,42 @@ export function DataTableToolbar<TData>({
             className="h-9 w-[250px]"
           />
         )}
+
+        {/* Bulk action buttons - shown when rows are selected */}
+        {selectedCount > 0 && (
+          <>
+            <div className="flex items-center border rounded-md h-9 px-3 bg-primary/10">
+              <span className="text-sm font-medium">
+                {selectedCount} selected
+              </span>
+            </div>
+          </>
+        )}
+
+        {selectedCount > 0 && onActivate && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => onActivate(selectedRows.map(row => row.original))}
+            className="h-9 px-3 gap-1 bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Power className="h-4 w-4" />
+            Activate
+          </Button>
+        )}
+
+        {selectedCount > 0 && onDeactivate && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => onDeactivate(selectedRows.map(row => row.original))}
+            className="h-9 px-3 gap-1 bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Power className="h-4 w-4" />
+            Deactivate
+          </Button>
+        )}
+
         {filterableColumns.length > 0 &&
           filterableColumns.map(
             (column) =>

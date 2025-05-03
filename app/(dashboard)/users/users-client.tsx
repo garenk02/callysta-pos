@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
+import { UsersTable } from "./users-table";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -23,7 +23,8 @@ import {
 } from "lucide-react";
 import { columns } from "./columns";
 import {
-  getUsers, createUser, updateUser, toggleUserStatus, resetUserPassword, deleteUser
+  getUsers, createUser, updateUser, toggleUserStatus, resetUserPassword, deleteUser,
+  bulkToggleUserStatus
 } from "@/app/api/users/actions";
 import { User as UserType } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -213,6 +214,68 @@ export default function UsersClient() {
       toast.error(
         "An unexpected error occurred while updating the user status"
       );
+    }
+  };
+
+  // Handle bulk activation of users
+  const handleBulkActivate = async (selectedUsers: UserType[]) => {
+    try {
+      const userIds = selectedUsers.map(user => user.id);
+
+      if (userIds.length === 0) {
+        toast.error('No users selected');
+        return;
+      }
+
+      const { data, error } = await bulkToggleUserStatus(userIds, true);
+
+      if (error) {
+        toast.error(`Failed to activate users: ${error.message}`);
+        return;
+      }
+
+      // Update the users in the list
+      setUsers(prev =>
+        prev.map(user =>
+          userIds.includes(user.id) ? { ...user, is_active: true } : user
+        )
+      );
+
+      toast.success(`${userIds.length} users activated successfully`);
+    } catch (err) {
+      console.error("Error bulk activating users:", err);
+      toast.error("An unexpected error occurred while activating users");
+    }
+  };
+
+  // Handle bulk deactivation of users
+  const handleBulkDeactivate = async (selectedUsers: UserType[]) => {
+    try {
+      const userIds = selectedUsers.map(user => user.id);
+
+      if (userIds.length === 0) {
+        toast.error('No users selected');
+        return;
+      }
+
+      const { data, error } = await bulkToggleUserStatus(userIds, false);
+
+      if (error) {
+        toast.error(`Failed to deactivate users: ${error.message}`);
+        return;
+      }
+
+      // Update the users in the list
+      setUsers(prev =>
+        prev.map(user =>
+          userIds.includes(user.id) ? { ...user, is_active: false } : user
+        )
+      );
+
+      toast.success(`${userIds.length} users deactivated successfully`);
+    } catch (err) {
+      console.error("Error bulk deactivating users:", err);
+      toast.error("An unexpected error occurred while deactivating users");
     }
   };
 
@@ -561,7 +624,7 @@ export default function UsersClient() {
                 <p className="text-sm mt-2">Click "Add User" to create your first user</p>
               </div>
             ) : (
-              <DataTable
+              <UsersTable
                 columns={columns({
                   onEdit: openEditDialog,
                   onResetPassword: handleResetPassword,
@@ -569,25 +632,8 @@ export default function UsersClient() {
                   onDelete: handleDeleteUser
                 })}
                 data={users}
-                searchKey="name"
-                filterableColumns={[
-                  {
-                    id: "role",
-                    title: "Role",
-                    options: [
-                      { label: "Admin", value: "admin" },
-                      { label: "Cashier", value: "cashier" },
-                    ],
-                  },
-                  {
-                    id: "is_active",
-                    title: "Status",
-                    options: [
-                      { label: "Active", value: "true" },
-                      { label: "Inactive", value: "false" },
-                    ],
-                  },
-                ]}
+                onActivate={handleBulkActivate}
+                onDeactivate={handleBulkDeactivate}
               />
             )}
           </CardContent>

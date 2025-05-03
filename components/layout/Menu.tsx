@@ -81,7 +81,7 @@ export default function Menu() {
   }, []);
 
   return (
-    <nav className="flex-1 py-4">
+    <nav className="flex-1 py-4 relative z-50">
       <ul className="space-y-1">
         {filteredMenuItems.map((item) => {
           // Special case for Dashboard: active when on / or /dashboard
@@ -103,8 +103,12 @@ export default function Menu() {
                   ${isActive
                     ? 'bg-primary/10 text-primary'
                     : 'hover:bg-secondary/50 hover:text-primary'
-                  } transition-all duration-300`}
+                  } transition-all duration-300 relative z-50`}
                 title={!hydrated || !isExpanded ? item.name : undefined}
+                onClick={(e) => {
+                  // Prevent event propagation to ensure the click isn't captured by the overlay
+                  e.stopPropagation();
+                }}
               >
                 <item.icon className={`h-5 w-5 ${iconMargin}`} />
                 {(!hydrated || isExpanded) && item.name}

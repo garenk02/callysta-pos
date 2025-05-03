@@ -25,7 +25,6 @@ import { toast } from 'sonner'
 import ProductGrid from './ProductGrid'
 import CartList from './CartList'
 import PaymentSection from './PaymentSection'
-import KeyboardShortcuts from './KeyboardShortcuts'
 import { useProductSearch } from '@/hooks/useProductSearch'
 import { useCart } from '@/hooks/useCart'
 
@@ -107,17 +106,13 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left side - Product Selection */}
-        <div className="w-3/5 p-4 overflow-hidden flex flex-col">
+        <div className="w-full md:w-3/5 p-4 overflow-hidden flex flex-col">
           <Card className="flex-1 overflow-hidden">
             <CardHeader className="pb-2 px-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <CardTitle>Products</CardTitle>
-                  <KeyboardShortcuts />
-                </div>
-                <div className="relative w-64">
+              <div className="flex justify-center items-center w-full">
+                <div className="relative w-full max-w-md">
                   {isScanning ? (
                     <Barcode className="absolute left-2 top-2.5 h-4 w-4 text-primary animate-pulse" />
                   ) : (
@@ -147,7 +142,7 @@ export default function CheckoutPage() {
                 onValueChange={setSelectedCategory}
                 className="h-full flex flex-col"
               >
-                <TabsList className="mb-3">
+                <TabsList className="mb-3 flex-wrap">
                   <TabsTrigger value="all">All Products</TabsTrigger>
                   {categories.map(category => (
                     <TabsTrigger key={category} value={category}>
@@ -170,7 +165,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Right side - Cart and Payment */}
-        <div className="w-2/5 p-4 flex flex-col overflow-hidden">
+        <div className="w-full md:w-2/5 p-4 flex flex-col overflow-hidden">
           <Card className="flex-1 overflow-hidden flex flex-col">
             <CardHeader className="py-1 px-4">
               <div className="flex justify-between items-center">
@@ -181,8 +176,8 @@ export default function CheckoutPage() {
               </div>
             </CardHeader>
 
-            {/* Make cart area larger and more scrollable */}
-            <div className="flex-1 overflow-hidden min-h-[300px]">
+            {/* Make cart area more responsive and ensure payment section is visible */}
+            <div className="flex-1 overflow-hidden md:max-h-[calc(100vh-20rem)]">
               <CardContent className="h-full overflow-auto py-2 px-4">
                 <CartList />
               </CardContent>

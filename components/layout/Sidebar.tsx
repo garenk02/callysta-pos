@@ -48,21 +48,21 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Mobile overlay - moved outside the aside element */}
+      {(isExpanded && hydrated) && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={toggleSidebar}
+          aria-hidden="true"
+        />
+      )}
+
       <aside
         className={`${sidebarWidth} bg-background border-r border-border flex flex-col
           transition-all duration-300 ease-in-out md:block ${sidebarVisibility}`}
       >
         <Logo />
         <Menu />
-
-        {/* Mobile overlay - rendered outside the aside to avoid positioning issues */}
-        {(isExpanded && hydrated) && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={toggleSidebar}
-            aria-hidden="true"
-          />
-        )}
       </aside>
 
       {/* Toggle button positioned fixed to the sidebar */}

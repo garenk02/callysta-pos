@@ -278,6 +278,56 @@ export async function resetUserPassword(email: string): Promise<UserActionResult
 }
 
 /**
+ * Bulk toggle user status (activate/deactivate multiple users)
+ */
+export async function bulkToggleUserStatus(
+  userIds: string[],
+  isActive: boolean
+): Promise<UserActionResult<{ count: number }>> {
+  try {
+    if (!userIds.length) {
+      return {
+        data: { count: 0 },
+        error: null
+      }
+    }
+
+    const supabase = await createClient()
+
+    // Update all users with the given IDs
+    const { error, count } = await supabase
+      .from('profiles')
+      .update({
+        is_active: isActive,
+        updated_at: new Date().toISOString()
+      })
+      .in('id', userIds)
+
+    if (error) {
+      console.error('Error bulk updating user status:', error.message)
+      return {
+        data: null,
+        error: { message: error.message }
+      }
+    }
+
+    // Revalidate the users page to update the UI
+    revalidatePath('/users')
+
+    return {
+      data: { count: count || userIds.length },
+      error: null
+    }
+  } catch (err) {
+    console.error('Unexpected error bulk updating user status:', err)
+    return {
+      data: null,
+      error: { message: 'An unexpected error occurred while bulk updating user status' }
+    }
+  }
+}
+
+/**
  * Delete a user (admin only)
  * Note: This is a destructive action and should be used with caution
  */

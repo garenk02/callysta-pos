@@ -39,7 +39,7 @@ export default function ProductImageUpload({
 
         if (isSignedUrl) {
           // If it's already a signed URL, use it as is
-          console.log('URL is already a valid signed URL');
+          // console.log('URL is already a valid signed URL');
           setFixedImageUrl(value);
         } else if (value.includes('/storage/v1/object/public/')) {
           // If it's a public URL, try to convert it to a signed URL
