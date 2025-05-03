@@ -49,6 +49,9 @@ interface DataTableProps<TData, TValue> {
   }
   onSearch?: (query: string) => void
   onFilterChange?: (columnId: string, value: string | undefined) => void
+  onSortingChange?: (column: string, direction: 'asc' | 'desc') => void
+  onColumnVisibilityChange?: (visibility: Record<string, boolean>) => void
+  columnVisibility?: Record<string, boolean>
 }
 
 export function DataTable<TData, TValue>({
@@ -60,9 +63,14 @@ export function DataTable<TData, TValue>({
   pagination,
   onSearch,
   onFilterChange,
+  onSortingChange,
+  onColumnVisibilityChange,
+  columnVisibility: initialColumnVisibility,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
+    initialColumnVisibility || {}
+  )
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
 
@@ -124,6 +132,35 @@ export function DataTable<TData, TValue>({
       }
     : {};
 
+  // Handle sorting changes
+  const handleSortingChange = React.useCallback(
+    (updater: SortingState | ((prevState: SortingState) => SortingState)) => {
+      setSorting(updater);
+
+      if (onSortingChange && typeof updater === 'function') {
+        const newSorting = updater(sorting);
+        if (newSorting.length > 0) {
+          const { id, desc } = newSorting[0];
+          onSortingChange(id, desc ? 'desc' : 'asc');
+        }
+      }
+    },
+    [onSortingChange, sorting]
+  );
+
+  // Handle column visibility changes
+  const handleColumnVisibilityChange = React.useCallback(
+    (updater: VisibilityState | ((prevState: VisibilityState) => VisibilityState)) => {
+      setColumnVisibility(updater);
+
+      if (onColumnVisibilityChange && typeof updater === 'function') {
+        const newVisibility = updater(columnVisibility);
+        onColumnVisibilityChange(newVisibility);
+      }
+    },
+    [onColumnVisibilityChange, columnVisibility]
+  );
+
   const table = useReactTable({
     data,
     columns,
@@ -135,13 +172,14 @@ export function DataTable<TData, TValue>({
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    manualSorting: !!onSortingChange, // Use manual sorting if onSortingChange is provided
     ...paginationOptions,
   })
 

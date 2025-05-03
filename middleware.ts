@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
 
     // If no user or error, redirect to login
     if (userError || !user) {
-      console.log('Auth middleware: No authenticated user found')
+      // console.log('Auth middleware: No authenticated user found')
       const redirectUrl = new URL('/login', request.url)
       return NextResponse.redirect(redirectUrl)
     }

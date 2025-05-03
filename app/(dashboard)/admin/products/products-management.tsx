@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { DataTable } from "@/components/ui/data-table"
+import { DataTable } from "@/components/ui/data-table/data-table"
+import { ProductsTableToolbar } from "./products-table-toolbar"
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -16,9 +17,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Package, PlusCircle, Loader2, AlertCircle
+  Package, PlusCircle, Loader2
 } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { columns } from "./columns"
 import {
   getProducts, createProduct, updateProduct, deleteProduct, adjustStock
@@ -44,6 +44,9 @@ const productFormSchema = z.object({
   stock_quantity: z.coerce.number().int().min(0, {
     message: "Stock quantity must be a positive integer.",
   }),
+  low_stock_threshold: z.coerce.number().int().min(1, {
+    message: "Low stock threshold must be at least 1.",
+  }).optional(),
   sku: z.string().optional(),
   category: z.string().optional(),
   is_active: z.boolean().default(true),
@@ -70,7 +73,8 @@ export default function ProductsManagement() {
   const [isAdjustStockDialogOpen, setIsAdjustStockDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  // We need setImageFile for the ProductImageUpload component
+  const [, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const hasMounted = useRef(false);
 
@@ -85,6 +89,10 @@ export default function ProductsManagement() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<boolean | undefined>(undefined);
 
+  // Sorting state
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
   // Mark component as mounted
   useEffect(() => {
     hasMounted.current = true;
@@ -93,13 +101,16 @@ export default function ProductsManagement() {
     };
   }, []);
 
-  // Load products on component mount or when pagination/filters change
+  // Store all available categories
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+
+  // Load products on component mount or when pagination/filters/sorting change
   useEffect(() => {
     // Only fetch data on the client side
     if (hasMounted.current) {
       loadProducts();
     }
-  }, [page, pageSize, searchQuery, selectedCategory, selectedStatus]);
+  }, [page, pageSize, searchQuery, selectedCategory, selectedStatus, sortBy, sortDirection]);
 
   // Load products function
   async function loadProducts() {
@@ -112,7 +123,9 @@ export default function ProductsManagement() {
         pageSize,
         searchQuery,
         category: selectedCategory,
-        isActive: selectedStatus
+        isActive: selectedStatus,
+        sortBy,
+        sortDirection
       });
 
       if (fetchError) {
@@ -121,6 +134,45 @@ export default function ProductsManagement() {
         setProducts(data.products || []);
         setTotalItems(data.totalCount);
         setTotalPages(data.totalPages);
+
+        // Extract all unique categories for the filter
+        if (data.products && data.products.length > 0) {
+          const categories = Array.from(
+            new Set(
+              data.products
+                .map(p => p.category)
+                .filter(Boolean)
+            )
+          ) as string[];
+
+          // If we're on the first page, fetch all categories for the filter
+          if (page === 1) {
+            try {
+              // Get all categories from all products
+              const { data: allData } = await getProducts({
+                page: 1,
+                pageSize: 1000, // Large number to get all products
+                searchQuery: '',
+              });
+
+              if (allData && allData.products) {
+                const allUniqueCategories = Array.from(
+                  new Set(
+                    allData.products
+                      .map(p => p.category)
+                      .filter(Boolean)
+                  )
+                ) as string[];
+
+                setAllCategories(allUniqueCategories);
+              }
+            } catch (err) {
+              console.error('Error fetching all categories:', err);
+              // Fallback to categories from current page
+              setAllCategories(categories);
+            }
+          }
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred while fetching products.');
@@ -138,17 +190,46 @@ export default function ProductsManagement() {
 
   const handleCategoryFilter = (category: string | undefined) => {
     setSelectedCategory(category);
+    setColumnFilters(prev => ({
+      ...prev,
+      category: category
+    }));
     setPage(1); // Reset to first page when filter changes
   };
 
   const handleStatusFilter = (status: string | undefined) => {
     if (status === undefined) {
       setSelectedStatus(undefined);
+      setColumnFilters(prev => ({
+        ...prev,
+        is_active: undefined
+      }));
     } else {
       setSelectedStatus(status === 'true');
+      setColumnFilters(prev => ({
+        ...prev,
+        is_active: status
+      }));
     }
     setPage(1); // Reset to first page when filter changes
   };
+
+  // State to track column filters for UI display
+  const [columnFilters, setColumnFilters] = useState<{
+    is_active?: string;
+    category?: string;
+  }>({});
+
+  // Handle sorting changes
+  const handleSortingChange = (column: string, direction: 'asc' | 'desc') => {
+    setSortBy(column);
+    setSortDirection(direction);
+    setPage(1); // Reset to first page when sorting changes
+  };
+
+  // We've removed column visibility toggle to match orders/users UI
+
+  // We've removed bulk actions since we removed the checkbox column
 
   // Form for adding a new product
   const addProductForm = useForm({
@@ -158,6 +239,7 @@ export default function ProductsManagement() {
       description: "",
       price: 0,
       stock_quantity: 0,
+      low_stock_threshold: 10,
       sku: "",
       category: "",
       is_active: true,
@@ -173,6 +255,7 @@ export default function ProductsManagement() {
       description: "",
       price: 0,
       stock_quantity: 0,
+      low_stock_threshold: 10,
       sku: "",
       category: "",
       is_active: true,
@@ -228,6 +311,7 @@ export default function ProductsManagement() {
 
     // Set the image preview if the product has an image URL
     if (product.image_url) {
+      console.log("Setting image preview to:", product.image_url);
       setImagePreview(product.image_url);
     } else {
       setImagePreview(null);
@@ -238,6 +322,7 @@ export default function ProductsManagement() {
       description: product.description || "",
       price: product.price,
       stock_quantity: product.stock_quantity,
+      low_stock_threshold: product.low_stock_threshold || 10,
       sku: product.sku || "",
       category: product.category || "",
       is_active: product.is_active !== false, // Default to true if undefined
@@ -287,7 +372,7 @@ export default function ProductsManagement() {
   // Handle deleting a product
   const handleDeleteProduct = async (productId: string) => {
     try {
-      const { data, error } = await deleteProduct(productId);
+      const { error } = await deleteProduct(productId);
 
       if (error) {
         toast.error(`Failed to delete product: ${error.message}`);
@@ -452,6 +537,31 @@ export default function ProductsManagement() {
 
                       <FormField
                         control={addProductForm.control}
+                        name="low_stock_threshold"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Low Stock Threshold</FormLabel>
+                            <FormDescription className="text-xs">
+                              Alert when stock falls below this level
+                            </FormDescription>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={1}
+                                step={1}
+                                placeholder="10"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <FormField
+                        control={addProductForm.control}
                         name="sku"
                         render={({ field }) => (
                           <FormItem>
@@ -463,21 +573,23 @@ export default function ProductsManagement() {
                           </FormItem>
                         )}
                       />
+
+                      <FormField
+                        control={addProductForm.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Category" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
-                    <FormField
-                      control={addProductForm.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Category" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+
 
                     <FormField
                       control={addProductForm.control}
@@ -487,7 +599,7 @@ export default function ProductsManagement() {
                           <FormLabel>Product Image</FormLabel>
                           <FormControl>
                             <ProductImageUpload
-                              value={field.value}
+                              value={field.value || ""}
                               onChange={(url) => field.onChange(url)}
                               onImageChange={(file) => setImageFile(file)}
                               preview={imagePreview}
@@ -632,6 +744,31 @@ export default function ProductsManagement() {
 
                       <FormField
                         control={editProductForm.control}
+                        name="low_stock_threshold"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Low Stock Threshold</FormLabel>
+                            <FormDescription className="text-xs">
+                              Alert when stock falls below this level
+                            </FormDescription>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={1}
+                                step={1}
+                                placeholder="10"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <FormField
+                        control={editProductForm.control}
                         name="sku"
                         render={({ field }) => (
                           <FormItem>
@@ -643,21 +780,23 @@ export default function ProductsManagement() {
                           </FormItem>
                         )}
                       />
+
+                      <FormField
+                        control={editProductForm.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Category" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
-                    <FormField
-                      control={editProductForm.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Category" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+
 
                     <FormField
                       control={editProductForm.control}
@@ -667,7 +806,7 @@ export default function ProductsManagement() {
                           <FormLabel>Product Image</FormLabel>
                           <FormControl>
                             <ProductImageUpload
-                              value={field.value}
+                              value={field.value || ""}
                               onChange={(url) => field.onChange(url)}
                               onImageChange={(file) => setImageFile(file)}
                               preview={imagePreview}
@@ -847,6 +986,14 @@ export default function ProductsManagement() {
                       { label: "Inactive", value: "false" },
                     ],
                   },
+                  {
+                    id: "category",
+                    title: "Category",
+                    options: allCategories.map(category => ({
+                      label: category,
+                      value: category
+                    }))
+                  }
                 ]}
                 pagination={{
                   page,
@@ -854,19 +1001,56 @@ export default function ProductsManagement() {
                   totalItems,
                   totalPages,
                   onPageChange: setPage,
-                  onPageSizeChange: (newPageSize) => {
-                    setPageSize(newPageSize);
+                  onPageSizeChange: (pageSize: number) => {
+                    setPageSize(pageSize);
                     setPage(1); // Reset to first page when page size changes
                   }
                 }}
                 onSearch={handleSearch}
-                onFilterChange={(columnId, value) => {
+                onFilterChange={(columnId: string, value: string | undefined) => {
                   if (columnId === 'is_active') {
                     handleStatusFilter(value);
                   } else if (columnId === 'category') {
                     handleCategoryFilter(value);
                   }
                 }}
+
+                onSortingChange={(column: string, direction: 'asc' | 'desc') => {
+                  handleSortingChange(column, direction);
+                }}
+                tableToolbar={(table) => (
+                  <ProductsTableToolbar
+                    table={table}
+                    searchKey="name"
+                    filterableColumns={[
+                      {
+                        id: "is_active",
+                        title: "Status",
+                        options: [
+                          { label: "Active", value: "true" },
+                          { label: "Inactive", value: "false" },
+                        ],
+                      },
+                      {
+                        id: "category",
+                        title: "Category",
+                        options: allCategories.map(category => ({
+                          label: category,
+                          value: category
+                        }))
+                      }
+                    ]}
+                    onSearch={handleSearch}
+                    onFilterChange={(columnId: string, value: string | undefined) => {
+                      if (columnId === 'is_active') {
+                        handleStatusFilter(value);
+                      } else if (columnId === 'category') {
+                        handleCategoryFilter(value);
+                      }
+                    }}
+                    selectedFilters={columnFilters}
+                  />
+                )}
               />
             )}
         </CardContent>

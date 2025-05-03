@@ -15,7 +15,7 @@ export type ProductActionResult<T = void> = {
 }
 
 /**
- * Get all products with pagination support
+ * Get all products with pagination, filtering and sorting support
  */
 export async function getProducts(options?: {
   page?: number;
@@ -23,6 +23,8 @@ export async function getProducts(options?: {
   searchQuery?: string;
   category?: string;
   isActive?: boolean;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
 }): Promise<ProductActionResult<{
   products: Product[];
   totalCount: number;
@@ -99,9 +101,17 @@ export async function getProducts(options?: {
       // Continue with count = 0, we'll still try to get the data
     }
 
+    // Apply sorting
+    const sortBy = options?.sortBy || 'name';
+    const sortDirection = options?.sortDirection || 'asc';
+
+    // Validate sortBy to prevent SQL injection
+    const validColumns = ['name', 'price', 'stock_quantity', 'sku', 'category', 'is_active', 'created_at', 'updated_at'];
+    const column = validColumns.includes(sortBy) ? sortBy : 'name';
+
     // Then get paginated data
     const { data, error } = await query
-      .order('name', { ascending: true })
+      .order(column, { ascending: sortDirection === 'asc' })
       .range(from, to)
 
     if (error) {

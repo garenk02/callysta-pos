@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Product } from "@/types"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { MoreHorizontal, Edit, Trash2, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -25,28 +24,7 @@ interface ProductsColumnProps {
 }
 
 export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsColumnProps): ColumnDef<Product>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // 1. Image column
   {
     accessorKey: "image_url",
     header: ({ column }) => (
@@ -75,6 +53,8 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
     },
     enableSorting: false,
   },
+
+  // 2. Name column
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -83,7 +63,38 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
     cell: ({ row }) => {
       return <div className="font-medium">{row.getValue("name")}</div>
     },
+    enableSorting: true,
   },
+
+  // 3. SKU column
+  {
+    accessorKey: "sku",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="SKU" />
+    ),
+    cell: ({ row }) => {
+      return <div className="text-sm text-center">{row.getValue("sku") || "-"}</div>
+    },
+    enableSorting: true,
+  },
+
+  // 4. Category column
+  {
+    accessorKey: "category",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Category" />
+    ),
+    cell: ({ row }) => {
+      return <div className="text-sm text-center">{row.getValue("category") || "-"}</div>
+    },
+    filterFn: (row, id, value) => {
+      if (!value || value.length === 0) return true;
+      return value.includes(row.getValue(id))
+    },
+    enableSorting: true,
+  },
+
+  // 5. Price column
   {
     accessorKey: "price",
     header: ({ column }) => (
@@ -92,9 +103,12 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
     cell: ({ row }) => {
       const price = parseFloat(row.getValue("price"))
       const formatted = `Rp.${price.toLocaleString('id-ID')}`
-      return <div>{formatted}</div>
+      return <div className="text-right">{formatted}</div>
     },
+    enableSorting: true,
   },
+
+  // 6. Stock column
   {
     accessorKey: "stock_quantity",
     header: ({ column }) => (
@@ -104,25 +118,10 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
       const stock = parseInt(row.getValue("stock_quantity"))
       return <div className="text-center">{stock}</div>
     },
+    enableSorting: true,
   },
-  {
-    accessorKey: "sku",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="SKU" />
-    ),
-    cell: ({ row }) => {
-      return <div className="text-sm">{row.getValue("sku") || "-"}</div>
-    },
-  },
-  {
-    accessorKey: "category",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Category" />
-    ),
-    cell: ({ row }) => {
-      return <div className="text-sm">{row.getValue("category") || "-"}</div>
-    },
-  },
+
+  // 7. Status column
   {
     accessorKey: "is_active",
     header: ({ column }) => (
@@ -140,7 +139,10 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
       const isActive = row.getValue(id) as boolean
       return value.includes(String(isActive))
     },
+    enableSorting: true,
   },
+
+  // 8. Actions column
   {
     id: "actions",
     cell: ({ row }) => {
@@ -180,5 +182,6 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
         </DropdownMenu>
       )
     },
+    enableSorting: false,
   },
 ]

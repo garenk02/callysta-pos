@@ -31,6 +31,7 @@ interface DataTableFacetedFilterProps<TData, TValue> {
     icon?: React.ComponentType<{ className?: string }>
   }[]
   onValueChange?: (value: string | undefined) => void
+  multiSelect?: boolean
 }
 
 export function DataTableFacetedFilter<TData, TValue>({
@@ -38,6 +39,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   title,
   options,
   onValueChange,
+  multiSelect = false,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues()
   const selectedValues = new Set(column?.getFilterValue() as string[])
@@ -96,21 +98,39 @@ export function DataTableFacetedFilter<TData, TValue>({
                     key={option.value}
                     value={option.value} // Ensure value is always set
                     onSelect={() => {
-                      if (isSelected) {
-                        selectedValues.delete(option.value)
-                      } else {
-                        selectedValues.add(option.value)
-                      }
-                      const filterValues = Array.from(selectedValues)
+                      if (multiSelect) {
+                        // Multi-select behavior
+                        if (isSelected) {
+                          selectedValues.delete(option.value)
+                        } else {
+                          selectedValues.add(option.value)
+                        }
+                        const filterValues = Array.from(selectedValues)
 
-                      if (onValueChange) {
-                        // For single-select filters, just pass the value
-                        onValueChange(filterValues.length ? filterValues[0] : undefined);
-                      } else if (column) {
-                        // For multi-select filters, pass the array
-                        column.setFilterValue(
-                          filterValues.length ? filterValues : undefined
-                        );
+                        if (onValueChange) {
+                          onValueChange(filterValues.length ? filterValues[0] : undefined);
+                        } else if (column) {
+                          column.setFilterValue(
+                            filterValues.length ? filterValues : undefined
+                          );
+                        }
+                      } else {
+                        // Single-select behavior
+                        if (isSelected) {
+                          // Clicking the selected item deselects it
+                          if (onValueChange) {
+                            onValueChange(undefined);
+                          } else if (column) {
+                            column.setFilterValue(undefined);
+                          }
+                        } else {
+                          // Clicking a new item selects only that item
+                          if (onValueChange) {
+                            onValueChange(option.value);
+                          } else if (column) {
+                            column.setFilterValue(option.value);
+                          }
+                        }
                       }
                     }}
                   >

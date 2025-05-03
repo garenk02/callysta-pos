@@ -1,13 +1,17 @@
 'use client'
 
 import { Table } from "@tanstack/react-table"
-import { X, CheckCircle, XCircle } from "lucide-react"
+import { X, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DataTableViewOptions } from "@/components/ui/data-table/data-table-view-options"
-import { DataTableFacetedFilter } from "@/components/ui/data-table/data-table-faceted-filter"
-import { useAuth } from "@/hooks/useAuth"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface ProductsTableToolbarProps<TData> {
   table: Table<TData>
@@ -20,111 +24,127 @@ interface ProductsTableToolbarProps<TData> {
       value: string
     }[]
   }[]
-  onBulkActivate?: (productIds: string[]) => void
-  onBulkDeactivate?: (productIds: string[]) => void
+  onSearch?: (value: string) => void
+  onFilterChange?: (columnId: string, value: string | undefined) => void
+  selectedFilters?: {
+    is_active?: string
+    category?: string
+  }
 }
 
 export function ProductsTableToolbar<TData>({
   table,
   searchKey,
   filterableColumns = [],
-  onBulkActivate,
-  onBulkDeactivate,
+  onSearch,
+  onFilterChange,
+  selectedFilters,
 }: ProductsTableToolbarProps<TData>) {
-  const { isAdmin } = useAuth()
   const isFiltered = table.getState().columnFilters.length > 0
-  const hasSelection = table.getFilteredSelectedRowModel().rows.length > 0
 
   // Handle search input changes
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
-    if (searchKey) {
+    if (onSearch) {
+      onSearch(value)
+    } else if (searchKey) {
       table.getColumn(searchKey)?.setFilterValue(value)
+    }
+  }
+
+  // Handle filter changes
+  const handleFilterChange = (columnId: string, value: string | undefined) => {
+    if (onFilterChange) {
+      onFilterChange(columnId, value)
+    } else {
+      if (value === undefined || value === "all") {
+        table.getColumn(columnId)?.setFilterValue(undefined)
+      } else {
+        table.getColumn(columnId)?.setFilterValue(value)
+      }
     }
   }
 
   // Handle reset filters
   const handleResetFilters = () => {
-    table.resetColumnFilters()
+    if (onSearch && searchKey) {
+      onSearch('')
+    }
+
+    if (onFilterChange) {
+      filterableColumns.forEach(column => {
+        onFilterChange(column.id, undefined)
+      })
+    } else {
+      table.resetColumnFilters()
+    }
   }
 
-  // Get selected product IDs
-  const getSelectedProductIds = () => {
-    return table.getFilteredSelectedRowModel().rows.map(row => {
-      const product = row.original as any
-      return product.id
-    })
-  }
+  // We've removed the checkbox column, so we don't need to get selected product IDs anymore
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 items-center space-x-2">
-        {searchKey && (
-          <div className="relative w-full sm:w-[250px]">
-            <Input
-              placeholder={`Search by ${searchKey}...`}
-              value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-              onChange={handleSearchChange}
-              className="h-9 w-full"
-            />
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Search */}
+      {searchKey && (
+        <div className="flex items-center gap-2 max-w-sm">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={`Search...`}
+            value={(onSearch ? '' : (table.getColumn(searchKey)?.getFilterValue() as string)) ?? ""}
+            onChange={handleSearchChange}
+            className="h-9"
+          />
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        {filterableColumns.length > 0 && filterableColumns.map((column) => (
+          <div key={column.id} className="flex items-center">
+            <Select
+              value={
+                // Use selectedFilters if provided, otherwise fall back to table state
+                selectedFilters && column.id === "is_active" && selectedFilters.is_active
+                  ? selectedFilters.is_active
+                  : selectedFilters && column.id === "category" && selectedFilters.category
+                    ? selectedFilters.category
+                    : "all"
+              }
+              onValueChange={(value) => {
+                if (value === "all") {
+                  handleFilterChange(column.id, undefined)
+                } else {
+                  handleFilterChange(column.id, value)
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 w-[130px]">
+                <SelectValue placeholder={column.title} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All {column.title}s</SelectItem>
+                {column.options.map((option) => (
+                  <SelectItem key={option.value} value={option.value || "undefined"}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        {filterableColumns.length > 0 &&
-          filterableColumns.map(
-            (column) =>
-              table.getColumn(column.id) && (
-                <DataTableFacetedFilter
-                  key={column.id}
-                  column={table.getColumn(column.id)}
-                  title={column.title}
-                  options={column.options.map(option => ({
-                    ...option,
-                    // Ensure value is never an empty string
-                    value: option.value || "undefined"
-                  }))}
-                  onValueChange={(value) => {
-                    if (value === "undefined") value = undefined;
-                    table.getColumn(column.id)?.setFilterValue(value);
-                  }}
-                />
-              )
-          )}
+        ))}
         {isFiltered && (
           <Button
             variant="ghost"
             onClick={handleResetFilters}
-            className="h-9 px-2 lg:px-3"
+            className="h-8 px-2"
           >
             Reset
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
       </div>
-      <div className="flex items-center space-x-2">
-        {hasSelection && isAdmin && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onBulkActivate?.(getSelectedProductIds())}
-              className="h-9"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Activate
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onBulkDeactivate?.(getSelectedProductIds())}
-              className="h-9"
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Deactivate
-            </Button>
-          </>
-        )}
-        <DataTableViewOptions table={table} />
-      </div>
+
+      {/* We've removed bulk actions since we removed the checkbox column */}
     </div>
   )
 }

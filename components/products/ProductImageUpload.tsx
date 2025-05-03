@@ -27,29 +27,30 @@ export default function ProductImageUpload({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [fixedImageUrl, setFixedImageUrl] = useState<string | null>(null)
 
-  // Set preview from value if it exists and preview doesn't
+  // Set preview and fixedImageUrl from value
   useEffect(() => {
-    async function convertToSignedUrl() {
-      if (value && !preview) {
+    async function processImageUrl() {
+      if (value) {
+        // Always set the preview to the current value
+        setPreview(value);
+
         // Check if it's already a signed URL
         const isSignedUrl = value.includes('/object/sign/') && value.includes('token=');
 
         if (isSignedUrl) {
           // If it's already a signed URL, use it as is
-          // console.log('URL is already a valid signed URL');
+          console.log('URL is already a valid signed URL');
           setFixedImageUrl(value);
-          setPreview(value);
         } else if (value.includes('/storage/v1/object/public/')) {
           // If it's a public URL, try to convert it to a signed URL
           try {
-            // console.log('Converting public URL to signed URL:', value);
+            console.log('Converting public URL to signed URL:', value);
 
             // Extract the bucket and file path from the URL
             const urlObj = new URL(value);
             const pathParts = urlObj.pathname.split('/storage/v1/object/public/');
             if (pathParts.length < 2) {
               setFixedImageUrl(value);
-              setPreview(value);
               return;
             }
 
@@ -58,7 +59,6 @@ export default function ProductImageUpload({
 
             if (slashIndex === -1) {
               setFixedImageUrl(value);
-              setPreview(value);
               return;
             }
 
@@ -75,28 +75,26 @@ export default function ProductImageUpload({
               console.error('Error creating signed URL:', error);
               setFixedImageUrl(value);
             } else {
-              // console.log('Created signed URL:', data.signedUrl);
+              console.log('Created signed URL:', data.signedUrl);
               setFixedImageUrl(data.signedUrl);
             }
-
-            setPreview(value);
           } catch (err) {
             console.error('Error converting to signed URL:', err);
             setFixedImageUrl(value);
-            setPreview(value);
           }
         } else {
           // If it's not a Supabase URL, use it as is
           setFixedImageUrl(value);
-          setPreview(value);
         }
-      } else if (!value) {
+      } else {
+        // If no value, clear both preview and fixedImageUrl
+        setPreview(null);
         setFixedImageUrl(null);
       }
     }
 
-    convertToSignedUrl();
-  }, [value, preview, setPreview]);
+    processImageUrl();
+  }, [value, setPreview]);
 
   // Handle file selection
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,26 +222,34 @@ export default function ProductImageUpload({
         <div className="relative w-full h-40 border rounded-md overflow-hidden">
           {/* Use next/image with error handling */}
           {fixedImageUrl ? (
-            <Image
-              src={fixedImageUrl}
-              alt="Product preview"
-              fill
-              className="object-contain"
-              onError={(e) => {
-                console.log('Image failed to load:', e);
-                // If the fixed URL fails, try falling back to an img tag
-                const imgElement = e.currentTarget;
-                if (imgElement.parentElement) {
-                  const fallbackImg = document.createElement('img');
-                  fallbackImg.src = fixedImageUrl;
-                  fallbackImg.alt = "Product preview";
-                  fallbackImg.className = "object-contain w-full h-full";
-                  imgElement.parentElement.appendChild(fallbackImg);
-                  imgElement.style.display = 'none';
-                }
-              }}
-              unoptimized={fixedImageUrl.startsWith('data:')} // Don't optimize data URLs
-            />
+            <>
+              <Image
+                src={fixedImageUrl}
+                alt="Product preview"
+                fill
+                className="object-contain"
+                onError={(e) => {
+                  console.log('Image failed to load:', e);
+                  e.currentTarget.style.display = 'none';
+
+                  // Show the fallback div when image fails to load
+                  const fallbackDiv = document.getElementById(`fallback-${fixedImageUrl.substring(0, 10)}`);
+                  if (fallbackDiv) {
+                    fallbackDiv.style.display = 'flex';
+                  }
+                }}
+                unoptimized={true} // Don't optimize any URLs to avoid CORS issues
+              />
+              {/* Hidden fallback that will be shown if image fails to load */}
+              <div
+                id={`fallback-${fixedImageUrl.substring(0, 10)}`}
+                className="hidden items-center justify-center h-full w-full bg-muted"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Unable to load image. Click to upload a new one.
+                </p>
+              </div>
+            </>
           ) : (
             <div className="flex items-center justify-center h-full w-full bg-muted">
               <p className="text-sm text-muted-foreground">Image URL not valid</p>
