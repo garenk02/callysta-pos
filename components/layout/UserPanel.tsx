@@ -44,7 +44,11 @@ export default function UserPanel() {
     setIsLoading(true)
 
     try {
-      await logout()
+      const result = await logout()
+      if (result.success) {
+        // Handle the redirect on the client side
+        router.push('/login')
+      }
     } catch (error) {
       console.error('Error logging out:', error)
       setIsLoading(false)

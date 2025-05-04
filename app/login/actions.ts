@@ -177,6 +177,8 @@ export async function logout() {
     await cookieStore.delete(cookie.name)
   }
 
-  redirect('/login')
+  // Return success instead of redirecting directly
+  // This allows client components to handle the redirect
+  return { success: true }
 }
 

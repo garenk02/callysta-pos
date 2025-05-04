@@ -30,12 +30,14 @@ interface PaymentSectionProps {
   total: number
   onPaymentComplete: (paymentMethod: PaymentMethod, paymentDetails?: PaymentDetails) => void
   disabled: boolean
+  isCompact?: boolean
 }
 
 export default function PaymentSection({
   total,
   onPaymentComplete,
-  disabled
+  disabled,
+  isCompact = false
 }: PaymentSectionProps) {
   const { user } = useAuth()
   const { cart, summary, clearCart } = useCart()
@@ -289,7 +291,7 @@ export default function PaymentSection({
   }
 
   return (
-    <div className="w-full mt-1 max-w-full">
+    <div className={`w-full mt-1 max-w-full pb-2 ${isCompact ? 'compact-payment' : ''}`}>
       {/* Receipt Modal */}
       {receiptData && (
         <Receipt
@@ -302,116 +304,198 @@ export default function PaymentSection({
       {currentStep === 'payment' ? (
         /* Payment Step */
         <>
-          <div className="mb-1">
+          <div className={`${isCompact ? 'mb-0.5' : 'mb-1'}`}>
             <Tabs
               value={paymentMethod}
               onValueChange={handlePaymentMethodChange}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-2 h-8 mb-1">
+              <TabsList className={`grid grid-cols-2 ${isCompact ? 'h-7' : 'h-8'} ${isCompact ? 'mb-0.5' : 'mb-1'}`}>
                 <TabsTrigger value="cash" className="text-xs py-0 px-2 flex items-center">
-                  <Banknote className="h-3.5 w-3.5 mr-1" />
+                  <Banknote className={`${isCompact ? 'h-3 w-3 mr-0.5' : 'h-3.5 w-3.5 mr-1'}`} />
                   Cash
                 </TabsTrigger>
                 <TabsTrigger value="bank_transfer" className="text-xs py-0 px-2 flex items-center">
-                  <CreditCard className="h-3.5 w-3.5 mr-1" />
+                  <CreditCard className={`${isCompact ? 'h-3 w-3 mr-0.5' : 'h-3.5 w-3.5 mr-1'}`} />
                   Bank Transfer
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="cash" className="mt-0 pt-0">
-                <div className="grid grid-cols-2 gap-2 mb-1">
-                  <div>
-                    <Label htmlFor="amount-tendered" className="text-xs block mb-0.5">Amount Tender</Label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                        <span className="text-xs text-muted-foreground">Rp.</span>
+                {isCompact ? (
+                  /* Compact layout for desktop */
+                  <>
+                    <div className="flex gap-1 mb-0.5">
+                      <div className="w-3/5">
+                        <div className="flex items-center">
+                          <Label htmlFor="amount-tendered" className="text-xs whitespace-nowrap mr-1">Amount:</Label>
+                          <div className="relative flex-1">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-1 pointer-events-none">
+                              <span className="text-xs text-muted-foreground">Rp.</span>
+                            </div>
+                            <Input
+                              id="amount-tendered"
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="0"
+                              value={formattedAmount}
+                              onChange={handleAmountTenderedChange}
+                              disabled={disabled}
+                              className="h-7 text-xs pl-7 pr-1"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <Input
-                        id="amount-tendered"
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="0"
-                        value={formattedAmount}
-                        onChange={handleAmountTenderedChange}
-                        disabled={disabled}
-                        className="h-8 text-xs pl-8 pr-2"
-                      />
+                      <div className="w-2/5">
+                        <div className="flex items-center">
+                          <Label htmlFor="change-due" className="text-xs whitespace-nowrap mr-1">Change:</Label>
+                          <Input
+                            id="change-due"
+                            value={`${changeDue.toLocaleString('id-ID')}`}
+                            disabled
+                            className="bg-muted h-7 text-xs px-1 flex-1"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="change-due" className="text-xs block mb-0.5">Change Due</Label>
-                    <Input
-                      id="change-due"
-                      value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
-                      disabled
-                      className="bg-muted h-8 text-xs px-2"
-                    />
-                  </div>
-                </div>
 
-                {/* Quick amount buttons - more mobile friendly */}
-                <div className="grid grid-cols-4 gap-1 mb-1">
-                  {[10000, 20000, 50000, 100000].map(amount => (
-                    <Button
-                      key={amount}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuickCashAmount(amount)}
-                      disabled={disabled}
-                      className="h-7 text-xs px-1 md:text-[10px] md:px-0.5"
-                    >
-                      {amount.toLocaleString('id-ID')}
-                    </Button>
-                  ))}
-                </div>
+                    {/* Quick amount buttons in compact grid */}
+                    <div className="grid grid-cols-4 gap-0.5 mb-0.5">
+                      {[10000, 20000, 50000, 100000].map(amount => (
+                        <Button
+                          key={amount}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuickCashAmount(amount)}
+                          disabled={disabled}
+                          className="h-6 text-[10px] px-0.5"
+                        >
+                          {amount.toLocaleString('id-ID')}
+                        </Button>
+                      ))}
+                    </div>
 
-                <div className="grid grid-cols-2 gap-1 mb-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
-                    disabled={disabled}
-                    className="h-7 text-xs px-2 md:text-[10px] md:px-1"
-                  >
-                    Exact: {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
-                    disabled={disabled}
-                    className="h-7 text-xs px-2 md:text-[10px] md:px-1"
-                  >
-                    Round: {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
-                  </Button>
-                </div>
+                    <div className="grid grid-cols-2 gap-0.5 mb-0.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
+                        disabled={disabled}
+                        className="h-6 text-[10px] px-0.5"
+                      >
+                        Exact: {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
+                        disabled={disabled}
+                        className="h-6 text-[10px] px-0.5"
+                      >
+                        Round: {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  /* Original layout for mobile */
+                  <>
+                    <div className="grid grid-cols-2 gap-2 mb-1">
+                      <div>
+                        <Label htmlFor="amount-tendered" className="text-xs block mb-0.5">Amount Tender</Label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                            <span className="text-xs text-muted-foreground">Rp.</span>
+                          </div>
+                          <Input
+                            id="amount-tendered"
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="0"
+                            value={formattedAmount}
+                            onChange={handleAmountTenderedChange}
+                            disabled={disabled}
+                            className="h-8 text-xs pl-8 pr-2"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="change-due" className="text-xs block mb-0.5">Change Due</Label>
+                        <Input
+                          id="change-due"
+                          value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
+                          disabled
+                          className="bg-muted h-8 text-xs px-2"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick amount buttons - more mobile friendly */}
+                    <div className="grid grid-cols-4 gap-1 mb-1">
+                      {[10000, 20000, 50000, 100000].map(amount => (
+                        <Button
+                          key={amount}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuickCashAmount(amount)}
+                          disabled={disabled}
+                          className="h-7 text-xs px-1 md:text-[10px] md:px-0.5"
+                        >
+                          {amount.toLocaleString('id-ID')}
+                        </Button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1 mb-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
+                        disabled={disabled}
+                        className="h-7 text-xs px-2 md:text-[10px] md:px-1"
+                      >
+                        Exact: {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
+                        disabled={disabled}
+                        className="h-7 text-xs px-2 md:text-[10px] md:px-1"
+                      >
+                        Round: {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
+                      </Button>
+                    </div>
+                  </>
+                )}
               </TabsContent>
 
               <TabsContent value="bank_transfer" className="mt-0 pt-0">
-                <div className="text-xs mb-1 p-2 bg-muted/50 rounded-md">
+                <div className={`text-xs ${isCompact ? 'mb-0.5 p-1.5' : 'mb-1 p-2'} bg-muted/50 rounded-md`}>
                   <p className="font-medium mb-0.5">Bank Transfer Instructions:</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Make sure to transfer to correct bank account</p>
+                  <p className={`${isCompact ? 'mt-0.5' : 'mt-1'} text-xs text-muted-foreground`}>Make sure to transfer to correct bank account</p>
                 </div>
               </TabsContent>
             </Tabs>
           </div>
 
           {/* Customer Information Section */}
-          <div className="mb-2 mt-3 border-t pt-2">
-            {/* <h3 className="text-xs font-medium mb-1">Customer Information (Optional)</h3> */}
+          <div className={`${isCompact ? 'mb-1 mt-1 border-t pt-1' : 'mb-2 mt-3 border-t pt-2'}`}>
             <CustomerInfo
               customerInfo={customerInfo}
               onChange={setCustomerInfo}
               disabled={disabled}
+              isCompact={isCompact}
             />
           </div>
 
           {validationError && (
-            <div className="flex items-center gap-1 text-destructive text-xs mb-1 p-1.5 bg-destructive/10 rounded-md">
+            <div className={`flex items-center gap-1 text-destructive text-xs ${isCompact ? 'mb-0.5 p-1' : 'mb-1 p-1.5'} bg-destructive/10 rounded-md`}>
               <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
               <span>{validationError}</span>
             </div>
@@ -422,7 +506,7 @@ export default function PaymentSection({
             size="sm"
             onClick={handleProceedToReview}
             disabled={disabled || !isPaymentValid() || isProcessing}
-            style={{ height: "40px", backgroundColor: "#FF54BB", color: "white" }}
+            style={{ height: isCompact ? "36px" : "40px", backgroundColor: "#FF54BB", color: "white" }}
           >
             {isProcessing ? (
               <>
@@ -452,6 +536,7 @@ export default function PaymentSection({
           onBack={handleBackToPayment}
           onConfirm={handleCompleteSale}
           isProcessing={isProcessing}
+          isCompact={isCompact}
         />
       )}
     </div>

@@ -245,11 +245,19 @@ export default function CheckoutPage() {
                     <span>Rp. {total.toLocaleString('id-ID')}</span>
                   </div>
 
-                  <PaymentSection
-                    total={total}
-                    onPaymentComplete={handlePaymentComplete}
-                    disabled={itemCount === 0}
-                  />
+                  {/* Ensure payment section has enough space and proper overflow handling */}
+                  <div className="payment-section-container" style={{
+                    minHeight: '180px',
+                    maxHeight: '250px',
+                    overflowY: 'auto'
+                  }}>
+                    <PaymentSection
+                      total={total}
+                      onPaymentComplete={handlePaymentComplete}
+                      disabled={itemCount === 0}
+                      isCompact={false}
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
@@ -349,8 +357,8 @@ export default function CheckoutPage() {
 
             {/* Cart area with better height control */}
             <div className="flex-1 overflow-hidden" style={{
-              maxHeight: 'min(calc(100vh - 22rem), 500px)',
-              minHeight: '250px'
+              maxHeight: 'min(calc(100vh - 24rem), 400px)',
+              minHeight: '200px'
             }}>
               <CardContent className="h-full overflow-auto py-2 px-4">
                 <CartList />
@@ -364,11 +372,19 @@ export default function CheckoutPage() {
                   <span>Rp. {total.toLocaleString('id-ID')}</span>
                 </div>
 
-                <PaymentSection
-                  total={total}
-                  onPaymentComplete={handlePaymentComplete}
-                  disabled={itemCount === 0}
-                />
+                {/* Ensure payment section has enough space and proper overflow handling */}
+                <div className="payment-section-container lg:compact-payment" style={{
+                  minHeight: '180px',
+                  maxHeight: '250px',
+                  overflowY: 'auto'
+                }}>
+                  <PaymentSection
+                    total={total}
+                    onPaymentComplete={handlePaymentComplete}
+                    disabled={itemCount === 0}
+                    isCompact={true}
+                  />
+                </div>
               </div>
             </div>
           </Card>

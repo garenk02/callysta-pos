@@ -218,67 +218,7 @@ export default function UsersClient() {
     }
   };
 
-  // Handle bulk activation of users
-  const handleBulkActivate = async (selectedUsers: UserType[]) => {
-    try {
-      const userIds = selectedUsers.map(user => user.id);
-
-      if (userIds.length === 0) {
-        toast.error('No users selected');
-        return;
-      }
-
-      const { data, error } = await bulkToggleUserStatus(userIds, true);
-
-      if (error) {
-        toast.error(`Failed to activate users: ${error.message}`);
-        return;
-      }
-
-      // Update the users in the list
-      setUsers(prev =>
-        prev.map(user =>
-          userIds.includes(user.id) ? { ...user, is_active: true } : user
-        )
-      );
-
-      toast.success(`${userIds.length} users activated successfully`);
-    } catch (err) {
-      console.error("Error bulk activating users:", err);
-      toast.error("An unexpected error occurred while activating users");
-    }
-  };
-
-  // Handle bulk deactivation of users
-  const handleBulkDeactivate = async (selectedUsers: UserType[]) => {
-    try {
-      const userIds = selectedUsers.map(user => user.id);
-
-      if (userIds.length === 0) {
-        toast.error('No users selected');
-        return;
-      }
-
-      const { data, error } = await bulkToggleUserStatus(userIds, false);
-
-      if (error) {
-        toast.error(`Failed to deactivate users: ${error.message}`);
-        return;
-      }
-
-      // Update the users in the list
-      setUsers(prev =>
-        prev.map(user =>
-          userIds.includes(user.id) ? { ...user, is_active: false } : user
-        )
-      );
-
-      toast.success(`${userIds.length} users deactivated successfully`);
-    } catch (err) {
-      console.error("Error bulk deactivating users:", err);
-      toast.error("An unexpected error occurred while deactivating users");
-    }
-  };
+  // Bulk actions removed as checkbox column has been removed
 
   // Handle resetting a user's password
   const handleResetPassword = async (email: string) => {
@@ -651,8 +591,6 @@ export default function UsersClient() {
                   onDelete: handleDeleteUser
                 })}
                 data={users}
-                onActivate={handleBulkActivate}
-                onDeactivate={handleBulkDeactivate}
               />
             )}
           </CardContent>

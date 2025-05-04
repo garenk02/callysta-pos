@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { logout } from '@/app/login/actions'
 import { Button } from '@/components/ui/button'
 import { LogOut, Loader2 } from 'lucide-react'
@@ -19,12 +20,17 @@ import { NoAutofocusAlertDialogContent } from '@/components/ui/no-autofocus-aler
 export default function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
 
   const handleLogout = async () => {
     setIsLoading(true)
 
     try {
-      await logout()
+      const result = await logout()
+      if (result.success) {
+        // Handle the redirect on the client side
+        router.push('/login')
+      }
     } catch (error) {
       console.error('Error logging out:', error)
       setIsLoading(false)

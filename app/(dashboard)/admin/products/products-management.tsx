@@ -441,36 +441,36 @@ export default function ProductsManagement() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Products</h1>
 
-          {isAdmin && (
-            <Dialog
-              open={isAddDialogOpen}
-              onOpenChange={(open) => {
-                setIsAddDialogOpen(open);
-                if (!open) {
-                  // Reset form when dialog is closed
-                  addProductForm.reset();
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Product
-                </Button>
-              </DialogTrigger>
-              <NoAutofocusDialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
-                <DialogHeader>
-                  <DialogTitle>Add New Product</DialogTitle>
-                  <DialogDescription>
-                    Create a new product to sell in your store.
-                  </DialogDescription>
-                </DialogHeader>
+          {/* Allow both admin and cashier to add products */}
+          <Dialog
+            open={isAddDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddDialogOpen(open);
+              if (!open) {
+                // Reset form when dialog is closed
+                addProductForm.reset();
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Product
+              </Button>
+            </DialogTrigger>
+            <NoAutofocusDialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Add New Product</DialogTitle>
+                <DialogDescription>
+                  Create a new product to sell in your store.
+                </DialogDescription>
+              </DialogHeader>
 
-                <Form {...addProductForm}>
-                  <form
-                    onSubmit={addProductForm.handleSubmit(handleAddProduct)}
-                    className="space-y-4 overflow-y-auto pr-1"
-                  >
+              <Form {...addProductForm}>
+                <form
+                  onSubmit={addProductForm.handleSubmit(handleAddProduct)}
+                  className="space-y-4 overflow-y-auto pr-1"
+                >
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <FormField
                         control={addProductForm.control}
@@ -642,52 +642,51 @@ export default function ProductsManagement() {
                       )}
                     />
 
-                    <DialogFooter className="mt-2 pt-2 border-t">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsAddDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Create Product
-                      </Button>
-                    </DialogFooter>
+                  <DialogFooter className="mt-2 pt-2 border-t">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsAddDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Create Product
+                    </Button>
+                  </DialogFooter>
                   </form>
                 </Form>
               </NoAutofocusDialogContent>
             </Dialog>
-          )}
 
-          {isAdmin && (
-            <Dialog
-              open={isEditDialogOpen && selectedProduct !== null}
-              onOpenChange={(open) => {
-                if (!open) {
-                  setIsEditDialogOpen(false);
-                  setSelectedProduct(null);
-                }
-              }}
-            >
-              <NoAutofocusDialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
-                <DialogHeader>
-                  <DialogTitle>Edit Product</DialogTitle>
-                  <DialogDescription>
-                    Update product details and inventory.
-                  </DialogDescription>
-                </DialogHeader>
+          {/* Allow both admin and cashier to edit products */}
+          <Dialog
+            open={isEditDialogOpen && selectedProduct !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setIsEditDialogOpen(false);
+                setSelectedProduct(null);
+              }
+            }}
+          >
+            <NoAutofocusDialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Edit Product</DialogTitle>
+                <DialogDescription>
+                  Update product details and inventory.
+                </DialogDescription>
+              </DialogHeader>
 
-                {selectedProduct && <Form {...editProductForm}>
-                  <form
-                    onSubmit={editProductForm.handleSubmit(handleEditProduct)}
-                    className="space-y-4 overflow-y-auto pr-1"
-                  >
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <FormField
+              {selectedProduct && <Form {...editProductForm}>
+                <form
+                  onSubmit={editProductForm.handleSubmit(handleEditProduct)}
+                  className="space-y-4 overflow-y-auto pr-1"
+                >
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <FormField
                         control={editProductForm.control}
                         name="name"
                         render={({ field }) => (
@@ -857,26 +856,25 @@ export default function ProductsManagement() {
                       )}
                     />
 
-                    <DialogFooter className="mt-2 pt-2 border-t">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsEditDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Update Product
-                      </Button>
-                    </DialogFooter>
+                  <DialogFooter className="mt-2 pt-2 border-t">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsEditDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Update Product
+                    </Button>
+                  </DialogFooter>
                   </form>
                 </Form>}
               </NoAutofocusDialogContent>
             </Dialog>
-          )}
 
           <Dialog
             open={isAdjustStockDialogOpen && selectedProduct !== null}
@@ -905,63 +903,63 @@ export default function ProductsManagement() {
                   </div>
 
                   <Form {...stockAdjustmentForm}>
-                <form
-                  onSubmit={stockAdjustmentForm.handleSubmit(handleAdjustStock)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={stockAdjustmentForm.control}
-                    name="quantityChange"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Quantity Change</FormLabel>
-                        <FormDescription>
-                          Enter a positive number to add stock or a negative number to remove stock.
-                        </FormDescription>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="1"
-                            placeholder="0"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={stockAdjustmentForm.control}
-                    name="reason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Reason</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Reason for adjustment" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <DialogFooter className="mt-4 pt-2 border-t">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsAdjustStockDialogOpen(false)}
+                    <form
+                      onSubmit={stockAdjustmentForm.handleSubmit(handleAdjustStock)}
+                      className="space-y-4"
                     >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Adjust Stock
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
+                      <FormField
+                        control={stockAdjustmentForm.control}
+                        name="quantityChange"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantity Change</FormLabel>
+                            <FormDescription>
+                              Enter a positive number to add stock or a negative number to remove stock.
+                            </FormDescription>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="1"
+                                placeholder="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={stockAdjustmentForm.control}
+                        name="reason"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Reason</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Reason for adjustment" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <DialogFooter className="mt-4 pt-2 border-t">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsAdjustStockDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                          {isSubmitting && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Adjust Stock
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
                 </>
               )}
             </NoAutofocusDialogContent>
