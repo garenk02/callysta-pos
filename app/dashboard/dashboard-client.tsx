@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Card,
   CardContent,
@@ -14,17 +14,11 @@ import {
   ArrowDown,
   DollarSign,
   AlertTriangle,
-  Loader2
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import {
-  getTodaySales,
-  getTotalSales,
-  getTotalOrders,
-  getLowStockItems,
-  getDailySales,
-  getTopSellingProducts
-} from "@/app/api/dashboard/actions";
+import { Button } from "@/components/ui/button";
 import {
   BarChart,
   Bar,
@@ -38,109 +32,75 @@ import {
   Cell,
   Legend
 } from "recharts";
+import { useDashboardData } from "@/hooks/useDashboard";
 
 // Chart colors
 const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
 export default function DashboardClient() {
-  // State for dashboard data
-  const [todaySales, setTodaySales] = useState<{ total: number; count: number } | null>(null);
-  const [totalSales, setTotalSales] = useState<{ total: number; percentChange: number } | null>(null);
-  const [totalOrders, setTotalOrders] = useState<{ count: number; percentChange: number } | null>(null);
-  const [lowStockItems, setLowStockItems] = useState<{ count: number; items: any[] } | null>(null);
-  const [dailySales, setDailySales] = useState<Array<{ date: string; displayDate: string; total: number }> | null>(null);
-  const [topProducts, setTopProducts] = useState<Array<{ id: string; name: string; quantity: number; total: number }> | null>(null);
+  // Use the dashboard data hook with caching
+  const {
+    todaySales,
+    totalSales,
+    totalOrders,
+    lowStockItems,
+    dailySales,
+    topProducts,
+    isLoading,
+    error: hookError,
+    refetch
+  } = useDashboardData();
 
-  // Loading states
-  const [loadingTodaySales, setLoadingTodaySales] = useState(true);
-  const [loadingTotalSales, setLoadingTotalSales] = useState(true);
-  const [loadingTotalOrders, setLoadingTotalOrders] = useState(true);
-  const [loadingLowStock, setLoadingLowStock] = useState(true);
-  const [loadingDailySales, setLoadingDailySales] = useState(true);
-  const [loadingTopProducts, setLoadingTopProducts] = useState(true);
-
-  // Error states
+  // Local error state for additional errors
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch dashboard data on component mount
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        // Fetch today's sales
-        setLoadingTodaySales(true);
-        const { data: todaySalesData, error: todaySalesError } = await getTodaySales();
-        if (todaySalesError) {
-          console.error('Error fetching today\'s sales:', todaySalesError.message);
-        } else {
-          setTodaySales(todaySalesData);
-        }
-        setLoadingTodaySales(false);
+  // Determine if we're refreshing data
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-        // Fetch total sales
-        setLoadingTotalSales(true);
-        const { data: totalSalesData, error: totalSalesError } = await getTotalSales();
-        if (totalSalesError) {
-          console.error('Error fetching total sales:', totalSalesError.message);
-        } else {
-          setTotalSales(totalSalesData);
-        }
-        setLoadingTotalSales(false);
-
-        // Fetch total orders
-        setLoadingTotalOrders(true);
-        const { data: totalOrdersData, error: totalOrdersError } = await getTotalOrders();
-        if (totalOrdersError) {
-          console.error('Error fetching total orders:', totalOrdersError.message);
-        } else {
-          setTotalOrders(totalOrdersData);
-        }
-        setLoadingTotalOrders(false);
-
-        // Fetch low stock items
-        setLoadingLowStock(true);
-        const { data: lowStockData, error: lowStockError } = await getLowStockItems();
-        if (lowStockError) {
-          console.error('Error fetching low stock items:', lowStockError.message);
-        } else {
-          setLowStockItems(lowStockData);
-        }
-        setLoadingLowStock(false);
-
-        // Fetch daily sales
-        setLoadingDailySales(true);
-        const { data: dailySalesData, error: dailySalesError } = await getDailySales();
-        if (dailySalesError) {
-          console.error('Error fetching daily sales:', dailySalesError.message);
-        } else {
-          setDailySales(dailySalesData);
-        }
-        setLoadingDailySales(false);
-
-        // Fetch top selling products
-        setLoadingTopProducts(true);
-        const { data: topProductsData, error: topProductsError } = await getTopSellingProducts();
-        if (topProductsError) {
-          console.error('Error fetching top selling products:', topProductsError.message);
-        } else {
-          setTopProducts(topProductsData);
-        }
-        setLoadingTopProducts(false);
-      } catch (err) {
-        console.error('Unexpected error fetching dashboard data:', err);
-        setError('An unexpected error occurred while fetching dashboard data.');
-      }
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } catch (err) {
+      console.error('Error refreshing dashboard data:', err);
+      setError('Failed to refresh dashboard data. Please try again.');
+    } finally {
+      setIsRefreshing(false);
     }
-
-    fetchDashboardData();
-  }, []);
+  };
 
   return (
     <div className="space-y-6">
-      {error && (
+      {/* Error display */}
+      {(error || hookError) && (
         <div className="p-4 text-sm bg-destructive/10 text-destructive rounded-md">
-          {error}
+          {error || (hookError instanceof Error ? hookError.message : 'An error occurred')}
         </div>
       )}
+
+      {/* Refresh button */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing || isLoading}
+          className="flex items-center gap-2"
+        >
+          {isRefreshing ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4" />
+              Refresh Data
+            </>
+          )}
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Sales Card */}
@@ -149,7 +109,7 @@ export default function DashboardClient() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingTotalSales ? (
+            {isLoading || isRefreshing ? (
               <div className="flex justify-center items-center h-16">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
@@ -180,7 +140,7 @@ export default function DashboardClient() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingTotalOrders ? (
+            {isLoading || isRefreshing ? (
               <div className="flex justify-center items-center h-16">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
@@ -211,7 +171,7 @@ export default function DashboardClient() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Low Stock Items</CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingLowStock ? (
+            {isLoading || isRefreshing ? (
               <div className="flex justify-center items-center h-16">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
@@ -237,7 +197,7 @@ export default function DashboardClient() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Today&apos;s Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingTodaySales ? (
+            {isLoading || isRefreshing ? (
               <div className="flex justify-center items-center h-16">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
@@ -267,7 +227,7 @@ export default function DashboardClient() {
             <CardDescription>Daily sales for the past week</CardDescription>
           </CardHeader>
           <CardContent>
-            {loadingDailySales ? (
+            {isLoading || isRefreshing ? (
               <div className="flex justify-center items-center h-80">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -309,7 +269,7 @@ export default function DashboardClient() {
             <CardDescription>Most popular items this week</CardDescription>
           </CardHeader>
           <CardContent>
-            {loadingTopProducts ? (
+            {isLoading || isRefreshing ? (
               <div className="flex justify-center items-center h-80">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>

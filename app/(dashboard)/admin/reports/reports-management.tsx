@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import {
   Card,
   CardContent,
@@ -31,7 +33,8 @@ import {
   Download,
   Loader2
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency as formatCurrencyUtil } from "@/lib/utils"
+import { useSettings } from '@/hooks/useSettings'
 import {
   getSalesSummary,
   getProductSalesReport,
@@ -66,6 +69,7 @@ export default function ReportsManagement() {
   const [salesPeriod, setSalesPeriod] = useState("30days")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { settings } = useSettings()
 
   // Report data states
   const [salesSummary, setSalesSummary] = useState<SalesSummary | null>(null)
@@ -191,6 +195,271 @@ export default function ReportsManagement() {
     }) + '%';
   }
 
+  // Format payment method for display
+  const formatPaymentMethod = (method: string): string => {
+    return method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  // Handle export button click
+  const handleExport = () => {
+    if (loading) return;
+
+    switch (activeTab) {
+      case 'sales':
+        if (salesSummary) exportSalesSummary();
+        break;
+      case 'products':
+        if (productSales) exportProductSales();
+        break;
+      case 'inventory':
+        if (inventoryReport) exportInventoryReport();
+        break;
+    }
+  }
+
+  // Export sales summary to PDF
+  const exportSalesSummary = () => {
+    if (!salesSummary) return;
+
+    const doc = new jsPDF();
+    const appName = settings?.app_name || 'Callysta POS';
+    const dateRangeText = `${format(dateRange.from, "MMM dd, yyyy")} - ${format(dateRange.to, "MMM dd, yyyy")}`;
+
+    // Add header
+    doc.setFontSize(18);
+    doc.text(appName, 105, 15, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('Sales Summary Report', 105, 25, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Period: ${dateRangeText}`, 105, 35, { align: 'center' });
+    doc.text(`Generated: ${format(new Date(), "MMM dd, yyyy HH:mm")}`, 105, 40, { align: 'center' });
+
+    // Sales overview
+    doc.setFontSize(12);
+    doc.text('Sales Overview', 14, 50);
+
+    const overviewData = [
+      ['Total Sales', formatCurrency(salesSummary.totalSales)],
+      ['Total Orders', salesSummary.totalOrders.toString()],
+      ['Average Order Value', formatCurrency(salesSummary.averageOrderValue)]
+    ];
+
+    autoTable(doc, {
+      startY: 55,
+      head: [['Metric', 'Value']],
+      body: overviewData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Payment methods
+    doc.setFontSize(12);
+    // Get the last table's y position
+    const lastTableY = (doc as any).lastAutoTable.finalY;
+    doc.text('Payment Methods', 14, lastTableY + 15);
+
+    const paymentData = salesSummary.paymentMethodBreakdown.map(method => [
+      formatPaymentMethod(method.method),
+      method.count.toString(),
+      formatCurrency(method.total),
+      formatPercentage(method.percentage)
+    ]);
+
+    autoTable(doc, {
+      startY: lastTableY + 20,
+      head: [['Payment Method', 'Orders', 'Total', 'Percentage']],
+      body: paymentData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Daily sales
+    doc.setFontSize(12);
+    // Get the last table's y position again
+    const lastTableY2 = (doc as any).lastAutoTable.finalY;
+    doc.text('Daily Sales', 14, lastTableY2 + 15);
+
+    const dailySalesData = salesSummary.dailySales.map(day => [
+      day.displayDate,
+      day.orders.toString(),
+      formatCurrency(day.total)
+    ]);
+
+    autoTable(doc, {
+      startY: lastTableY2 + 20,
+      head: [['Date', 'Orders', 'Total Sales']],
+      body: dailySalesData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Save the PDF
+    doc.save(`sales-summary-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  }
+
+  // Export product sales to PDF
+  const exportProductSales = () => {
+    if (!productSales) return;
+
+    const doc = new jsPDF();
+    const appName = settings?.app_name || 'Callysta POS';
+    const dateRangeText = `${format(dateRange.from, "MMM dd, yyyy")} - ${format(dateRange.to, "MMM dd, yyyy")}`;
+
+    // Add header
+    doc.setFontSize(18);
+    doc.text(appName, 105, 15, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('Product Sales Report', 105, 25, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Period: ${dateRangeText}`, 105, 35, { align: 'center' });
+    doc.text(`Generated: ${format(new Date(), "MMM dd, yyyy HH:mm")}`, 105, 40, { align: 'center' });
+
+    // Sales overview
+    doc.setFontSize(12);
+    doc.text('Product Sales Overview', 14, 50);
+
+    const overviewData = [
+      ['Total Products Sold', productSales.totalQuantity.toString()],
+      ['Unique Products', productSales.totalProducts.toString()],
+      ['Total Sales', formatCurrency(productSales.totalSales)]
+    ];
+
+    autoTable(doc, {
+      startY: 55,
+      head: [['Metric', 'Value']],
+      body: overviewData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Top products
+    doc.setFontSize(12);
+    // Get the last table's y position
+    const productLastTableY = (doc as any).lastAutoTable.finalY;
+    doc.text('Top Selling Products', 14, productLastTableY + 15);
+
+    const topProductsData = productSales.topProducts.slice(0, 10).map(product => [
+      product.product_name,
+      product.quantity.toString(),
+      formatCurrency(product.total),
+      formatCurrency(product.average_price),
+      formatPercentage(product.percentage_of_sales)
+    ]);
+
+    autoTable(doc, {
+      startY: productLastTableY + 20,
+      head: [['Product', 'Quantity', 'Total Sales', 'Avg. Price', '% of Sales']],
+      body: topProductsData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Category breakdown
+    doc.setFontSize(12);
+    // Get the last table's y position again
+    const productLastTableY2 = (doc as any).lastAutoTable.finalY;
+    doc.text('Sales by Category', 14, productLastTableY2 + 15);
+
+    const categoryData = productSales.categoryBreakdown.map(category => [
+      category.category,
+      category.quantity.toString(),
+      formatCurrency(category.total),
+      formatPercentage(category.percentage)
+    ]);
+
+    autoTable(doc, {
+      startY: productLastTableY2 + 20,
+      head: [['Category', 'Quantity', 'Total Sales', 'Percentage']],
+      body: categoryData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Save the PDF
+    doc.save(`product-sales-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  }
+
+  // Export inventory report to PDF
+  const exportInventoryReport = () => {
+    if (!inventoryReport) return;
+
+    const doc = new jsPDF();
+    const appName = settings?.app_name || 'Callysta POS';
+
+    // Add header
+    doc.setFontSize(18);
+    doc.text(appName, 105, 15, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('Inventory Report', 105, 25, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Generated: ${format(new Date(), "MMM dd, yyyy HH:mm")}`, 105, 35, { align: 'center' });
+
+    // Inventory overview
+    doc.setFontSize(12);
+    doc.text('Inventory Overview', 14, 45);
+
+    const overviewData = [
+      ['Total Products', inventoryReport.totalProducts.toString()],
+      ['Total Stock Value', formatCurrency(inventoryReport.inventoryValue)],
+      ['Low Stock Items', inventoryReport.lowStockCount.toString()],
+      ['Out of Stock Items', inventoryReport.outOfStockCount.toString()]
+    ];
+
+    autoTable(doc, {
+      startY: 50,
+      head: [['Metric', 'Value']],
+      body: overviewData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Inventory by category
+    doc.setFontSize(12);
+    // Get the last table's y position
+    const inventoryLastTableY = (doc as any).lastAutoTable.finalY;
+    doc.text('Inventory by Category', 14, inventoryLastTableY + 15);
+
+    const categoryData = inventoryReport.inventoryByCategory.map(category => [
+      category.category,
+      category.product_count.toString(),
+      category.stock_quantity.toString(),
+      formatPercentage(category.percentage)
+    ]);
+
+    autoTable(doc, {
+      startY: inventoryLastTableY + 20,
+      head: [['Category', 'Products', 'Stock Quantity', 'Percentage']],
+      body: categoryData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Low stock items
+    doc.setFontSize(12);
+    // Get the last table's y position again
+    const inventoryLastTableY2 = (doc as any).lastAutoTable.finalY;
+    doc.text('Low Stock Items', 14, inventoryLastTableY2 + 15);
+
+    const lowStockData = inventoryReport.lowStockItems.map(item => [
+      item.name,
+      item.sku || 'N/A',
+      item.stock_quantity.toString(),
+      item.low_stock_threshold?.toString() || 'N/A',
+      item.stock_status === 'out_of_stock' ? 'Out of Stock' : 'Low Stock'
+    ]);
+
+    autoTable(doc, {
+      startY: inventoryLastTableY2 + 20,
+      head: [['Product', 'SKU', 'Current Stock', 'Threshold', 'Status']],
+      body: lowStockData,
+      theme: 'grid',
+      headStyles: { fillColor: [136, 132, 216] }
+    });
+
+    // Save the PDF
+    doc.save(`inventory-report-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -253,9 +522,15 @@ export default function ReportsManagement() {
             </SelectContent>
           </Select>
 
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={loading || (activeTab === 'sales' && !salesSummary) ||
+                     (activeTab === 'products' && !productSales) ||
+                     (activeTab === 'inventory' && !inventoryReport)}
+          >
             <Download className="mr-2 h-4 w-4" />
-            Export
+            Export PDF
           </Button>
         </div>
       </div>
