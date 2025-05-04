@@ -1,9 +1,10 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
 import { Button } from '@/components/ui/button'
-import { ShoppingCart, Trash2 } from 'lucide-react'
+import { ShoppingCart, Trash2, ArrowRight } from 'lucide-react'
 import {
   Popover,
   PopoverContent,
@@ -14,6 +15,7 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 
 export default function CartSummary() {
+  const router = useRouter()
   const { cart, summary, removeItem, clearCart } = useCart()
 
   return (
@@ -95,6 +97,19 @@ export default function CartSummary() {
                 <span>Total</span>
                 <span>Rp. {summary.total.toLocaleString('id-ID')}</span>
               </div>
+
+              {/* Checkout button */}
+              <Button
+                className="w-full mt-3"
+                size="sm"
+                onClick={() => {
+                  router.push('/checkout');
+                }}
+                disabled={summary.itemCount === 0}
+              >
+                <span>Checkout</span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </>
         )}

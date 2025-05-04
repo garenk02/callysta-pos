@@ -26,23 +26,23 @@ export default function ProductGrid({
 }: ProductGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {[...Array(9)].map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {[...Array(6)].map((_, i) => (
           <Card key={i} className="overflow-hidden shadow-sm">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <Skeleton className="h-5 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2 mb-3" />
+                  <Skeleton className="h-4 w-1/2 mb-2" />
                 </div>
                 <div className="text-right">
-                  <Skeleton className="h-5 w-20 mb-2" />
-                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-5 w-16 mb-2" />
+                  <Skeleton className="h-4 w-10" />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="p-4 pt-0">
-              <Skeleton className="h-9 w-full" />
+            <CardFooter className="p-3 pt-0">
+              <Skeleton className="h-8 w-full" />
             </CardFooter>
           </Card>
         ))}
@@ -85,7 +85,7 @@ export default function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
       {products.map(product => (
         <ProductCard
           key={product.id}
@@ -107,6 +107,23 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
     onAddToCart(product)
   }
 
+  // Double tap detection for mobile
+  const lastTapRef = React.useRef<number>(0);
+
+  const handleTap = (e: React.MouseEvent) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300; // ms
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      if (!isOutOfStock && !isInactive) {
+        handleAddToCart();
+      }
+    }
+
+    lastTapRef.current = now;
+  }
+
   // Determine product status
   const isOutOfStock = product.stock_quantity <= 0;
   const isInactive = product.is_active === false;
@@ -115,20 +132,23 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
                     product.stock_quantity > 0;
 
   return (
-    <Card className={`overflow-hidden flex flex-col shadow-sm transition-all duration-200 hover:shadow-md ${isInactive ? 'opacity-70' : ''}`}>
-      <CardContent className="p-4 flex-1">
+    <Card
+      className={`overflow-hidden flex flex-col shadow-sm transition-all duration-200 hover:shadow-md active:scale-95 ${isInactive ? 'opacity-70' : ''}`}
+      onClick={handleTap}
+    >
+      <CardContent className="p-3 flex-1">
         <div className="flex justify-between items-start">
           <div className="flex-1 pr-2">
-            <h3 className="font-medium line-clamp-2">{product.name}</h3>
+            <h3 className="text-sm font-medium line-clamp-2">{product.name}</h3>
             {product.sku && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                 SKU: {product.sku}
               </p>
             )}
           </div>
           <div className="text-right">
-            <p className="font-semibold">Rp. {product.price.toLocaleString('id-ID')}</p>
-            <div className="flex items-center justify-end mt-1">
+            <p className="text-sm font-semibold">Rp. {product.price.toLocaleString('id-ID')}</p>
+            <div className="flex items-center justify-end mt-0.5">
               {isOutOfStock ? (
                 <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-sm">
                   Out of stock
@@ -146,20 +166,32 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-3 pt-0">
         <Button
           className="w-full"
           size="sm"
           variant={isInactive || isOutOfStock ? "outline" : "default"}
-          onClick={handleAddToCart}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent double tap from triggering
+            handleAddToCart();
+          }}
           disabled={isOutOfStock || isInactive}
           title={isInactive ? "Product not available" :
                  isOutOfStock ? "Out of stock" : "Add to cart"}
         >
-          <Plus className="h-4 w-4 mr-1" />
-          {isInactive ? "Unavailable" : isOutOfStock ? "Out of stock" : "Add to cart"}
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          <span className="text-xs">
+            {isInactive ? "Unavailable" : isOutOfStock ? "Out of stock" : "Add to cart"}
+          </span>
         </Button>
       </CardFooter>
+
+      {/* Double tap hint - only on mobile */}
+      {!isOutOfStock && !isInactive && (
+        <div className="absolute top-0 right-0 bg-primary/80 text-white text-[10px] px-1.5 py-0.5 rounded-bl-md md:hidden">
+          Double tap to add
+        </div>
+      )}
     </Card>
   )
 }

@@ -5,15 +5,17 @@ import { PaymentMethod, PaymentDetails } from '@/types'
 import { createOrder } from '@/lib/supabase/client-orders'
 import { useAuth } from '@/hooks/useAuth'
 import Receipt from './Receipt'
+import CustomerInfo, { CustomerInfoData } from './CustomerInfo'
+import OrderReview from './OrderReview'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   CreditCard,
   Banknote,
-  CheckCircle2,
   AlertCircle,
-  Loader2
+  Loader2,
+  ArrowRight
 } from 'lucide-react'
 import {
   Tabs,
@@ -37,9 +39,20 @@ export default function PaymentSection({
 }: PaymentSectionProps) {
   const { user } = useAuth()
   const { cart, summary, clearCart } = useCart()
+
+  // Step management
+  const [currentStep, setCurrentStep] = useState<'payment' | 'review'>('payment')
+
+  // Payment state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [isProcessing, setIsProcessing] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+
+  // Customer information
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfoData>({
+    name: '',
+    phone: ''
+  })
 
   // Receipt state
   const [showReceipt, setShowReceipt] = useState(false)
@@ -53,6 +66,7 @@ export default function PaymentSection({
     paymentMethod: PaymentMethod
     paymentDetails?: PaymentDetails
     cashierName?: string
+    customerInfo?: CustomerInfoData
   } | null>(null)
 
   // Cash payment state
@@ -65,12 +79,15 @@ export default function PaymentSection({
   // Reset form when total changes
   useEffect(() => {
     resetPaymentForms()
+    // Reset to payment step when total changes
+    setCurrentStep('payment')
   }, [total])
 
   // Reset all payment forms
   const resetPaymentForms = () => {
     // Reset cash payment
     setAmountTendered('')
+    setFormattedAmount('')
     setChangeDue(0)
 
     // Reset validation
@@ -120,11 +137,33 @@ export default function PaymentSection({
     return true
   }
 
-  const handleCompleteSale = async () => {
+  // Handle proceeding to review step
+  const handleProceedToReview = () => {
     if (!validatePayment()) {
       return
     }
 
+    if (!user) {
+      setValidationError('You must be logged in to complete a sale')
+      return
+    }
+
+    if (cart.length === 0) {
+      setValidationError('Cart is empty')
+      return
+    }
+
+    // Move to review step
+    setCurrentStep('review')
+  }
+
+  // Handle going back to payment step
+  const handleBackToPayment = () => {
+    setCurrentStep('payment')
+  }
+
+  // Handle completing the sale after review
+  const handleCompleteSale = async () => {
     if (!user) {
       setValidationError('You must be logged in to complete a sale')
       return
@@ -155,6 +194,14 @@ export default function PaymentSection({
         }
       }
 
+      // Add customer info to payment details if provided
+      if (customerInfo.name || customerInfo.phone) {
+        paymentDetails.customer_info = {
+          name: customerInfo.name,
+          phone: customerInfo.phone
+        }
+      }
+
       // Create the order in the database
       const { orderId, error } = await createOrder({
         userId: user.id,
@@ -174,7 +221,8 @@ export default function PaymentSection({
         throw new Error('Failed to create order')
       }
 
-      // Call the onPaymentComplete callback
+      // Call the onPaymentComplete callback with payment details
+      // This will trigger the page loading indicator in the parent component
       onPaymentComplete(paymentMethod, paymentDetails)
 
       // Prepare receipt data
@@ -194,7 +242,8 @@ export default function PaymentSection({
         total: summary.total,
         paymentMethod,
         paymentDetails,
-        cashierName: user?.name
+        cashierName: user?.name,
+        customerInfo: customerInfo.name || customerInfo.phone ? customerInfo : undefined
       })
 
       // Clear the cart after payment is complete
@@ -203,11 +252,17 @@ export default function PaymentSection({
       // Reset payment form
       resetPaymentForms()
 
+      // Reset customer info
+      setCustomerInfo({ name: '', phone: '' })
+
       // Show success message with order ID
       toast.success(`Sale completed successfully! Order ID: ${orderId.slice(0, 8)}...`)
 
       // Show receipt
       setShowReceipt(true)
+
+      // Reset to payment step for next order
+      setCurrentStep('payment')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Payment processing failed'
       setValidationError(errorMessage)
@@ -244,112 +299,162 @@ export default function PaymentSection({
         />
       )}
 
-      <div className="mb-1">
-        <Tabs
-          value={paymentMethod}
-          onValueChange={handlePaymentMethodChange}
-          className="w-full"
-        >
-          <TabsList className="grid grid-cols-2 h-7 mb-1">
-            <TabsTrigger value="cash" className="text-xs py-0 px-2 flex items-center">
-              <Banknote className="h-3 w-3 mr-1" />
-              Cash
-            </TabsTrigger>
-            <TabsTrigger value="bank_transfer" className="text-xs py-0 px-2 flex items-center">
-              <CreditCard className="h-3 w-3 mr-1" />
-              Bank Transfer
-            </TabsTrigger>
-          </TabsList>
+      {currentStep === 'payment' ? (
+        /* Payment Step */
+        <>
+          <div className="mb-1">
+            <Tabs
+              value={paymentMethod}
+              onValueChange={handlePaymentMethodChange}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-2 h-8 mb-1">
+                <TabsTrigger value="cash" className="text-xs py-0 px-2 flex items-center">
+                  <Banknote className="h-3.5 w-3.5 mr-1" />
+                  Cash
+                </TabsTrigger>
+                <TabsTrigger value="bank_transfer" className="text-xs py-0 px-2 flex items-center">
+                  <CreditCard className="h-3.5 w-3.5 mr-1" />
+                  Bank Transfer
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="cash" className="mt-0 pt-0">
-            <div className="grid grid-cols-2 gap-2 mb-1">
-              <div>
-                <Label htmlFor="amount-tendered" className="text-xs block mb-0.5">Amount Tender</Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                    <span className="text-xs text-muted-foreground">Rp.</span>
+              <TabsContent value="cash" className="mt-0 pt-0">
+                <div className="grid grid-cols-2 gap-2 mb-1">
+                  <div>
+                    <Label htmlFor="amount-tendered" className="text-xs block mb-0.5">Amount Tender</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+                        <span className="text-xs text-muted-foreground">Rp.</span>
+                      </div>
+                      <Input
+                        id="amount-tendered"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0"
+                        value={formattedAmount}
+                        onChange={handleAmountTenderedChange}
+                        disabled={disabled}
+                        className="h-8 text-xs pl-8 pr-2"
+                      />
+                    </div>
                   </div>
-                  <Input
-                    id="amount-tendered"
-                    type="text"
-                    placeholder="0"
-                    value={formattedAmount}
-                    onChange={handleAmountTenderedChange}
-                    disabled={disabled}
-                    className="h-7 text-xs pl-8 pr-2"
-                  />
+                  <div>
+                    <Label htmlFor="change-due" className="text-xs block mb-0.5">Change Due</Label>
+                    <Input
+                      id="change-due"
+                      value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
+                      disabled
+                      className="bg-muted h-8 text-xs px-2"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="change-due" className="text-xs block mb-0.5">Change Due</Label>
-                <Input
-                  id="change-due"
-                  value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
-                  disabled
-                  className="bg-muted h-7 text-xs px-2"
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
-                disabled={disabled}
-                className="h-6 text-xs px-2"
-              >
-                Exact: Rp. {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
-                disabled={disabled}
-                className="h-6 text-xs px-2"
-              >
-                Round: Rp. {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
-              </Button>
-            </div>
-          </TabsContent>
+                {/* Quick amount buttons - more mobile friendly */}
+                <div className="grid grid-cols-4 gap-1 mb-1">
+                  {[10000, 20000, 50000, 100000].map(amount => (
+                    <Button
+                      key={amount}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickCashAmount(amount)}
+                      disabled={disabled}
+                      className="h-7 text-xs px-1"
+                    >
+                      {amount.toLocaleString('id-ID')}
+                    </Button>
+                  ))}
+                </div>
 
-          <TabsContent value="bank_transfer" className="mt-0 pt-0">
-            <div className="text-xs mb-1 p-1.5 bg-muted/50 rounded-md">
-              <p className="font-medium mb-0.5">Bank Transfer Instructions:</p>
-              <p>Amount: Rp. {total.toLocaleString('id-ID')}</p>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+                <div className="grid grid-cols-2 gap-2 mb-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
+                    disabled={disabled}
+                    className="h-7 text-xs px-2"
+                  >
+                    Exact: {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
+                    disabled={disabled}
+                    className="h-7 text-xs px-2"
+                  >
+                    Round: {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
+                  </Button>
+                </div>
+              </TabsContent>
 
-      {validationError && (
-        <div className="flex items-center gap-1 text-destructive text-xs mb-1 p-1 bg-destructive/10 rounded-md">
-          <AlertCircle className="h-3 w-3 flex-shrink-0" />
-          <span>{validationError}</span>
-        </div>
+              <TabsContent value="bank_transfer" className="mt-0 pt-0">
+                <div className="text-xs mb-1 p-2 bg-muted/50 rounded-md">
+                  <p className="font-medium mb-0.5">Bank Transfer Instructions:</p>
+                  <p>Amount: Rp. {total.toLocaleString('id-ID')}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Transfer to the account below and click Complete Sale</p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Customer Information Section */}
+          <div className="mb-2 mt-3 border-t pt-2">
+            {/* <h3 className="text-xs font-medium mb-1">Customer Information (Optional)</h3> */}
+            <CustomerInfo
+              customerInfo={customerInfo}
+              onChange={setCustomerInfo}
+              disabled={disabled}
+            />
+          </div>
+
+          {validationError && (
+            <div className="flex items-center gap-1 text-destructive text-xs mb-1 p-1.5 bg-destructive/10 rounded-md">
+              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{validationError}</span>
+            </div>
+          )}
+
+          <Button
+            className="w-full mt-1"
+            size="sm"
+            onClick={handleProceedToReview}
+            disabled={disabled || !isPaymentValid() || isProcessing}
+            style={{ height: "40px", backgroundColor: "#FF54BB", color: "white" }}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                <span className="text-sm font-medium">Processing...</span>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-medium">Review Order</span>
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </>
+            )}
+          </Button>
+        </>
+      ) : (
+        /* Review Step */
+        <OrderReview
+          cart={cart}
+          total={total}
+          paymentMethod={paymentMethod}
+          paymentDetails={
+            paymentMethod === 'cash'
+              ? { amount_tendered: parseInt(amountTendered) || 0, change_due: changeDue }
+              : { bank_reference: `ORDER-${new Date().getTime()}` }
+          }
+          customerInfo={customerInfo}
+          onBack={handleBackToPayment}
+          onConfirm={handleCompleteSale}
+          isProcessing={isProcessing}
+        />
       )}
-
-      <Button
-        className="w-full mt-0.5"
-        size="sm"
-        onClick={handleCompleteSale}
-        disabled={disabled || !isPaymentValid() || isProcessing}
-        style={{ height: "34px", backgroundColor: "#FF54BB", color: "white" }}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="h-3.5 w-3.5 mr-1" />
-            <span className="text-xs font-medium">Processing...</span>
-          </>
-        ) : (
-          <>
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-            <span className="text-xs font-medium">Complete Sale</span>
-          </>
-        )}
-      </Button>
     </div>
   )
 }

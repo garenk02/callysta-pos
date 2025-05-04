@@ -57,6 +57,10 @@ export interface PaymentDetails {
   bank_name?: string;
   bank_account_number?: string;
   bank_reference?: string;
+  customer_info?: {
+    name?: string;
+    phone?: string;
+  };
 }
 
 export interface Order {

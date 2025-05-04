@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { Product, CartItem } from '@/types'
 import { toast } from 'sonner'
 
@@ -24,34 +24,81 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+// Create a global variable to store the cart state
+// This ensures the state persists across page navigations and refreshes
+let globalCartState: CartItem[] | null = null;
+
+// Helper function to safely parse cart from localStorage
+const getCartFromStorage = (): CartItem[] => {
+  if (typeof window === 'undefined') {
+    return globalCartState || [];
+  }
+
+  try {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      const parsedCart = JSON.parse(savedCart) as CartItem[];
+      globalCartState = parsedCart;
+      return parsedCart;
+    }
+  } catch (error) {
+    console.error('Failed to parse saved cart:', error);
+    localStorage.removeItem('cart');
+  }
+
+  return globalCartState || [];
+};
+
+// Helper function to safely save cart to localStorage
+const saveCartToStorage = (cart: CartItem[]): void => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    globalCartState = cart;
+  } catch (error) {
+    console.error('Failed to save cart to localStorage:', error);
+  }
+};
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([])
+  // Initialize cart state from localStorage or global variable
+  const [cart, setCart] = useState<CartItem[]>(() => getCartFromStorage());
   const [summary, setSummary] = useState<CartSummary>({
     subtotal: 0,
     total: 0,
     itemCount: 0,
     uniqueItemCount: 0
-  })
+  });
 
-  // Load cart from localStorage on initial render
+  // Track if component is mounted to avoid hydration issues
+  const isMounted = useRef(false);
+
+  // Set mounted flag after initial render
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart')
+    isMounted.current = true;
 
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart) as CartItem[]
-        setCart(parsedCart)
-      } catch (error) {
-        console.error('Failed to parse saved cart:', error)
-        localStorage.removeItem('cart')
+    // Ensure we have the latest cart data from localStorage
+    if (typeof window !== 'undefined') {
+      const storedCart = getCartFromStorage();
+      if (storedCart.length > 0 && cart.length === 0) {
+        setCart(storedCart);
       }
     }
-  }, [])
+
+    // Cleanup function
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart))
-  }, [cart])
+    // Skip during server-side rendering and initial hydration
+    if (!isMounted.current) return;
+
+    saveCartToStorage(cart);
+  }, [cart]);
 
   // Calculate summary whenever cart changes
   useEffect(() => {
@@ -102,20 +149,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    setCart(prevCart => {
-      // Check if product is already in cart
-      const existingItemIndex = prevCart.findIndex(item => item.product.id === product.id)
+    let updatedCart: CartItem[];
 
-      if (existingItemIndex >= 0) {
-        // Update quantity if product is already in cart
-        const updatedCart = [...prevCart]
-        updatedCart[existingItemIndex].quantity += quantity
-        return updatedCart
-      } else {
-        // Add new item to cart
-        return [...prevCart, { product, quantity }]
-      }
-    })
+    // Check if product is already in cart
+    const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
+
+    if (existingItemIndex >= 0) {
+      // Update quantity if product is already in cart
+      updatedCart = [...cart];
+      updatedCart[existingItemIndex].quantity += quantity;
+    } else {
+      // Add new item to cart
+      updatedCart = [...cart, { product, quantity }];
+    }
+
+    // Update state
+    setCart(updatedCart);
+
+    // Ensure the updated cart is saved to localStorage and global state
+    if (isMounted.current) {
+      saveCartToStorage(updatedCart);
+    }
 
     toast.success(`Added ${quantity} ${product.name} to cart`)
   }
@@ -140,24 +194,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.product.id === productId
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    )
+    const updatedCart = cart.map(item =>
+      item.product.id === productId
+        ? { ...item, quantity: newQuantity }
+        : item
+    );
+
+    setCart(updatedCart);
+
+    // Ensure the updated cart is saved to localStorage and global state
+    if (isMounted.current) {
+      saveCartToStorage(updatedCart);
+    }
   }
 
   // Remove an item from the cart
   const removeItem = (productId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.product.id !== productId))
+    const updatedCart = cart.filter(item => item.product.id !== productId);
+    setCart(updatedCart)
+    // Ensure the updated cart is saved to localStorage and global state
+    if (isMounted.current) {
+      saveCartToStorage(updatedCart)
+    }
     toast.info('Item removed from cart')
   }
 
   // Clear the entire cart
   const clearCart = () => {
     setCart([])
+    // Also clear the cart in localStorage and global state
+    saveCartToStorage([])
+    globalCartState = []
     toast.info('Cart cleared')
   }
 

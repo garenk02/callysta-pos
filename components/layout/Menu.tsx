@@ -72,7 +72,7 @@ export default function Menu() {
     return item.roles.includes(user.role as UserRole);
   });
 
-  const { isExpanded } = useSidebar();
+  const { isExpanded, collapseSidebar } = useSidebar();
   const [hydrated, setHydrated] = useState(false);
 
   // Mark component as hydrated after client-side hydration is complete
@@ -108,6 +108,14 @@ export default function Menu() {
                 onClick={(e) => {
                   // Prevent event propagation to ensure the click isn't captured by the overlay
                   e.stopPropagation();
+
+                  // Auto-hide sidebar on mobile after menu item click
+                  if (window.innerWidth < 768 && isExpanded) {
+                    // Add a small delay to ensure navigation happens first
+                    setTimeout(() => {
+                      collapseSidebar();
+                    }, 150);
+                  }
                 }}
               >
                 <item.icon className={`h-5 w-5 ${iconMargin}`} />

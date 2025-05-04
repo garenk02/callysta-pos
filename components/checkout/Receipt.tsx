@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Order, OrderItem, PaymentMethod, PaymentDetails } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { CustomerInfoData } from './CustomerInfo'
 
 interface ReceiptProps {
   open: boolean
@@ -39,6 +40,7 @@ interface ReceiptProps {
     paymentMethod: PaymentMethod
     paymentDetails?: PaymentDetails
     cashierName?: string
+    customerInfo?: CustomerInfoData
   }
 }
 
@@ -191,6 +193,12 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
               <p className="text-sm mt-1 date-info">Receipt #{order.id.slice(0, 8)}</p>
               {order.cashierName && (
                 <p className="text-sm text-muted-foreground mt-1 date-info">Cashier: {order.cashierName}</p>
+              )}
+              {order.customerInfo && (order.customerInfo.name || order.customerInfo.phone) && (
+                <div className="text-sm text-muted-foreground mt-1 date-info">
+                  {order.customerInfo.name && <p>Customer: {order.customerInfo.name}</p>}
+                  {order.customerInfo.phone && <p>Phone: {order.customerInfo.phone}</p>}
+                </div>
               )}
             </div>
 

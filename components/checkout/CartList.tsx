@@ -71,8 +71,49 @@ function CartItemRow({
     removeItem(productId)
   }
 
+  // Handle swipe gestures for mobile
+  const handleSwipeStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const target = e.currentTarget as HTMLDivElement;
+    target.dataset.startX = touch.clientX.toString();
+  }
+
+  const handleSwipeMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const target = e.currentTarget as HTMLDivElement;
+    const startX = parseInt(target.dataset.startX || '0');
+    const currentX = touch.clientX;
+    const diff = currentX - startX;
+
+    // Only allow swiping left (negative diff)
+    if (diff < 0) {
+      target.style.transform = `translateX(${diff}px)`;
+    }
+  }
+
+  const handleSwipeEnd = (e: React.TouchEvent) => {
+    const target = e.currentTarget as HTMLDivElement;
+    const startX = parseInt(target.dataset.startX || '0');
+    const endX = e.changedTouches[0].clientX;
+    const diff = endX - startX;
+
+    // If swiped left more than 100px, remove the item
+    if (diff < -80) {
+      handleRemove();
+    } else {
+      // Reset position
+      target.style.transform = 'translateX(0)';
+    }
+  }
+
   return (
-    <div className="bg-white border rounded-lg p-2 shadow-sm" style={{ minHeight: "80px" }}>
+    <div
+      className="bg-white border rounded-lg p-2 shadow-sm transition-transform duration-200"
+      style={{ minHeight: "70px" }}
+      onTouchStart={handleSwipeStart}
+      onTouchMove={handleSwipeMove}
+      onTouchEnd={handleSwipeEnd}
+    >
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <h4 className="text-xs font-medium line-clamp-2">{name}</h4>
@@ -88,34 +129,39 @@ function CartItemRow({
           <Button
             variant="outline"
             size="icon"
-            className="h-5 w-5 rounded-md"
+            className="h-6 w-6 rounded-md"
             onClick={handleDecrement}
             disabled={quantity <= 1}
-            style={{ minWidth: "20px", padding: 0 }}
+            style={{ minWidth: "24px", padding: 0 }}
           >
-            <Minus className="h-2.5 w-2.5" />
+            <Minus className="h-3 w-3" />
           </Button>
           <span className="mx-1.5 w-5 text-center text-xs font-medium">{quantity}</span>
           <Button
             variant="outline"
             size="icon"
-            className="h-5 w-5 rounded-md"
+            className="h-6 w-6 rounded-md"
             onClick={handleIncrement}
             disabled={quantity >= maxQuantity}
-            style={{ minWidth: "20px", padding: 0 }}
+            style={{ minWidth: "24px", padding: 0 }}
           >
-            <Plus className="h-2.5 w-2.5" />
+            <Plus className="h-3 w-3" />
           </Button>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="h-5 w-5 text-destructive hover:bg-destructive/10"
+          className="h-6 w-6 text-destructive hover:bg-destructive/10"
           onClick={handleRemove}
-          style={{ minWidth: "20px", padding: 0 }}
+          style={{ minWidth: "24px", padding: 0 }}
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
+      </div>
+
+      {/* Swipe hint for mobile */}
+      <div className="text-xs text-muted-foreground mt-1 text-right italic md:hidden">
+        Swipe left to remove
       </div>
     </div>
   )
