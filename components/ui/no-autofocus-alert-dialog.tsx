@@ -1,16 +1,19 @@
 "use client"
 
 import * as React from "react"
-import { DialogContent, DialogContentProps } from "@/components/ui/dialog"
+import { AlertDialogContent } from "@/components/ui/alert-dialog"
+import type { ComponentProps } from "react"
+
+type AlertDialogContentProps = ComponentProps<typeof AlertDialogContent>
 
 /**
- * A wrapper around DialogContent that prevents autofocus on dialog open
+ * A wrapper around AlertDialogContent that prevents autofocus on dialog open
  * This is useful for dialogs that contain forms where you don't want the first input to be focused automatically
  */
-export function NoAutofocusDialogContent({
+export function NoAutofocusAlertDialogContent({
   children,
   ...props
-}: DialogContentProps) {
+}: AlertDialogContentProps) {
   // Prevent autofocus by stopping propagation of the event
   const handleOpenAutoFocus = React.useCallback((event: Event) => {
     event.preventDefault()
@@ -22,7 +25,7 @@ export function NoAutofocusDialogContent({
   }, [])
 
   return (
-    <DialogContent
+    <AlertDialogContent
       onOpenAutoFocus={handleOpenAutoFocus}
       onCloseAutoFocus={handleCloseAutoFocus}
       // Remove forceMount as it causes dialogs to show when they shouldn't
@@ -31,6 +34,6 @@ export function NoAutofocusDialogContent({
       {...props}
     >
       {children}
-    </DialogContent>
+    </AlertDialogContent>
   )
 }

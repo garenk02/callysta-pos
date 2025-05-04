@@ -8,13 +8,13 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { NoAutofocusAlertDialogContent } from '@/components/ui/no-autofocus-alert-dialog'
 
 export default function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -32,7 +32,15 @@ export default function LogoutButton() {
   }
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          setIsLoading(false);
+        }
+      }}
+    >
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
@@ -43,7 +51,7 @@ export default function LogoutButton() {
           {isLoading ? 'Signing out...' : 'Sign out'}
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <NoAutofocusAlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -66,7 +74,7 @@ export default function LogoutButton() {
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
-      </AlertDialogContent>
+      </NoAutofocusAlertDialogContent>
     </AlertDialog>
   )
 }

@@ -20,10 +20,7 @@ export function UsersTable({ columns, data, onActivate, onDeactivate }: UsersTab
   // Handle row selection changes
   const handleRowSelectionChange = (rows: User[]) => {
     setSelectedRows(rows)
-    // Add alert for debugging
-    if (rows.length > 0) {
-      alert(`${rows.length} rows selected`)
-    }
+    // No alerts needed for production
   }
 
   // Custom toolbar with bulk action buttons
@@ -55,7 +52,6 @@ export function UsersTable({ columns, data, onActivate, onDeactivate }: UsersTab
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  alert(`Activating ${selectedCount} users`)
                   onActivate(selectedRows)
                 }}
                 className="h-9 px-3 gap-1 bg-green-600 hover:bg-green-700 text-white"
@@ -67,7 +63,6 @@ export function UsersTable({ columns, data, onActivate, onDeactivate }: UsersTab
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  alert(`Deactivating ${selectedCount} users`)
                   onDeactivate(selectedRows)
                 }}
                 className="h-9 px-3 gap-1 bg-red-600 hover:bg-red-700 text-white"

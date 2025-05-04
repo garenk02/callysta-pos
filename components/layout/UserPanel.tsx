@@ -21,12 +21,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
+import { NoAutofocusAlertDialogContent } from '@/components/ui/no-autofocus-alert-dialog'
 
 export default function UserPanel() {
   const router = useRouter()
@@ -97,8 +97,16 @@ export default function UserPanel() {
         </DropdownMenuItem>
 
         {/* Logout Confirmation Dialog */}
-        <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-          <AlertDialogContent>
+        <AlertDialog
+          open={isLogoutDialogOpen}
+          onOpenChange={(open) => {
+            setIsLogoutDialogOpen(open);
+            if (!open) {
+              setIsLoading(false);
+            }
+          }}
+        >
+          <NoAutofocusAlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
               <AlertDialogDescription>
@@ -121,7 +129,7 @@ export default function UserPanel() {
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
-          </AlertDialogContent>
+          </NoAutofocusAlertDialogContent>
         </AlertDialog>
       </DropdownMenuContent>
     </DropdownMenu>

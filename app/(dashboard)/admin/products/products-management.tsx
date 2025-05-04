@@ -442,7 +442,16 @@ export default function ProductsManagement() {
           <h1 className="text-2xl font-bold">Products</h1>
 
           {isAdmin && (
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <Dialog
+              open={isAddDialogOpen}
+              onOpenChange={(open) => {
+                setIsAddDialogOpen(open);
+                if (!open) {
+                  // Reset form when dialog is closed
+                  addProductForm.reset();
+                }
+              }}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -655,7 +664,15 @@ export default function ProductsManagement() {
           )}
 
           {isAdmin && (
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <Dialog
+              open={isEditDialogOpen && selectedProduct !== null}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setIsEditDialogOpen(false);
+                  setSelectedProduct(null);
+                }
+              }}
+            >
               <NoAutofocusDialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Edit Product</DialogTitle>
@@ -664,7 +681,7 @@ export default function ProductsManagement() {
                   </DialogDescription>
                 </DialogHeader>
 
-                <Form {...editProductForm}>
+                {selectedProduct && <Form {...editProductForm}>
                   <form
                     onSubmit={editProductForm.handleSubmit(handleEditProduct)}
                     className="space-y-4 overflow-y-auto pr-1"
@@ -856,12 +873,20 @@ export default function ProductsManagement() {
                       </Button>
                     </DialogFooter>
                   </form>
-                </Form>
+                </Form>}
               </NoAutofocusDialogContent>
             </Dialog>
           )}
 
-          <Dialog open={isAdjustStockDialogOpen} onOpenChange={setIsAdjustStockDialogOpen}>
+          <Dialog
+            open={isAdjustStockDialogOpen && selectedProduct !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setIsAdjustStockDialogOpen(false);
+                // Don't reset selectedProduct here as it might be needed for other operations
+              }
+            }}
+          >
             <NoAutofocusDialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>Adjust Stock</DialogTitle>
@@ -871,15 +896,15 @@ export default function ProductsManagement() {
               </DialogHeader>
 
               {selectedProduct && (
-                <div className="mb-4 p-4 bg-muted rounded-md">
-                  <div className="font-medium">{selectedProduct.name}</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    Current stock: <span className="font-medium">{selectedProduct.stock_quantity}</span>
+                <>
+                  <div className="mb-4 p-4 bg-muted rounded-md">
+                    <div className="font-medium">{selectedProduct.name}</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Current stock: <span className="font-medium">{selectedProduct.stock_quantity}</span>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              <Form {...stockAdjustmentForm}>
+                  <Form {...stockAdjustmentForm}>
                 <form
                   onSubmit={stockAdjustmentForm.handleSubmit(handleAdjustStock)}
                   className="space-y-4"
@@ -937,6 +962,8 @@ export default function ProductsManagement() {
                   </DialogFooter>
                 </form>
               </Form>
+                </>
+              )}
             </NoAutofocusDialogContent>
           </Dialog>
         </div>
