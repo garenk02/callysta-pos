@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog"
+import { NoAutofocusDialogContent } from "@/components/ui/no-autofocus-dialog"
 import {
   Form, FormControl, FormDescription, FormField, FormItem,
   FormLabel, FormMessage
@@ -448,7 +449,7 @@ export default function ProductsManagement() {
                   Add Product
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+              <NoAutofocusDialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Add New Product</DialogTitle>
                   <DialogDescription>
@@ -649,13 +650,13 @@ export default function ProductsManagement() {
                     </DialogFooter>
                   </form>
                 </Form>
-              </DialogContent>
+              </NoAutofocusDialogContent>
             </Dialog>
           )}
 
           {isAdmin && (
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-              <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+              <NoAutofocusDialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Edit Product</DialogTitle>
                   <DialogDescription>
@@ -856,12 +857,12 @@ export default function ProductsManagement() {
                     </DialogFooter>
                   </form>
                 </Form>
-              </DialogContent>
+              </NoAutofocusDialogContent>
             </Dialog>
           )}
 
           <Dialog open={isAdjustStockDialogOpen} onOpenChange={setIsAdjustStockDialogOpen}>
-            <DialogContent className="sm:max-w-[500px]">
+            <NoAutofocusDialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>Adjust Stock</DialogTitle>
                 <DialogDescription>
@@ -936,7 +937,7 @@ export default function ProductsManagement() {
                   </DialogFooter>
                 </form>
               </Form>
-            </DialogContent>
+            </NoAutofocusDialogContent>
           </Dialog>
         </div>
 

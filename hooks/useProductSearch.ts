@@ -21,6 +21,7 @@ function debounce<T extends (...args: any[]) => any>(
 interface UseProductSearchProps {
   products: Product[]
   onAddToCart: (product: Product) => void
+  autoFocus?: boolean
 }
 
 interface UseProductSearchResult {
@@ -37,7 +38,8 @@ interface UseProductSearchResult {
 
 export function useProductSearch({
   products,
-  onAddToCart
+  onAddToCart,
+  autoFocus = true
 }: UseProductSearchProps): UseProductSearchResult {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products)
   const [searchQuery, setSearchQuery] = useState('')
@@ -189,9 +191,9 @@ export function useProductSearch({
     }
   }, [processScan])
 
-  // Focus the search input when the component mounts
+  // Focus the search input when the component mounts (if autoFocus is enabled)
   useEffect(() => {
-    if (searchInputRef.current) {
+    if (autoFocus && searchInputRef.current) {
       searchInputRef.current.focus()
     }
 

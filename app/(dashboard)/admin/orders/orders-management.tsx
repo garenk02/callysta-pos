@@ -25,6 +25,7 @@ import { columns } from "./columns"
 import { getOrders, getOrderById, OrderWithUser } from "@/app/api/orders/actions"
 import { OrderItem } from "@/types"
 import ReceiptComponent from "@/components/checkout/Receipt"
+import { toast } from "sonner"
 
 export default function OrdersManagement() {
   const [orders, setOrders] = useState<OrderWithUser[]>([])
@@ -35,6 +36,7 @@ export default function OrdersManagement() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const [loadingOrderDetails, setLoadingOrderDetails] = useState(false)
 
   // Load orders on component mount
   useEffect(() => {
@@ -64,41 +66,71 @@ export default function OrdersManagement() {
 
   // View order details
   const handleViewOrder = async (orderId: string) => {
+    // Open the dialog immediately with loading state
+    setIsViewDialogOpen(true)
+    setLoadingOrderDetails(true)
+    setSelectedOrder(null)
+    setOrderItems([])
+
     try {
       const { data, error } = await getOrderById(orderId)
 
       if (error) {
         console.error('Error fetching order details:', error.message)
+        toast.error(`Failed to load order details: ${error.message}`)
+        setIsViewDialogOpen(false)
         return
       }
 
       if (data) {
         setSelectedOrder(data.order)
         setOrderItems(data.items)
-        setIsViewDialogOpen(true)
+      } else {
+        // No data returned
+        toast.error('Failed to load order details: No data found')
+        setIsViewDialogOpen(false)
       }
     } catch (err) {
       console.error('Error viewing order:', err)
+      toast.error('An unexpected error occurred while loading the order details')
+      setIsViewDialogOpen(false)
+    } finally {
+      setLoadingOrderDetails(false)
     }
   }
 
   // View receipt
   const handleViewReceipt = async (order: OrderWithUser) => {
+    // Open the receipt dialog immediately with loading state
+    setIsReceiptDialogOpen(true)
+    setLoadingOrderDetails(true)
+    setSelectedOrder(null)
+    setOrderItems([])
+
     try {
       const { data, error } = await getOrderById(order.id)
 
       if (error) {
         console.error('Error fetching order details for receipt:', error.message)
+        toast.error(`Failed to load receipt: ${error.message}`)
+        setIsReceiptDialogOpen(false)
         return
       }
 
       if (data) {
         setSelectedOrder(data.order)
         setOrderItems(data.items)
-        setIsReceiptDialogOpen(true)
+      } else {
+        // No data returned
+        toast.error('Failed to load receipt: No data found')
+        setIsReceiptDialogOpen(false)
       }
     } catch (err) {
       console.error('Error viewing receipt:', err)
+      toast.error('An unexpected error occurred while loading the receipt')
+      setIsReceiptDialogOpen(false)
+    } finally {
+      setLoadingOrderDetails(false)
     }
   }
 
@@ -158,29 +190,33 @@ export default function OrdersManagement() {
                   ].map(option => ({
                     ...option,
                     value: option.value || "undefined"
-                  })),
-                },
+                  }))
+                }
               ]}
             />
           )}
         </CardContent>
       </Card>
 
-      {/* Order Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
             <DialogDescription>
-              Order #{selectedOrder?.id?.substring(0, 8)}
+              {selectedOrder ? `Order #${selectedOrder.id.substring(0, 8)}` : 'Loading order details...'}
             </DialogDescription>
           </DialogHeader>
 
-          {selectedOrder && (
+          {loadingOrderDetails ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+              <p className="text-sm text-muted-foreground">Loading order details...</p>
+            </div>
+          ) : selectedOrder ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Customer</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">Cashier</h3>
                   <p>{selectedOrder.user?.name || selectedOrder.user?.email || 'Guest'}</p>
                 </div>
                 <div>
@@ -285,32 +321,30 @@ export default function OrdersManagement() {
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
 
-      {/* Receipt Dialog */}
-      {selectedOrder && (
-        <ReceiptComponent
-          open={isReceiptDialogOpen}
-          onOpenChange={setIsReceiptDialogOpen}
-          order={{
-            id: selectedOrder.id,
-            date: new Date(selectedOrder.created_at),
-            items: orderItems.map(item => ({
-              name: item.product_name,
-              price: item.product_price,
-              quantity: item.quantity,
-              total: item.total
-            })),
-            subtotal: selectedOrder.subtotal,
-            tax: selectedOrder.tax,
-            total: selectedOrder.total,
-            paymentMethod: selectedOrder.payment_method,
-            paymentDetails: selectedOrder.payment_details
-          }}
-        />
-      )}
+      <ReceiptComponent
+        open={isReceiptDialogOpen}
+        onOpenChange={setIsReceiptDialogOpen}
+        isLoading={loadingOrderDetails}
+        order={selectedOrder && orderItems.length > 0 ? {
+          id: selectedOrder.id,
+          date: new Date(selectedOrder.created_at),
+          items: orderItems.map(item => ({
+            name: item.product_name,
+            price: item.product_price,
+            quantity: item.quantity,
+            total: item.total
+          })),
+          subtotal: selectedOrder.subtotal,
+          tax: selectedOrder.tax,
+          total: selectedOrder.total,
+          paymentMethod: selectedOrder.payment_method,
+          paymentDetails: selectedOrder.payment_details
+        } : undefined}
+      />
     </div>
   )
 }

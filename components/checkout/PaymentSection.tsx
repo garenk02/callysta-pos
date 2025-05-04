@@ -289,7 +289,7 @@ export default function PaymentSection({
   }
 
   return (
-    <div className="w-full mt-1">
+    <div className="w-full mt-1 max-w-full">
       {/* Receipt Modal */}
       {receiptData && (
         <Receipt
@@ -360,21 +360,21 @@ export default function PaymentSection({
                       size="sm"
                       onClick={() => handleQuickCashAmount(amount)}
                       disabled={disabled}
-                      className="h-7 text-xs px-1"
+                      className="h-7 text-xs px-1 md:text-[10px] md:px-0.5"
                     >
                       {amount.toLocaleString('id-ID')}
                     </Button>
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-1">
+                <div className="grid grid-cols-2 gap-1 mb-1">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
                     disabled={disabled}
-                    className="h-7 text-xs px-2"
+                    className="h-7 text-xs px-2 md:text-[10px] md:px-1"
                   >
                     Exact: {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
                   </Button>
@@ -384,7 +384,7 @@ export default function PaymentSection({
                     size="sm"
                     onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
                     disabled={disabled}
-                    className="h-7 text-xs px-2"
+                    className="h-7 text-xs px-2 md:text-[10px] md:px-1"
                   >
                     Round: {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
                   </Button>
@@ -394,8 +394,7 @@ export default function PaymentSection({
               <TabsContent value="bank_transfer" className="mt-0 pt-0">
                 <div className="text-xs mb-1 p-2 bg-muted/50 rounded-md">
                   <p className="font-medium mb-0.5">Bank Transfer Instructions:</p>
-                  <p>Amount: Rp. {total.toLocaleString('id-ID')}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Transfer to the account below and click Complete Sale</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Make sure to transfer to correct bank account</p>
                 </div>
               </TabsContent>
             </Tabs>

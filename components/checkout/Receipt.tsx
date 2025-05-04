@@ -16,7 +16,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Printer,
   Download,
-  Share2
+  Share2,
+  Loader2
 } from 'lucide-react'
 import { Order, OrderItem, PaymentMethod, PaymentDetails } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -25,7 +26,8 @@ import { CustomerInfoData } from './CustomerInfo'
 interface ReceiptProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  order: {
+  isLoading?: boolean
+  order?: {
     id: string
     date: Date
     items: {
@@ -44,11 +46,14 @@ interface ReceiptProps {
   }
 }
 
-export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
+export default function Receipt({ open, onOpenChange, isLoading = false, order }: ReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null)
   const { settings } = useSettings()
 
   const handlePrint = () => {
+    // Only proceed if order is defined
+    if (!order) return
+
     const printWindow = window.open('', '_blank')
     if (!printWindow || !receiptRef.current) return
 
@@ -154,6 +159,8 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
   }
 
   const formatPaymentMethod = (method: PaymentMethod): string => {
+    if (!method) return 'Unknown';
+
     switch (method) {
       case 'cash':
         return 'Cash'
@@ -174,33 +181,39 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
         <DialogHeader>
           <DialogTitle>Receipt</DialogTitle>
           <DialogDescription>
-            Order #{order.id.slice(0, 8)}
+            {isLoading ? 'Loading receipt...' : order ? `Order #${order.id.slice(0, 8)}` : 'Receipt'}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
-          <div ref={receiptRef} className="receipt-content p-4">
-            <div className="receipt-header text-center mb-4">
-              <h1 className="text-lg font-bold">{settings?.app_name || 'Elegant POS'}</h1>
-              <p className="text-xs text-muted-foreground">{settings?.app_address || '123 Main Street, City'}</p>
-              <p className="text-xs text-muted-foreground">Tel: {settings?.app_phone || '(123) 456-7890'}</p>
-              {settings?.app_email && (
-                <p className="text-xs text-muted-foreground">Email: {settings.app_email}</p>
-              )}
-              <p className="text-sm text-muted-foreground mt-2 date-info">
-                {formatDate(order.date)}
-              </p>
-              <p className="text-sm mt-1 date-info">Receipt #{order.id.slice(0, 8)}</p>
-              {order.cashierName && (
-                <p className="text-sm text-muted-foreground mt-1 date-info">Cashier: {order.cashierName}</p>
-              )}
-              {order.customerInfo && (order.customerInfo.name || order.customerInfo.phone) && (
-                <div className="text-sm text-muted-foreground mt-1 date-info">
-                  {order.customerInfo.name && <p>Customer: {order.customerInfo.name}</p>}
-                  {order.customerInfo.phone && <p>Phone: {order.customerInfo.phone}</p>}
-                </div>
-              )}
-            </div>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+            <p className="text-sm text-muted-foreground">Loading receipt...</p>
+          </div>
+        ) : order ? (
+          <ScrollArea className="max-h-[60vh]">
+            <div ref={receiptRef} className="receipt-content p-4">
+              <div className="receipt-header text-center mb-4">
+                <h1 className="text-lg font-bold">{settings?.app_name || 'Elegant POS'}</h1>
+                <p className="text-xs text-muted-foreground">{settings?.app_address || '123 Main Street, City'}</p>
+                <p className="text-xs text-muted-foreground">Tel: {settings?.app_phone || '(123) 456-7890'}</p>
+                {settings?.app_email && (
+                  <p className="text-xs text-muted-foreground">Email: {settings.app_email}</p>
+                )}
+                <p className="text-sm text-muted-foreground mt-2 date-info">
+                  {formatDate(order.date)}
+                </p>
+                <p className="text-sm mt-1 date-info">Receipt #{order.id.slice(0, 8)}</p>
+                {order.cashierName && (
+                  <p className="text-sm text-muted-foreground mt-1 date-info">Cashier: {order.cashierName}</p>
+                )}
+                {order.customerInfo && (order.customerInfo.name || order.customerInfo.phone) && (
+                  <div className="text-sm text-muted-foreground mt-1 date-info">
+                    {order.customerInfo.name && <p>Customer: {order.customerInfo.name}</p>}
+                    {order.customerInfo.phone && <p>Phone: {order.customerInfo.phone}</p>}
+                  </div>
+                )}
+              </div>
 
             <Separator className="my-4" />
 
@@ -256,18 +269,25 @@ export default function Receipt({ open, onOpenChange, order }: ReceiptProps) {
             </div>
           </div>
         </ScrollArea>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8">
+            <p className="text-sm text-muted-foreground">No receipt data available</p>
+          </div>
+        )}
 
         <DialogFooter className="flex justify-between sm:justify-between">
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-          </div>
+          {!isLoading && order && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handlePrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Save
+              </Button>
+            </div>
+          )}
           <Button variant="default" size="sm" onClick={() => onOpenChange(false)}>
             Close
           </Button>

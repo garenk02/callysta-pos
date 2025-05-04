@@ -21,7 +21,7 @@ export default function CartList() {
 
   return (
     <ScrollArea className="h-full pr-2">
-      <div className="space-y-2">
+      <div className="space-y-2 pb-2">
         {cart.map(item => (
           <CartItemRow
             key={item.product.id}

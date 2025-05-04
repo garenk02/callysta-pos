@@ -58,7 +58,8 @@ export default function CheckoutPage() {
     searchInputRef
   } = useProductSearch({
     products,
-    onAddToCart: addItem
+    onAddToCart: addItem,
+    autoFocus: false // Disable autofocus on search input
   })
 
   // Fetch products on component mount
@@ -127,11 +128,11 @@ export default function CheckoutPage() {
   const [isPageLoading, setIsPageLoading] = useState(false)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
       {/* Page Loading Overlay */}
       <LoadingOverlay isLoading={isPageLoading} message="Processing your order..." />
-      {/* Mobile View: Tab Navigation */}
-      <div className="md:hidden px-4 pt-4">
+      {/* Mobile and Tablet View: Tab Navigation */}
+      <div className="lg:hidden px-4 pt-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-2 w-full mb-2">
             <TabsTrigger value="products" className="flex items-center gap-1">
@@ -203,7 +204,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Product grid */}
-                <div className="mt-2 overflow-auto" style={{ height: 'calc(100vh - 14rem)' }}>
+                <div className="mt-2 overflow-auto" style={{ height: 'min(calc(100vh - 14rem), 500px)' }}>
                   <ProductGrid
                     products={filteredProducts}
                     isLoading={isLoading}
@@ -227,7 +228,10 @@ export default function CheckoutPage() {
               </CardHeader>
 
               {/* Cart items */}
-              <div className="flex-1 overflow-hidden" style={{ height: 'calc(100vh - 20rem)' }}>
+              <div className="flex-1 overflow-hidden" style={{
+                height: 'min(calc(100vh - 20rem), 400px)',
+                minHeight: '200px'
+              }}>
                 <CardContent className="h-full overflow-auto py-2 px-3">
                   <CartList />
                 </CardContent>
@@ -273,7 +277,7 @@ export default function CheckoutPage() {
       </div>
 
       {/* Desktop View: Side-by-side layout */}
-      <div className="hidden md:flex md:flex-row flex-1 overflow-hidden">
+      <div className="hidden lg:flex lg:flex-row flex-1 overflow-hidden">
         {/* Left side - Product Selection */}
         <div className="w-3/5 p-4 overflow-hidden flex flex-col">
           <Card className="flex-1 overflow-hidden">
@@ -344,7 +348,10 @@ export default function CheckoutPage() {
             </CardHeader>
 
             {/* Cart area with better height control */}
-            <div className="flex-1 overflow-hidden" style={{ maxHeight: 'calc(100vh - 22rem)' }}>
+            <div className="flex-1 overflow-hidden" style={{
+              maxHeight: 'min(calc(100vh - 22rem), 500px)',
+              minHeight: '250px'
+            }}>
               <CardContent className="h-full overflow-auto py-2 px-4">
                 <CartList />
               </CardContent>
