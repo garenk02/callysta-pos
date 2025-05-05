@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table/data-table"
+import { VirtualizedDataTable } from "@/components/ui/virtualized-data-table"
 import { ProductsTableToolbar } from "./products-table-toolbar"
+import { useDebounce } from "@/hooks/useDebounce"
+import { virtualizedColumns } from "./virtualized-columns"
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger
@@ -18,9 +21,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Package, PlusCircle, Loader2
+  Package, PlusCircle, Loader2, RefreshCw
 } from "lucide-react"
-import { columns } from "./columns"
 import {
   getProducts, createProduct, updateProduct, deleteProduct, adjustStock
 } from "@/app/api/products/actions"
@@ -86,7 +88,8 @@ export default function ProductsManagement() {
   const [totalPages, setTotalPages] = useState(1);
 
   // Filter state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const searchQuery = useDebounce(searchInput, 300); // Debounce search input by 300ms
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<boolean | undefined>(undefined);
 
@@ -185,7 +188,7 @@ export default function ProductsManagement() {
 
   // Handle search and filter changes
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
+    setSearchInput(query);
     setPage(1); // Reset to first page when search changes
   };
 
@@ -982,27 +985,80 @@ export default function ProductsManagement() {
               </div>
             )}
 
-            {loading ? (
-              <div className="flex flex-col justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                <p className="text-primary">Loading products...</p>
-              </div>
-            ) : products.length === 0 && totalItems === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <p>No products found</p>
-                <p className="text-sm mt-2">Click "Add Product" to create your first product</p>
-              </div>
-            ) : (
-              <DataTable
-                columns={columns({
+            <div className="relative">
+              {/* Loading overlay - absolute positioned over the table */}
+              {loading && (
+                <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-50">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                  <p className="text-primary">Loading products...</p>
+                </div>
+              )}
+
+              {/* Empty state message - shown only when not loading and no products */}
+              {!loading && products.length === 0 && (
+                <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-50">
+                  <Package className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <p className="text-lg font-medium">No products found</p>
+                  <p className="text-sm mt-1 text-muted-foreground mb-4">
+                    {totalItems === 0
+                      ? "Click \"Add Product\" to create your first product"
+                      : "Try adjusting your search or filters"}
+                  </p>
+
+                  {/* Always show reset button in empty state */}
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      // Reset all state values
+                      setSearchInput('');
+                      setSelectedCategory(undefined);
+                      setSelectedStatus(undefined);
+                      setColumnFilters({});
+                      setPage(1);
+
+                      // Force a reload with default parameters
+                      getProducts({
+                        page: 1,
+                        pageSize: 10,
+                        searchQuery: '',
+                        category: undefined,
+                        isActive: undefined,
+                        sortBy: 'name',
+                        sortDirection: 'asc'
+                      }).then(({ data, error }) => {
+                        if (error) {
+                          setError(error.message);
+                        } else if (data) {
+                          setProducts(data.products || []);
+                          setTotalItems(data.totalCount);
+                          setTotalPages(data.totalPages);
+                        }
+                        setLoading(false);
+                      }).catch(err => {
+                        console.error('Error resetting products view:', err);
+                        setLoading(false);
+                      });
+                    }}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Reset to Default View
+                  </Button>
+                </div>
+              )}
+
+              {/* Always render the table */}
+              <VirtualizedDataTable
+                columns={virtualizedColumns({
                   onEdit: openEditDialog,
                   onDelete: handleDeleteProduct,
                   onAdjustStock: openAdjustStockDialog,
                   isAdmin,
                 })}
-                data={products}
+                data={loading ? [] : products}
                 searchKey="name"
+                onSearch={handleSearch}
+                searchPlaceholder="Search products..."
+                currentSearchValue={searchInput}
                 filterableColumns={[
                   {
                     id: "is_active",
@@ -1021,18 +1077,6 @@ export default function ProductsManagement() {
                     }))
                   }
                 ]}
-                pagination={{
-                  page,
-                  pageSize,
-                  totalItems,
-                  totalPages,
-                  onPageChange: setPage,
-                  onPageSizeChange: (pageSize: number) => {
-                    setPageSize(pageSize);
-                    setPage(1); // Reset to first page when page size changes
-                  }
-                }}
-                onSearch={handleSearch}
                 onFilterChange={(columnId: string, value: string | undefined) => {
                   if (columnId === 'is_active') {
                     handleStatusFilter(value);
@@ -1040,45 +1084,10 @@ export default function ProductsManagement() {
                     handleCategoryFilter(value);
                   }
                 }}
-
-                onSortingChange={(column: string, direction: 'asc' | 'desc') => {
-                  handleSortingChange(column, direction);
-                }}
-                tableToolbar={(table) => (
-                  <ProductsTableToolbar
-                    table={table}
-                    searchKey="name"
-                    filterableColumns={[
-                      {
-                        id: "is_active",
-                        title: "Status",
-                        options: [
-                          { label: "Active", value: "true" },
-                          { label: "Inactive", value: "false" },
-                        ],
-                      },
-                      {
-                        id: "category",
-                        title: "Category",
-                        options: allCategories.map(category => ({
-                          label: category,
-                          value: category
-                        }))
-                      }
-                    ]}
-                    onSearch={handleSearch}
-                    onFilterChange={(columnId: string, value: string | undefined) => {
-                      if (columnId === 'is_active') {
-                        handleStatusFilter(value);
-                      } else if (columnId === 'category') {
-                        handleCategoryFilter(value);
-                      }
-                    }}
-                    selectedFilters={columnFilters}
-                  />
-                )}
+                height={600}
+                selectedFilters={columnFilters}
               />
-            )}
+            </div>
         </CardContent>
       </Card>
     </div>

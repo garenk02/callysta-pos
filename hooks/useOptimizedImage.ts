@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import cache from '@/lib/cache'
+import { CACHE_CONFIG } from '@/lib/cache-config'
 
 interface ImageCache {
   src: string
@@ -70,23 +71,23 @@ export function useOptimizedImage(
         // If using Supabase storage, we can add transformation parameters
         if (src.includes('supabase.co/storage/v1/object/public')) {
           const url = new URL(src)
-          
+
           // Add width parameter if specified
           if (width) {
             url.searchParams.append('width', width.toString())
           }
-          
+
           // Add height parameter if specified
           if (height) {
             url.searchParams.append('height', height.toString())
           }
-          
+
           // Add format parameter if specified
           url.searchParams.append('format', format)
-          
+
           // Add quality parameter
           url.searchParams.append('quality', quality.toString())
-          
+
           optimizedUrl = url.toString()
         }
 
@@ -98,7 +99,7 @@ export function useOptimizedImage(
             width: width || 0,
             height: height || 0,
           },
-          60 * 60 // Cache for 1 hour
+          CACHE_CONFIG.images.optimized
         )
 
         setOptimizedSrc(optimizedUrl)

@@ -18,10 +18,13 @@ import {
 } from "@/components/ui/dialog"
 import {
   Receipt as ReceiptIcon,
-  Loader2
+  Loader2,
+  RefreshCw
 } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
-import { columns } from "./columns"
+import { VirtualizedDataTable } from "@/components/ui/virtualized-data-table"
+import { virtualizedColumns } from "./virtualized-columns"
+import { useDebounce } from "@/hooks/useDebounce"
 import { getOrders, getOrderById, OrderWithUser } from "@/app/api/orders/actions"
 import { OrderItem } from "@/types"
 import ReceiptComponent from "@/components/checkout/Receipt"
@@ -29,7 +32,8 @@ import { toast } from "sonner"
 
 export default function OrdersManagement() {
   const [orders, setOrders] = useState<OrderWithUser[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) // Main loading state for initial data fetch
+  const [filterLoading, setFilterLoading] = useState(false) // Loading state for filter/search operations
   const [error, setError] = useState<string | null>(null)
   const [selectedOrder, setSelectedOrder] = useState<OrderWithUser | null>(null)
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
@@ -37,11 +41,62 @@ export default function OrdersManagement() {
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false)
+  const [columnFilters, setColumnFilters] = useState<{
+    payment_method?: string;
+  }>({})
+  const [searchInput, setSearchInput] = useState('')
 
-  // Load orders on component mount
+  // Load orders on component mount or when date range changes
   useEffect(() => {
     loadOrders()
   }, [dateRange])
+
+  // Store the original unfiltered orders
+  const [allOrders, setAllOrders] = useState<OrderWithUser[]>([])
+
+  // Apply filters when columnFilters or searchInput changes
+  useEffect(() => {
+    // If we're in the main loading state or don't have any orders yet, don't do anything
+    if (loading || allOrders.length === 0) return;
+
+    // Set filter loading state to true to show loading indicator
+    setFilterLoading(true);
+
+    // Use setTimeout to ensure the loading indicator is shown
+    // This creates a small delay that makes the UI feel more responsive
+    setTimeout(() => {
+      // Start with all orders
+      let filteredOrders = [...allOrders];
+
+      // Apply payment method filter if set
+      if (columnFilters.payment_method) {
+        filteredOrders = filteredOrders.filter(order =>
+          order.payment_method === columnFilters.payment_method
+        );
+      }
+
+      // Apply search filter if set
+      if (searchInput) {
+        filteredOrders = filteredOrders.filter(order => {
+          // Search by Order ID (case insensitive)
+          const idMatch = order.id.toLowerCase().includes(searchInput.toLowerCase());
+
+          // Search by Cashier name or email (case insensitive)
+          const cashierNameMatch = order.user?.name?.toLowerCase().includes(searchInput.toLowerCase()) || false;
+          const cashierEmailMatch = order.user?.email?.toLowerCase().includes(searchInput.toLowerCase()) || false;
+
+          // Return true if any of the conditions match
+          return idMatch || cashierNameMatch || cashierEmailMatch;
+        });
+      }
+
+      // Update the orders list with filtered results
+      setOrders(filteredOrders);
+
+      // Set filter loading state back to false
+      setFilterLoading(false);
+    }, 300); // Small delay for better UX
+  }, [columnFilters, searchInput, allOrders, loading])
 
   // Load orders function
   const loadOrders = useCallback(async () => {
@@ -54,7 +109,9 @@ export default function OrdersManagement() {
       if (fetchError) {
         setError(fetchError.message)
       } else {
+        // Store both the filtered and unfiltered orders
         setOrders(data || [])
+        setAllOrders(data || [])
       }
     } catch (err) {
       setError('An unexpected error occurred while fetching orders.')
@@ -140,6 +197,15 @@ export default function OrdersManagement() {
     return `Rp.${value.toLocaleString('id-ID')}`;
   }
 
+  // Handle search for Order ID or Cashier
+  const handleSearch = (query: string) => {
+    // Show loading indicator immediately
+    setFilterLoading(true);
+
+    // Update the search input - the useEffect will handle the filtering
+    setSearchInput(query);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -160,32 +226,76 @@ export default function OrdersManagement() {
             </div>
           )}
 
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <ReceiptIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>No orders found</p>
-              <p className="text-sm mt-2">Orders will appear here when customers make purchases</p>
-            </div>
-          ) : (
-            <DataTable
-              columns={columns({
-                onView: handleViewOrder,
-                onViewReceipt: handleViewReceipt
+          <div className="relative">
+            {/* Loading overlay - absolute positioned over the table */}
+            {(loading || filterLoading) && (
+              <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-50">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                <p className="text-primary">
+                  {loading ? "Loading orders..." : "Updating results..."}
+                </p>
+              </div>
+            )}
+
+            {/* Empty state message - shown only when not loading/filtering and no orders */}
+            {!loading && !filterLoading && orders.length === 0 && (
+              <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-50">
+                <ReceiptIcon className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                <p className="text-lg font-medium">No orders found</p>
+                <p className="text-sm mt-1 text-muted-foreground mb-4">
+                  {searchInput || Object.keys(columnFilters).length > 0
+                    ? "Try adjusting your search or filters"
+                    : "Orders will appear here when customers make purchases"}
+                </p>
+
+                {/* Always show reset button in empty state */}
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    // Show loading indicator immediately
+                    setFilterLoading(true);
+
+                    // Reset all state values
+                    setSearchInput('');
+                    setColumnFilters({});
+                    setDateRange(undefined);
+
+                    // Use setTimeout to ensure the loading indicator is shown
+                    setTimeout(() => {
+                      // Reset to all orders without making a new API call
+                      if (allOrders.length > 0) {
+                        setOrders([...allOrders]);
+                        setFilterLoading(false);
+                      } else {
+                        // If we don't have any orders yet, reload them
+                        loadOrders();
+                      }
+                    }, 300); // Small delay for better UX
+                  }}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Reset
+                </Button>
+              </div>
+            )}
+
+            {/* Always render the table */}
+            <VirtualizedDataTable
+              columns={virtualizedColumns({
+                onViewDetails: handleViewOrder,
+                onPrintReceipt: handleViewReceipt
               })}
-              data={orders}
+              data={loading ? [] : orders}
               searchKey="id"
+              searchPlaceholder="Search by Order ID or Cashier..."
+              onSearch={handleSearch}
+              currentSearchValue={searchInput}
               filterableColumns={[
                 {
                   id: "payment_method",
                   title: "Payment Method",
                   options: [
                     { label: "Cash", value: "cash" },
-                    { label: "Card", value: "card" },
-                    { label: "Mobile Payment", value: "mobile_payment" },
                     { label: "Bank Transfer", value: "bank_transfer" },
                   ].map(option => ({
                     ...option,
@@ -193,8 +303,21 @@ export default function OrdersManagement() {
                   }))
                 }
               ]}
+              onFilterChange={(columnId: string, value: string | undefined) => {
+                // Show loading indicator immediately
+                setFilterLoading(true);
+
+                if (columnId === 'payment_method') {
+                  setColumnFilters(prev => ({
+                    ...prev,
+                    payment_method: value
+                  }));
+                }
+              }}
+              selectedFilters={columnFilters}
+              height={600}
             />
-          )}
+          </div>
         </CardContent>
       </Card>
 

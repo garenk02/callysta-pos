@@ -170,8 +170,14 @@ export default function Receipt({ open, onOpenChange, isLoading = false, order }
         return 'Mobile Payment'
       case 'gift_card':
         return 'Gift Card'
+      case 'bank_transfer':
+        return 'Bank Transfer'
       default:
+        // For any other payment methods, convert snake_case to Title Case
         return method
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
     }
   }
 

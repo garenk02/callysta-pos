@@ -16,6 +16,7 @@ export type ProductActionResult<T = void> = {
 
 /**
  * Get all products with pagination, filtering and sorting support
+ * Supports both standard pagination and cursor-based pagination for better performance with large datasets
  */
 export async function getProducts(options?: {
   page?: number;
@@ -25,12 +26,14 @@ export async function getProducts(options?: {
   isActive?: boolean;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
+  cursor?: string; // Add cursor-based pagination support
 }): Promise<ProductActionResult<{
   products: Product[];
   totalCount: number;
   page: number;
   pageSize: number;
   totalPages: number;
+  nextCursor?: string; // Return next cursor for infinite scrolling
 }>> {
   try {
     const supabase = await createClient()
@@ -39,10 +42,7 @@ export async function getProducts(options?: {
     const searchQuery = options?.searchQuery || ''
     const category = options?.category
     const isActive = options?.isActive
-
-    // Calculate range for pagination
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
+    const cursor = options?.cursor
 
     // Start building the query
     let query = supabase
@@ -51,7 +51,8 @@ export async function getProducts(options?: {
 
     // Apply filters if provided
     if (searchQuery) {
-      query = query.ilike('name', `%${searchQuery}%`)
+      // Improved search to look in name, sku, and description
+      query = query.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
     }
 
     if (category) {
@@ -62,43 +63,45 @@ export async function getProducts(options?: {
       query = query.eq('is_active', isActive)
     }
 
-    // Get total count first using a separate query
+    // Get total count first using a separate query (only for standard pagination)
     let count = 0;
-    try {
-      // Create a separate query for counting
-      const countQuery = supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true });
+    if (!cursor) { // Skip count query for cursor-based pagination
+      try {
+        // Create a separate query for counting
+        const countQuery = supabase
+          .from('products')
+          .select('id', { count: 'exact', head: true });
 
-      // Apply the same filters as the main query
-      if (searchQuery) {
-        countQuery.ilike('name', `%${searchQuery}%`);
+        // Apply the same filters as the main query
+        if (searchQuery) {
+          countQuery.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+        }
+
+        if (category) {
+          countQuery.eq('category', category);
+        }
+
+        if (isActive !== undefined) {
+          countQuery.eq('is_active', isActive);
+        }
+
+        // Execute the count query
+        const { count: totalCount, error: countError } = await countQuery;
+
+        if (countError) {
+          console.error("Supabase count error:", countError.message);
+          return {
+            data: null,
+            error: { message: countError.message }
+          };
+        }
+
+        // Set the count from the result
+        count = totalCount || 0;
+      } catch (countErr) {
+        console.error("Error getting count:", countErr);
+        // Continue with count = 0, we'll still try to get the data
       }
-
-      if (category) {
-        countQuery.eq('category', category);
-      }
-
-      if (isActive !== undefined) {
-        countQuery.eq('is_active', isActive);
-      }
-
-      // Execute the count query
-      const { count: totalCount, error: countError } = await countQuery;
-
-      if (countError) {
-        console.error("Supabase count error:", countError.message);
-        return {
-          data: null,
-          error: { message: countError.message }
-        };
-      }
-
-      // Set the count from the result
-      count = totalCount || 0;
-    } catch (countErr) {
-      console.error("Error getting count:", countErr);
-      // Continue with count = 0, we'll still try to get the data
     }
 
     // Apply sorting
@@ -109,10 +112,23 @@ export async function getProducts(options?: {
     const validColumns = ['name', 'price', 'stock_quantity', 'sku', 'category', 'is_active', 'created_at', 'updated_at'];
     const column = validColumns.includes(sortBy) ? sortBy : 'name';
 
-    // Then get paginated data
-    const { data, error } = await query
-      .order(column, { ascending: sortDirection === 'asc' })
-      .range(from, to)
+    query = query.order(column, { ascending: sortDirection === 'asc' })
+
+    // Apply pagination - either cursor-based or offset-based
+    let data, error;
+    if (cursor) {
+      // Cursor-based pagination (more efficient for large datasets)
+      const result = await query.gt('id', cursor).limit(pageSize)
+      data = result.data
+      error = result.error
+    } else {
+      // Standard offset pagination
+      const from = (page - 1) * pageSize
+      const to = from + pageSize - 1
+      const result = await query.range(from, to)
+      data = result.data
+      error = result.error
+    }
 
     if (error) {
       console.error('Error fetching products:', error.message)
@@ -122,8 +138,11 @@ export async function getProducts(options?: {
       }
     }
 
-    // Calculate total pages
+    // Calculate total pages (only for standard pagination)
     const totalPages = Math.ceil((count || 0) / pageSize)
+
+    // Calculate next cursor for infinite scrolling
+    const nextCursor = data && data.length === pageSize ? data[data.length - 1].id : undefined
 
     return {
       data: {
@@ -131,7 +150,8 @@ export async function getProducts(options?: {
         totalCount: count || 0,
         page,
         pageSize,
-        totalPages
+        totalPages,
+        nextCursor
       },
       error: null
     }
