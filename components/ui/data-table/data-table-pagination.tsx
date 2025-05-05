@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>
@@ -81,24 +82,32 @@ export function DataTablePagination<TData>({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4 border-t">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <div>
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-2 py-3 sm:py-4 border-t">
+      {/* Info text - simplified on mobile */}
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground w-full sm:w-auto text-center sm:text-left">
+        <div className="w-full sm:w-auto">
           {selectedRows > 0 && (
-            <span className="mr-2">{selectedRows} of {totalRows} row(s) selected.</span>
+            <span className="mr-2 hidden sm:inline">{selectedRows} of {totalRows} row(s) selected.</span>
           )}
-          Showing {totalRows > 0 ? (currentPage - 1) * currentPageSize + 1 : 0} to {Math.min(currentPage * currentPageSize, totalRows)} of {totalRows} entries
+          <span className="hidden sm:inline">
+            Showing {totalRows > 0 ? (currentPage - 1) * currentPageSize + 1 : 0} to {Math.min(currentPage * currentPageSize, totalRows)} of {totalRows} entries
+          </span>
+          {/* Mobile-optimized info text */}
+          <span className="sm:hidden">
+            {Math.min(currentPage * currentPageSize, totalRows)} of {totalRows} entries
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground whitespace-nowrap min-w-[100px]">Rows per page</span>
+      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
+        {/* Rows per page selector - more compact on mobile */}
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
+          <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Rows per page</span>
           <Select
             value={`${currentPageSize}`}
             onValueChange={handlePageSizeChange}
           >
-            <SelectTrigger className="h-8 w-[80px]">
+            <SelectTrigger className="h-8 w-[70px] sm:w-[80px] text-xs sm:text-sm">
               <SelectValue placeholder={currentPageSize} />
             </SelectTrigger>
             <SelectContent side="top">
@@ -111,45 +120,65 @@ export function DataTablePagination<TData>({
           </Select>
         </div>
 
-        <Pagination>
-          <PaginationContent>
+        {/* Pagination controls - more touch-friendly on mobile */}
+        <Pagination className="w-full sm:w-auto">
+          <PaginationContent className="gap-1 sm:gap-1">
+            {/* Previous button - icon only on mobile */}
             <PaginationItem>
-              <PaginationPrevious
+              <PaginationLink
                 onClick={() => handlePageChange(currentPage - 1)}
-                className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                className={`h-9 px-2 sm:px-3 ${currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}`}
                 aria-disabled={currentPage <= 1}
-              />
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline ml-1">Previous</span>
+              </PaginationLink>
             </PaginationItem>
 
-            {pageNumbers.map((pageNumber, i) => {
-              // Render ellipsis
-              if (pageNumber === -1) {
+            {/* Only show current page on very small screens */}
+            <div className="flex items-center xs:hidden">
+              <span className="text-xs mx-1 text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+            </div>
+
+            {/* Page numbers - hidden on very small screens */}
+            <div className="hidden xs:flex">
+              {pageNumbers.map((pageNumber, i) => {
+                // Render ellipsis
+                if (pageNumber === -1) {
+                  return (
+                    <PaginationItem key={`ellipsis-${i}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )
+                }
+
+                // Render page number
                 return (
-                  <PaginationItem key={`ellipsis-${i}`}>
-                    <PaginationEllipsis />
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      isActive={pageNumber === currentPage}
+                      onClick={() => handlePageChange(pageNumber)}
+                      className="h-9 w-9"
+                    >
+                      {pageNumber}
+                    </PaginationLink>
                   </PaginationItem>
                 )
-              }
+              })}
+            </div>
 
-              // Render page number
-              return (
-                <PaginationItem key={pageNumber}>
-                  <PaginationLink
-                    isActive={pageNumber === currentPage}
-                    onClick={() => handlePageChange(pageNumber)}
-                  >
-                    {pageNumber}
-                  </PaginationLink>
-                </PaginationItem>
-              )
-            })}
-
+            {/* Next button - icon only on mobile */}
             <PaginationItem>
-              <PaginationNext
+              <PaginationLink
                 onClick={() => handlePageChange(currentPage + 1)}
-                className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                className={`h-9 px-2 sm:px-3 ${currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}`}
                 aria-disabled={currentPage >= totalPages}
-              />
+              >
+                <span className="hidden sm:inline mr-1">Next</span>
+                <ChevronRight className="h-4 w-4" />
+              </PaginationLink>
             </PaginationItem>
           </PaginationContent>
         </Pagination>

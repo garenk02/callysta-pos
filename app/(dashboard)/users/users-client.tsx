@@ -281,8 +281,8 @@ export default function UsersClient() {
                 Add User
               </Button>
             </DialogTrigger>
-            <NoAutofocusDialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
-              <DialogHeader>
+            <NoAutofocusDialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col p-4 sm:p-6">
+              <DialogHeader className="mb-3 sm:mb-4">
                 <DialogTitle>Add New User</DialogTitle>
                 <DialogDescription>
                   Create a new user account with specific permissions.
@@ -292,19 +292,23 @@ export default function UsersClient() {
               <Form {...addUserForm}>
                 <form
                   onSubmit={addUserForm.handleSubmit(handleAddUser)}
-                  className="space-y-4 overflow-y-auto pr-1"
+                  className="space-y-3 sm:space-y-4 overflow-y-auto"
                 >
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     <FormField
                       control={addUserForm.control}
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Name</FormLabel>
+                          <FormLabel className="text-sm sm:text-base">Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Full name" {...field} />
+                            <Input
+                              placeholder="Full name"
+                              {...field}
+                              className="h-10 sm:h-9 text-base sm:text-sm"
+                            />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -314,15 +318,16 @@ export default function UsersClient() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel className="text-sm sm:text-base">Email</FormLabel>
                           <FormControl>
                             <Input
                               type="email"
                               placeholder="Email address"
                               {...field}
+                              className="h-10 sm:h-9 text-base sm:text-sm"
                             />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -332,15 +337,16 @@ export default function UsersClient() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="text-sm sm:text-base">Password</FormLabel>
                           <FormControl>
                             <Input
                               type="password"
                               placeholder="Password"
                               {...field}
+                              className="h-10 sm:h-9 text-base sm:text-sm"
                             />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -350,13 +356,13 @@ export default function UsersClient() {
                       name="role"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Role</FormLabel>
+                          <FormLabel className="text-sm sm:text-base">Role</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-10 sm:h-9 text-base sm:text-sm">
                                 <SelectValue placeholder="Select a role" />
                               </SelectTrigger>
                             </FormControl>
@@ -368,7 +374,7 @@ export default function UsersClient() {
                           <FormDescription className="text-xs">
                             Admins have full access. Cashiers can only access checkout and products.
                           </FormDescription>
-                          <FormMessage />
+                          <FormMessage className="text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -382,10 +388,11 @@ export default function UsersClient() {
                             <Checkbox
                               checked={field.value}
                               onCheckedChange={field.onChange}
+                              className="mt-1 h-5 w-5"
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Active</FormLabel>
+                            <FormLabel className="text-sm sm:text-base">Active</FormLabel>
                             <FormDescription className="text-xs">
                               Inactive users cannot log in.
                             </FormDescription>
@@ -395,7 +402,7 @@ export default function UsersClient() {
                     />
                   </div>
 
-                  <DialogFooter className="mt-2 pt-2 border-t">
+                  <DialogFooter className="mt-4 pt-3 border-t flex flex-col sm:flex-row gap-2 sm:gap-0">
                     <Button
                       type="button"
                       variant="outline"
@@ -403,10 +410,15 @@ export default function UsersClient() {
                         setIsAddDialogOpen(false);
                         addUserForm.reset();
                       }}
+                      className="w-full sm:w-auto h-10 sm:h-9"
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto h-10 sm:h-9"
+                    >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -428,8 +440,8 @@ export default function UsersClient() {
               setSelectedUser(null);
             }
           }}>
-            <NoAutofocusDialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
-              <DialogHeader>
+            <NoAutofocusDialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col p-4 sm:p-6">
+              <DialogHeader className="mb-3 sm:mb-4">
                 <DialogTitle>Edit User</DialogTitle>
                 <DialogDescription>
                   Update user information and permissions.
@@ -440,19 +452,23 @@ export default function UsersClient() {
                 <Form {...editUserForm}>
                   <form
                     onSubmit={editUserForm.handleSubmit(handleEditUser)}
-                    className="space-y-4 overflow-y-auto pr-1"
+                    className="space-y-3 sm:space-y-4 overflow-y-auto"
                   >
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
                       <FormField
                         control={editUserForm.control}
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Name</FormLabel>
+                            <FormLabel className="text-sm sm:text-base">Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Full name" {...field} />
+                              <Input
+                                placeholder="Full name"
+                                {...field}
+                                className="h-10 sm:h-9 text-base sm:text-sm"
+                              />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs sm:text-sm" />
                           </FormItem>
                         )}
                       />
@@ -462,19 +478,20 @@ export default function UsersClient() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel className="text-sm sm:text-base">Email</FormLabel>
                             <FormControl>
                               <Input
                                 type="email"
                                 placeholder="Email address"
                                 {...field}
                                 disabled
+                                className="h-10 sm:h-9 text-base sm:text-sm opacity-70"
                               />
                             </FormControl>
                             <FormDescription className="text-xs">
                               Email cannot be changed
                             </FormDescription>
-                            <FormMessage />
+                            <FormMessage className="text-xs sm:text-sm" />
                           </FormItem>
                         )}
                       />
@@ -484,13 +501,13 @@ export default function UsersClient() {
                         name="role"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Role</FormLabel>
+                            <FormLabel className="text-sm sm:text-base">Role</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-10 sm:h-9 text-base sm:text-sm">
                                   <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
                               </FormControl>
@@ -502,7 +519,7 @@ export default function UsersClient() {
                             <FormDescription className="text-xs">
                               Admins have full access. Cashiers can only access checkout and products.
                             </FormDescription>
-                            <FormMessage />
+                            <FormMessage className="text-xs sm:text-sm" />
                           </FormItem>
                         )}
                       />
@@ -516,10 +533,11 @@ export default function UsersClient() {
                               <Checkbox
                                 checked={field.value}
                                 onCheckedChange={field.onChange}
+                                className="mt-1 h-5 w-5"
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel>Active</FormLabel>
+                              <FormLabel className="text-sm sm:text-base">Active</FormLabel>
                               <FormDescription className="text-xs">
                                 Inactive users cannot log in.
                               </FormDescription>
@@ -529,7 +547,7 @@ export default function UsersClient() {
                       />
                     </div>
 
-                    <DialogFooter className="mt-2 pt-2 border-t">
+                    <DialogFooter className="mt-4 pt-3 border-t flex flex-col sm:flex-row gap-2 sm:gap-0">
                       <Button
                         type="button"
                         variant="outline"
@@ -537,10 +555,15 @@ export default function UsersClient() {
                           setIsEditDialogOpen(false);
                           setSelectedUser(null);
                         }}
+                        className="w-full sm:w-auto h-10 sm:h-9"
                       >
                         Cancel
                       </Button>
-                      <Button type="submit" disabled={isSubmitting}>
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full sm:w-auto h-10 sm:h-9"
+                      >
                         {isSubmitting ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
