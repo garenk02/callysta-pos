@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { formatDate } from "@/lib/utils"
+import { formatDate, formatCurrency } from "@/lib/utils"
 
 interface OrdersColumnProps {
   onViewDetails: (order: string) => void
@@ -58,7 +58,7 @@ export const virtualizedColumns = ({ onViewDetails, onPrintReceipt }: OrdersColu
       return <div>{userName || userEmail || "Unknown"}</div>
     },
     meta: {
-      className: "w-[120px]" // Changed from flex-1 min-w-[150px] to fixed width
+      className: "w-[250px]" // Changed from flex-1 min-w-[150px] to fixed width
     }
   },
 
@@ -67,19 +67,13 @@ export const virtualizedColumns = ({ onViewDetails, onPrintReceipt }: OrdersColu
     accessorKey: "total",
     header: "Total",
     cell: ({ row }) => {
-      // Safely handle the total value
+      // Safely handle the total value using the global formatCurrency function
       const total = row.original.total;
-      if (total === undefined || total === null) {
-        return <div className="text-right font-medium">Rp.0</div>;
-      }
-
-      // Convert to number if it's a string
       const amount = typeof total === 'string' ? parseFloat(total) : total;
-      const formatted = `Rp.${amount.toLocaleString('id-ID')}`;
-      return <div className="text-right font-medium">{formatted}</div>;
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
     meta: {
-      className: "text-right w-[140px]" // Increased width from 120px to 140px
+      className: "text-right w-[200px]"
     }
   },
 
@@ -110,7 +104,7 @@ export const virtualizedColumns = ({ onViewDetails, onPrintReceipt }: OrdersColu
       return <div>{displayMethod}</div>;
     },
     meta: {
-      className: "w-[140px]" // Increased width from 120px to 140px
+      className: "w-[200px]" // Increased width from 120px to 140px
     }
   },
 

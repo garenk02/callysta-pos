@@ -21,19 +21,36 @@ export interface OrderWithUser extends Order {
 }
 
 /**
- * Get all orders with user information
- * @param dateRange Optional date range to filter orders
+ * Get all orders with user information and pagination support
+ * @param options Optional parameters for filtering and pagination
  */
 export async function getOrders(
-  dateRange?: { from?: Date; to?: Date }
-): Promise<OrderActionResult<OrderWithUser[]>> {
+  options?: {
+    dateRange?: { from?: Date; to?: Date };
+    page?: number;
+    pageSize?: number;
+    searchQuery?: string;
+    paymentMethod?: string;
+  }
+): Promise<OrderActionResult<{
+  orders: OrderWithUser[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>> {
   try {
     const supabase = await createClient()
+    const dateRange = options?.dateRange
+    const page = options?.page || 1
+    const pageSize = options?.pageSize || 10
+    const searchQuery = options?.searchQuery || ''
+    const paymentMethod = options?.paymentMethod
 
     // Build the query
     let query = supabase
       .from('orders')
-      .select('*')
+      .select('*', { count: 'exact' })
 
     // Apply date range filter if provided
     if (dateRange) {
@@ -52,8 +69,66 @@ export async function getOrders(
       }
     }
 
-    // Execute the query with ordering
-    const { data: orders, error } = await query.order('created_at', { ascending: false })
+    // Apply search filter if provided
+    if (searchQuery) {
+      // Search by order ID or user_id (cashier)
+      query = query.or(`id.ilike.%${searchQuery}%,user_id.ilike.%${searchQuery}%`)
+    }
+
+    // Apply payment method filter if provided
+    if (paymentMethod) {
+      query = query.eq('payment_method', paymentMethod)
+    }
+
+    // Get total count first
+    let count = 0
+    try {
+      const countQuery = supabase
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+
+      // Apply the same filters to the count query
+      if (dateRange) {
+        if (dateRange.from) {
+          const fromDate = new Date(dateRange.from)
+          fromDate.setHours(0, 0, 0, 0)
+          countQuery.gte('created_at', fromDate.toISOString())
+        }
+
+        if (dateRange.to) {
+          const toDate = new Date(dateRange.to)
+          toDate.setHours(23, 59, 59, 999)
+          countQuery.lte('created_at', toDate.toISOString())
+        }
+      }
+
+      if (searchQuery) {
+        countQuery.or(`id.ilike.%${searchQuery}%,user_id.ilike.%${searchQuery}%`)
+      }
+
+      if (paymentMethod) {
+        countQuery.eq('payment_method', paymentMethod)
+      }
+
+      const { count: totalCount, error: countError } = await countQuery
+
+      if (countError) {
+        console.error('Error counting orders:', countError.message)
+      } else {
+        count = totalCount || 0
+      }
+    } catch (countErr) {
+      console.error('Error in count query:', countErr)
+    }
+
+    // Apply pagination
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
+    // Execute the query with ordering and pagination
+    const { data: orders, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to)
 
     if (error) {
       console.error('Error fetching orders:', error.message)
@@ -91,8 +166,17 @@ export async function getOrders(
       } : undefined
     })) as OrderWithUser[]
 
+    // Calculate total pages
+    const totalPages = Math.ceil(count / pageSize)
+
     return {
-      data: ordersWithUsers,
+      data: {
+        orders: ordersWithUsers,
+        totalCount: count,
+        page,
+        pageSize,
+        totalPages
+      },
       error: null
     }
   } catch (err) {

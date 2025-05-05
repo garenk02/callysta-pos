@@ -74,11 +74,11 @@ describe('CartSummary component', () => {
     // Check that the cart items are displayed
     expect(screen.getByText('Shopping Cart')).toBeInTheDocument();
     expect(screen.getByText('Test Product')).toBeInTheDocument();
-    expect(screen.getByText('Rp.10.000')).toBeInTheDocument();
+    expect(screen.getByText('Rp. 10.000')).toBeInTheDocument();
     expect(screen.getByText('x2')).toBeInTheDocument();
     
     // Check that the total is displayed
-    expect(screen.getByText('Rp.20.000')).toBeInTheDocument();
+    expect(screen.getByText('Rp. 20.000')).toBeInTheDocument();
   });
 
   it('calls clearCart when clear button is clicked', () => {

@@ -210,11 +210,18 @@ export function VirtualizedDataTable<TData, TValue>({
                           cellContent = item[column.accessorKey.toString()];
                         }
 
+                        // Check if this is the name column to allow text wrapping
+                        // @ts-ignore - ColumnDef typing issue
+                        const accessorKey = column.accessorKey?.toString();
+                        const isNameColumn = accessorKey === 'name';
+
                         return (
                           <div
                             key={colIndex}
                             className={cn(
-                              "p-2 align-middle whitespace-nowrap flex items-center",
+                              "p-2 align-middle flex items-center",
+                              // Only apply whitespace-nowrap to non-name columns
+                              !isNameColumn && "whitespace-nowrap",
                               // @ts-ignore - ColumnDef typing issue
                               column.meta?.className as string || ''
                             )}

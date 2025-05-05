@@ -33,7 +33,7 @@ import {
   Download,
   Loader2
 } from "lucide-react"
-import { cn, formatCurrency as formatCurrencyUtil } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import { useSettings } from '@/hooks/useSettings'
 import {
   getSalesSummary,
@@ -181,11 +181,7 @@ export default function ReportsManagement() {
     }
   }
 
-  // Helper function to safely format currency values
-  const formatCurrency = (value?: number) => {
-    if (value === undefined || value === null) return 'Rp.0';
-    return `Rp.${value.toLocaleString('id-ID')}`;
-  }
+  // Using the global formatCurrency function from lib/utils.ts
 
   // Helper function to format percentage values
   const formatPercentage = (value: number) => {

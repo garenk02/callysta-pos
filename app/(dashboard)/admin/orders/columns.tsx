@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
+import { formatCurrency } from "@/lib/utils"
 
 interface OrdersColumnProps {
   onView: (orderId: string) => void
@@ -59,8 +60,7 @@ export const columns = ({ onView, onViewReceipt }: OrdersColumnProps): ColumnDef
     ),
     cell: ({ row }) => {
       const total = parseFloat(row.getValue("total"))
-      const formatted = `Rp.${total.toLocaleString('id-ID')}`
-      return <div className="font-medium">{formatted}</div>
+      return <div className="font-medium">{formatCurrency(total)}</div>
     },
   },
   {

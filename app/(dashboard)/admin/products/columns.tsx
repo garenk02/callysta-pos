@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Product } from "@/types"
 import { DataTableColumnHeader } from "./data-table-column-header"
+import { formatCurrency } from "@/lib/utils"
 import { MoreHorizontal, Edit, Trash2, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,49 +25,23 @@ interface ProductsColumnProps {
 }
 
 export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsColumnProps): ColumnDef<Product>[] => [
-  // 1. Image column
-  {
-    accessorKey: "image_url",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Image" />
-    ),
-    cell: ({ row }) => {
-      const imageUrl = row.getValue("image_url") as string | null
-      return (
-        <div className="flex items-center">
-          <div className="h-10 w-10 rounded-md border overflow-hidden bg-muted flex items-center justify-center">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt="Product"
-                width={40}
-                height={40}
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="text-xs text-muted-foreground">No image</div>
-            )}
-          </div>
-        </div>
-      )
-    },
-    enableSorting: false,
-  },
-
-  // 2. Name column
+  // 1. Name column
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
+      <DataTableColumnHeader column={column} title="Name" className="w-[300px]" />
     ),
     cell: ({ row }) => {
-      return <div className="font-medium">{row.getValue("name")}</div>
+      return (
+        <div className="font-medium line-clamp-2 text-ellipsis overflow-hidden w-full">
+          {row.getValue("name")}
+        </div>
+      )
     },
     enableSorting: true,
   },
 
-  // 3. SKU column
+  // 2. SKU column
   {
     accessorKey: "sku",
     header: ({ column }) => (
@@ -78,7 +53,7 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
     enableSorting: true,
   },
 
-  // 4. Category column
+  // 3. Category column
   {
     accessorKey: "category",
     header: ({ column }) => (
@@ -94,21 +69,20 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
     enableSorting: true,
   },
 
-  // 5. Price column
+  // 4. Price column
   {
     accessorKey: "price",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Price" />
+      <DataTableColumnHeader column={column} title="Price" className="text-right" />
     ),
     cell: ({ row }) => {
       const price = parseFloat(row.getValue("price"))
-      const formatted = `Rp.${price.toLocaleString('id-ID')}`
-      return <div className="text-right">{formatted}</div>
+      return <div className="text-right">{formatCurrency(price)}</div>
     },
     enableSorting: true,
   },
 
-  // 6. Stock column
+  // 5. Stock column
   {
     accessorKey: "stock_quantity",
     header: ({ column }) => (
@@ -121,7 +95,7 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
     enableSorting: true,
   },
 
-  // 7. Status column
+  // 6. Status column
   {
     accessorKey: "is_active",
     header: ({ column }) => (
@@ -142,7 +116,7 @@ export const columns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsCo
     enableSorting: true,
   },
 
-  // 8. Actions column
+  // 7. Actions column
   {
     id: "actions",
     cell: ({ row }) => {

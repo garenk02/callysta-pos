@@ -1,0 +1,101 @@
+name,description,price,sku,image_url,category,stock_quantity,low_stock_threshold
+Paracetamol 500mg,Obat penurun demam dan pereda nyeri.,198100.0,IDN-232963,https://example.com/images/paracetamol_500mg.jpg,Obat,60,7
+Bodrex Extra,Obat sakit kepala dengan kandungan paracetamol dan kafein.,198200.0,IDN-920048,https://example.com/images/bodrex_extra.jpg,Obat,84,20
+Promag,Obat maag dan gangguan lambung.,228200.0,IDN-375123,https://example.com/images/promag.jpg,Obat,144,13
+Antangin JRG,Obat herbal untuk masuk angin.,31700.0,IDN-358692,https://example.com/images/antangin_jrg.jpg,Obat,59,13
+OBH Combi Batuk,Obat batuk dengan rasa madu.,78200.0,IDN-920110,https://example.com/images/obh_combi_batuk.jpg,Obat,71,13
+Woods Peppermint,Obat batuk berdahak dengan rasa peppermint.,188200.0,IDN-549060,https://example.com/images/woods_peppermint.jpg,Obat,46,6
+Betadine Antiseptik,Antiseptik luka untuk mencegah infeksi.,38300.0,IDN-413057,https://example.com/images/betadine_antiseptik.jpg,Obat,105,11
+Neurobion,Vitamin B kompleks untuk saraf.,152400.0,IDN-746441,https://example.com/images/neurobion.jpg,Obat,92,12
+Sanmol Syrup,Obat penurun panas untuk anak-anak.,154400.0,IDN-530881,https://example.com/images/sanmol_syrup.jpg,Obat,185,15
+Panadol Extra,Obat pereda nyeri dan demam.,178600.0,IDN-795889,https://example.com/images/panadol_extra.jpg,Obat,144,17
+Enervon-C,Vitamin C dan B kompleks untuk daya tahan tubuh.,235900.0,IDN-449127,https://example.com/images/enervon-c.jpg,Vitamin,163,11
+Youvit Multivitamin,Gummy vitamin lengkap untuk dewasa dan anak-anak.,210800.0,IDN-646500,https://example.com/images/youvit_multivitamin.jpg,Vitamin,190,11
+Blackmores Vitamin C 500,Vitamin C untuk membantu sistem imun.,82400.0,IDN-802426,https://example.com/images/blackmores_vitamin_c_500.jpg,Vitamin,91,20
+Hemaviton Action,Suplemen untuk menambah energi dan stamina.,61500.0,IDN-846438,https://example.com/images/hemaviton_action.jpg,Vitamin,8,9
+Imboost Force,Suplemen daya tahan tubuh dengan Echinacea.,184300.0,IDN-633864,https://example.com/images/imboost_force.jpg,Vitamin,37,18
+Vitalong C,Vitamin C lepas lambat untuk daya tahan tubuh.,12600.0,IDN-768899,https://example.com/images/vitalong_c.jpg,Vitamin,130,15
+Redoxon Double Action,Vitamin C dan Zinc untuk daya tahan tubuh.,5700.0,IDN-313271,https://example.com/images/redoxon_double_action.jpg,Vitamin,124,5
+Nature’s Plus Vitamin C,Suplemen vitamin C berkualitas tinggi.,9400.0,IDN-867145,https://example.com/images/nature’s_plus_vitamin_c.jpg,Vitamin,70,20
+Scott's Emulsion,Suplemen minyak ikan dengan rasa jeruk.,168200.0,IDN-778261,https://example.com/images/scott's_emulsion.jpg,Vitamin,188,18
+Curcuma Plus,Vitamin untuk anak agar nafsu makan bertambah.,138700.0,IDN-774201,https://example.com/images/curcuma_plus.jpg,Vitamin,110,19
+SGM Eksplor 1+,Susu pertumbuhan anak usia 1 tahun ke atas.,29700.0,IDN-469981,https://example.com/images/sgm_eksplor_1+.jpg,Nutrisi,166,17
+Ensure Vanila,Susu dewasa untuk nutrisi tambahan.,57500.0,IDN-643812,https://example.com/images/ensure_vanila.jpg,Nutrisi,18,9
+Prenagen Mommy,Susu untuk ibu hamil rasa coklat.,193800.0,IDN-925196,https://example.com/images/prenagen_mommy.jpg,Nutrisi,12,13
+Diabetasol,Susu pengganti makan untuk penderita diabetes.,190400.0,IDN-914446,https://example.com/images/diabetasol.jpg,Nutrisi,196,14
+Appeton Weight Gain Adult,Susu untuk menambah berat badan.,107700.0,IDN-446556,https://example.com/images/appeton_weight_gain_adult.jpg,Nutrisi,25,12
+Bebelac Gold 3,Susu pertumbuhan anak usia 1-3 tahun.,136000.0,IDN-823481,https://example.com/images/bebelac_gold_3.jpg,Nutrisi,121,8
+Nestle Nutren Optimum,Susu tinggi protein untuk pemulihan.,212000.0,IDN-384958,https://example.com/images/nestle_nutren_optimum.jpg,Nutrisi,156,16
+L-Men Gain Mass,Susu tinggi kalori untuk pria aktif.,29000.0,IDN-832434,https://example.com/images/l-men_gain_mass.jpg,Nutrisi,4,9
+Anlene Gold,Susu tinggi kalsium untuk tulang.,183100.0,IDN-872953,https://example.com/images/anlene_gold.jpg,Nutrisi,196,8
+HiLo Active,Susu rendah lemak tinggi kalsium untuk aktivitas harian.,249900.0,IDN-328088,https://example.com/images/hilo_active.jpg,Nutrisi,167,9
+HiLo Active Rasa Jeruk,Susu rendah lemak tinggi kalsium untuk aktivitas harian.,95800.0,IDN-768907,https://example.com/images/hilo_active_rasa_jeruk.jpg,Nutrisi,72,17
+Bebelac Gold 3 Syrup,Susu pertumbuhan anak usia 1-3 tahun.,202600.0,IDN-796684,https://example.com/images/bebelac_gold_3_syrup.jpg,Nutrisi,73,9
+Redoxon Double Action Tablet,Vitamin C dan Zinc untuk daya tahan tubuh.,187700.0,IDN-927625,https://example.com/images/redoxon_double_action_tablet.jpg,Vitamin,179,8
+Betadine Antiseptik Plus,Antiseptik luka untuk mencegah infeksi.,166500.0,IDN-612341,https://example.com/images/betadine_antiseptik_plus.jpg,Obat,38,7
+OBH Combi Batuk 500mg,Obat batuk dengan rasa madu.,232500.0,IDN-829581,https://example.com/images/obh_combi_batuk_500mg.jpg,Obat,156,19
+Imboost Force Tablet,Suplemen daya tahan tubuh dengan Echinacea.,114400.0,IDN-943272,https://example.com/images/imboost_force_tablet.jpg,Vitamin,37,10
+Panadol Extra Tablet,Obat pereda nyeri dan demam.,155000.0,IDN-166697,https://example.com/images/panadol_extra_tablet.jpg,Obat,161,17
+Diabetasol Extra,Susu pengganti makan untuk penderita diabetes.,101100.0,IDN-821086,https://example.com/images/diabetasol_extra.jpg,Nutrisi,89,19
+HiLo Active Plus,Susu rendah lemak tinggi kalsium untuk aktivitas harian.,62600.0,IDN-286962,https://example.com/images/hilo_active_plus.jpg,Nutrisi,44,6
+Bodrex Extra Rasa Jeruk,Obat sakit kepala dengan kandungan paracetamol dan kafein.,238200.0,IDN-293186,https://example.com/images/bodrex_extra_rasa_jeruk.jpg,Obat,33,7
+Panadol Extra Gold,Obat pereda nyeri dan demam.,106100.0,IDN-967782,https://example.com/images/panadol_extra_gold.jpg,Obat,170,10
+HiLo Active Tablet,Susu rendah lemak tinggi kalsium untuk aktivitas harian.,197900.0,IDN-859593,https://example.com/images/hilo_active_tablet.jpg,Nutrisi,131,19
+Youvit Multivitamin 500mg,Gummy vitamin lengkap untuk dewasa dan anak-anak.,137700.0,IDN-555021,https://example.com/images/youvit_multivitamin_500mg.jpg,Vitamin,139,8
+Prenagen Mommy Extra,Susu untuk ibu hamil rasa coklat.,61500.0,IDN-687108,https://example.com/images/prenagen_mommy_extra.jpg,Nutrisi,59,5
+HiLo Active Syrup,Susu rendah lemak tinggi kalsium untuk aktivitas harian.,118500.0,IDN-798573,https://example.com/images/hilo_active_syrup.jpg,Nutrisi,119,12
+Promag Junior,Obat maag dan gangguan lambung.,93800.0,IDN-428764,https://example.com/images/promag_junior.jpg,Obat,84,5
+L-Men Gain Mass Rasa Jeruk,Susu tinggi kalori untuk pria aktif.,238300.0,IDN-606036,https://example.com/images/l-men_gain_mass_rasa_jeruk.jpg,Nutrisi,178,12
+Scott's Emulsion Junior,Suplemen minyak ikan dengan rasa jeruk.,175400.0,IDN-968987,https://example.com/images/scott's_emulsion_junior.jpg,Vitamin,21,13
+Neurobion 1000 IU,Vitamin B kompleks untuk saraf.,95000.0,IDN-185837,https://example.com/images/neurobion_1000_iu.jpg,Obat,64,11
+Bodrex Extra Adult,Obat sakit kepala dengan kandungan paracetamol dan kafein.,65400.0,IDN-630910,https://example.com/images/bodrex_extra_adult.jpg,Obat,74,11
+Imboost Force Junior,Suplemen daya tahan tubuh dengan Echinacea.,48000.0,IDN-584667,https://example.com/images/imboost_force_junior.jpg,Vitamin,177,10
+Neurobion Extra,Vitamin B kompleks untuk saraf.,140300.0,IDN-378396,https://example.com/images/neurobion_extra.jpg,Obat,105,5
+Hemaviton Action Extra,Suplemen untuk menambah energi dan stamina.,245300.0,IDN-745883,https://example.com/images/hemaviton_action_extra.jpg,Vitamin,98,17
+Woods Peppermint Tablet,Obat batuk berdahak dengan rasa peppermint.,219500.0,IDN-492073,https://example.com/images/woods_peppermint_tablet.jpg,Obat,64,13
+Sanmol Syrup Tablet,Obat penurun panas untuk anak-anak.,104600.0,IDN-555617,https://example.com/images/sanmol_syrup_tablet.jpg,Obat,105,12
+Hemaviton Action 1000 IU,Suplemen untuk menambah energi dan stamina.,93200.0,IDN-681676,https://example.com/images/hemaviton_action_1000_iu.jpg,Vitamin,187,17
+Appeton Weight Gain Adult Extra,Susu untuk menambah berat badan.,14900.0,IDN-812640,https://example.com/images/appeton_weight_gain_adult_extra.jpg,Nutrisi,197,14
+Prenagen Mommy Adult,Susu untuk ibu hamil rasa coklat.,76900.0,IDN-641749,https://example.com/images/prenagen_mommy_adult.jpg,Nutrisi,90,16
+Diabetasol 1000 IU,Susu pengganti makan untuk penderita diabetes.,120400.0,IDN-158075,https://example.com/images/diabetasol_1000_iu.jpg,Nutrisi,196,11
+Promag Plus,Obat maag dan gangguan lambung.,145500.0,IDN-566566,https://example.com/images/promag_plus.jpg,Obat,83,15
+Curcuma Plus Junior,Vitamin untuk anak agar nafsu makan bertambah.,177900.0,IDN-249214,https://example.com/images/curcuma_plus_junior.jpg,Vitamin,30,16
+Blackmores Vitamin C 500 Plus,Vitamin C untuk membantu sistem imun.,76000.0,IDN-688573,https://example.com/images/blackmores_vitamin_c_500_plus.jpg,Vitamin,180,13
+Scott's Emulsion Plus,Suplemen minyak ikan dengan rasa jeruk.,196600.0,IDN-624225,https://example.com/images/scott's_emulsion_plus.jpg,Vitamin,81,14
+Bebelac Gold 3 Plus,Susu pertumbuhan anak usia 1-3 tahun.,132500.0,IDN-517176,https://example.com/images/bebelac_gold_3_plus.jpg,Nutrisi,101,16
+Redoxon Double Action Junior,Vitamin C dan Zinc untuk daya tahan tubuh.,45700.0,IDN-991672,https://example.com/images/redoxon_double_action_junior.jpg,Vitamin,18,20
+Promag Rasa Jeruk,Obat maag dan gangguan lambung.,116200.0,IDN-770642,https://example.com/images/promag_rasa_jeruk.jpg,Obat,71,17
+Betadine Antiseptik Rasa Jeruk,Antiseptik luka untuk mencegah infeksi.,163400.0,IDN-930920,https://example.com/images/betadine_antiseptik_rasa_jeruk.jpg,Obat,75,17
+OBH Combi Batuk Syrup,Obat batuk dengan rasa madu.,230400.0,IDN-421872,https://example.com/images/obh_combi_batuk_syrup.jpg,Obat,157,5
+Panadol Extra Junior,Obat pereda nyeri dan demam.,58200.0,IDN-770634,https://example.com/images/panadol_extra_junior.jpg,Obat,12,16
+Betadine Antiseptik Syrup,Antiseptik luka untuk mencegah infeksi.,40400.0,IDN-972583,https://example.com/images/betadine_antiseptik_syrup.jpg,Obat,87,16
+Woods Peppermint Rasa Jeruk,Obat batuk berdahak dengan rasa peppermint.,247200.0,IDN-398890,https://example.com/images/woods_peppermint_rasa_jeruk.jpg,Obat,47,14
+L-Men Gain Mass 500mg,Susu tinggi kalori untuk pria aktif.,90400.0,IDN-947960,https://example.com/images/l-men_gain_mass_500mg.jpg,Nutrisi,102,20
+Promag Gold,Obat maag dan gangguan lambung.,7800.0,IDN-294003,https://example.com/images/promag_gold.jpg,Obat,74,13
+Anlene Gold Rasa Jeruk,Susu tinggi kalsium untuk tulang.,172500.0,IDN-299448,https://example.com/images/anlene_gold_rasa_jeruk.jpg,Nutrisi,1,13
+Bodrex Extra 500mg,Obat sakit kepala dengan kandungan paracetamol dan kafein.,32200.0,IDN-327051,https://example.com/images/bodrex_extra_500mg.jpg,Obat,2,19
+Blackmores Vitamin C 500 Extra,Vitamin C untuk membantu sistem imun.,108100.0,IDN-210977,https://example.com/images/blackmores_vitamin_c_500_extra.jpg,Vitamin,52,5
+Bodrex Extra Junior,Obat sakit kepala dengan kandungan paracetamol dan kafein.,62000.0,IDN-119493,https://example.com/images/bodrex_extra_junior.jpg,Obat,105,11
+SGM Eksplor 1+ Plus,Susu pertumbuhan anak usia 1 tahun ke atas.,63800.0,IDN-610997,https://example.com/images/sgm_eksplor_1+_plus.jpg,Nutrisi,77,19
+SGM Eksplor 1+ Tablet,Susu pertumbuhan anak usia 1 tahun ke atas.,185400.0,IDN-679900,https://example.com/images/sgm_eksplor_1+_tablet.jpg,Nutrisi,160,5
+Appeton Weight Gain Adult 500mg,Susu untuk menambah berat badan.,78600.0,IDN-452401,https://example.com/images/appeton_weight_gain_adult_500mg.jpg,Nutrisi,20,7
+Neurobion Tablet,Vitamin B kompleks untuk saraf.,229000.0,IDN-725123,https://example.com/images/neurobion_tablet.jpg,Obat,107,15
+OBH Combi Batuk Gold,Obat batuk dengan rasa madu.,129200.0,IDN-507341,https://example.com/images/obh_combi_batuk_gold.jpg,Obat,149,19
+Enervon-C Syrup,Vitamin C dan B kompleks untuk daya tahan tubuh.,33100.0,IDN-549479,https://example.com/images/enervon-c_syrup.jpg,Vitamin,106,15
+Diabetasol 500mg,Susu pengganti makan untuk penderita diabetes.,16400.0,IDN-973424,https://example.com/images/diabetasol_500mg.jpg,Nutrisi,141,16
+Neurobion Adult,Vitamin B kompleks untuk saraf.,224800.0,IDN-924903,https://example.com/images/neurobion_adult.jpg,Obat,150,19
+Antangin JRG 1000 IU,Obat herbal untuk masuk angin.,177400.0,IDN-560491,https://example.com/images/antangin_jrg_1000_iu.jpg,Obat,153,8
+Anlene Gold Plus,Susu tinggi kalsium untuk tulang.,156500.0,IDN-243320,https://example.com/images/anlene_gold_plus.jpg,Nutrisi,133,13
+Vitalong C 500mg,Vitamin C lepas lambat untuk daya tahan tubuh.,79400.0,IDN-444530,https://example.com/images/vitalong_c_500mg.jpg,Vitamin,190,8
+Nature’s Plus Vitamin C Junior,Suplemen vitamin C berkualitas tinggi.,169300.0,IDN-577439,https://example.com/images/nature’s_plus_vitamin_c_junior.jpg,Vitamin,107,6
+Youvit Multivitamin Syrup,Gummy vitamin lengkap untuk dewasa dan anak-anak.,44600.0,IDN-237212,https://example.com/images/youvit_multivitamin_syrup.jpg,Vitamin,132,11
+Panadol Extra Extra,Obat pereda nyeri dan demam.,87300.0,IDN-374240,https://example.com/images/panadol_extra_extra.jpg,Obat,159,12
+Nestle Nutren Optimum 500mg,Susu tinggi protein untuk pemulihan.,119000.0,IDN-966378,https://example.com/images/nestle_nutren_optimum_500mg.jpg,Nutrisi,82,8
+Appeton Weight Gain Adult Tablet,Susu untuk menambah berat badan.,112100.0,IDN-281349,https://example.com/images/appeton_weight_gain_adult_tablet.jpg,Nutrisi,165,17
+Hemaviton Action Adult,Suplemen untuk menambah energi dan stamina.,53100.0,IDN-960861,https://example.com/images/hemaviton_action_adult.jpg,Vitamin,199,7
+Vitalong C Syrup,Vitamin C lepas lambat untuk daya tahan tubuh.,120300.0,IDN-780155,https://example.com/images/vitalong_c_syrup.jpg,Vitamin,52,8
+Hemaviton Action Syrup,Suplemen untuk menambah energi dan stamina.,119400.0,IDN-945063,https://example.com/images/hemaviton_action_syrup.jpg,Vitamin,156,7
+Hemaviton Action Plus,Suplemen untuk menambah energi dan stamina.,144700.0,IDN-738655,https://example.com/images/hemaviton_action_plus.jpg,Vitamin,161,15
+Sanmol Syrup Plus,Obat penurun panas untuk anak-anak.,225700.0,IDN-224444,https://example.com/images/sanmol_syrup_plus.jpg,Obat,135,13
+Blackmores Vitamin C 500 Tablet,Vitamin C untuk membantu sistem imun.,29700.0,IDN-308917,https://example.com/images/blackmores_vitamin_c_500_tablet.jpg,Vitamin,179,16
+Hemaviton Action Gold,Suplemen untuk menambah energi dan stamina.,111200.0,IDN-135560,https://example.com/images/hemaviton_action_gold.jpg,Vitamin,132,16

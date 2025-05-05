@@ -91,14 +91,14 @@ export function DataTablePagination<TData>({
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Rows per page</span>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground whitespace-nowrap min-w-[100px]">Rows per page</span>
           <Select
             value={`${currentPageSize}`}
             onValueChange={handlePageSizeChange}
           >
-            <SelectTrigger className="h-8 w-[70px]">
+            <SelectTrigger className="h-8 w-[80px]">
               <SelectValue placeholder={currentPageSize} />
             </SelectTrigger>
             <SelectContent side="top">

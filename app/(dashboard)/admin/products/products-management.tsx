@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table/data-table"
 import { VirtualizedDataTable } from "@/components/ui/virtualized-data-table"
+import { DataTablePagination } from "@/components/ui/data-table/data-table-pagination"
 import { ProductsTableToolbar } from "./products-table-toolbar"
 import { useDebounce } from "@/hooks/useDebounce"
 import { virtualizedColumns } from "./virtualized-columns"
@@ -1084,9 +1085,34 @@ export default function ProductsManagement() {
                     handleCategoryFilter(value);
                   }
                 }}
-                height={600}
+                height={560} // Reduced height to make room for pagination
                 selectedFilters={columnFilters}
               />
+
+              {/* Custom Pagination */}
+              {!loading && products.length > 0 && (
+                <DataTablePagination
+                  table={{
+                    getState: () => ({ pagination: { pageIndex: page - 1, pageSize } }),
+                    getFilteredRowModel: () => ({ rows: { length: totalItems } }),
+                    getPageCount: () => totalPages,
+                    getFilteredSelectedRowModel: () => ({ rows: { length: 0 } }),
+                    setPageIndex: () => {},
+                    setPageSize: () => {},
+                  } as any}
+                  customPagination={{
+                    page,
+                    pageSize,
+                    totalItems,
+                    totalPages,
+                    onPageChange: (newPage) => setPage(newPage),
+                    onPageSizeChange: (newSize) => {
+                      setPageSize(newSize);
+                      setPage(1); // Reset to first page when changing page size
+                    }
+                  }}
+                />
+              )}
             </div>
         </CardContent>
       </Card>

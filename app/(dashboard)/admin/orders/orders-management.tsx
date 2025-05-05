@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { DateRange } from 'react-day-picker'
+import { useOrderDetails } from '@/hooks/useOrders'
 import {
   Card,
   CardContent,
@@ -21,82 +22,55 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react"
-import { DataTable } from "@/components/ui/data-table"
+import { Button } from "@/components/ui/button"
 import { VirtualizedDataTable } from "@/components/ui/virtualized-data-table"
+import { DataTablePagination } from "@/components/ui/data-table/data-table-pagination"
 import { virtualizedColumns } from "./virtualized-columns"
-import { useDebounce } from "@/hooks/useDebounce"
-import { getOrders, getOrderById, OrderWithUser } from "@/app/api/orders/actions"
-import { OrderItem } from "@/types"
+import { getOrders, OrderWithUser } from "@/app/api/orders/actions"
 import ReceiptComponent from "@/components/checkout/Receipt"
-import { toast } from "sonner"
+import { formatCurrency } from "@/lib/utils"
 
 export default function OrdersManagement() {
   const [orders, setOrders] = useState<OrderWithUser[]>([])
   const [loading, setLoading] = useState(true) // Main loading state for initial data fetch
   const [filterLoading, setFilterLoading] = useState(false) // Loading state for filter/search operations
   const [error, setError] = useState<string | null>(null)
-  const [selectedOrder, setSelectedOrder] = useState<OrderWithUser | null>(null)
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([])
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
-  const [loadingOrderDetails, setLoadingOrderDetails] = useState(false)
+
+  // Use the cached order details hook
+  const {
+    orderDetails,
+    isLoading: loadingOrderDetails
+  } = useOrderDetails(selectedOrderId || '', {
+    enabled: !!selectedOrderId && (isViewDialogOpen || isReceiptDialogOpen)
+  })
+
+  // Extract order and items from the cached data
+  const selectedOrder = orderDetails?.order || null
+  const orderItems = orderDetails?.items || []
   const [columnFilters, setColumnFilters] = useState<{
     payment_method?: string;
   }>({})
   const [searchInput, setSearchInput] = useState('')
 
-  // Load orders on component mount or when date range changes
+  // Pagination state
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+
+  // Load orders on component mount or when pagination/filters/date range changes
   useEffect(() => {
     loadOrders()
-  }, [dateRange])
+  }, [page, pageSize, dateRange])
 
-  // Store the original unfiltered orders
-  const [allOrders, setAllOrders] = useState<OrderWithUser[]>([])
+  // We no longer need to store unfiltered orders since we're using server-side pagination
 
-  // Apply filters when columnFilters or searchInput changes
-  useEffect(() => {
-    // If we're in the main loading state or don't have any orders yet, don't do anything
-    if (loading || allOrders.length === 0) return;
-
-    // Set filter loading state to true to show loading indicator
-    setFilterLoading(true);
-
-    // Use setTimeout to ensure the loading indicator is shown
-    // This creates a small delay that makes the UI feel more responsive
-    setTimeout(() => {
-      // Start with all orders
-      let filteredOrders = [...allOrders];
-
-      // Apply payment method filter if set
-      if (columnFilters.payment_method) {
-        filteredOrders = filteredOrders.filter(order =>
-          order.payment_method === columnFilters.payment_method
-        );
-      }
-
-      // Apply search filter if set
-      if (searchInput) {
-        filteredOrders = filteredOrders.filter(order => {
-          // Search by Order ID (case insensitive)
-          const idMatch = order.id.toLowerCase().includes(searchInput.toLowerCase());
-
-          // Search by Cashier name or email (case insensitive)
-          const cashierNameMatch = order.user?.name?.toLowerCase().includes(searchInput.toLowerCase()) || false;
-          const cashierEmailMatch = order.user?.email?.toLowerCase().includes(searchInput.toLowerCase()) || false;
-
-          // Return true if any of the conditions match
-          return idMatch || cashierNameMatch || cashierEmailMatch;
-        });
-      }
-
-      // Update the orders list with filtered results
-      setOrders(filteredOrders);
-
-      // Set filter loading state back to false
-      setFilterLoading(false);
-    }, 300); // Small delay for better UX
-  }, [columnFilters, searchInput, allOrders, loading])
+  // We no longer need the client-side filtering effect since we're using server-side pagination and filtering
+  // The loadOrders function now handles all filtering and pagination
 
   // Load orders function
   const loadOrders = useCallback(async () => {
@@ -104,14 +78,21 @@ export default function OrdersManagement() {
     setError(null)
 
     try {
-      const { data, error: fetchError } = await getOrders(dateRange)
+      const { data, error: fetchError } = await getOrders({
+        dateRange,
+        page,
+        pageSize,
+        searchQuery: searchInput,
+        paymentMethod: columnFilters.payment_method
+      })
 
       if (fetchError) {
         setError(fetchError.message)
-      } else {
-        // Store both the filtered and unfiltered orders
-        setOrders(data || [])
-        setAllOrders(data || [])
+      } else if (data) {
+        // Store the orders and pagination data
+        setOrders(data.orders)
+        setTotalItems(data.totalCount)
+        setTotalPages(data.totalPages)
       }
     } catch (err) {
       setError('An unexpected error occurred while fetching orders.')
@@ -119,91 +100,39 @@ export default function OrdersManagement() {
     } finally {
       setLoading(false)
     }
-  }, [dateRange])
+  }, [dateRange, page, pageSize, searchInput, columnFilters.payment_method])
 
-  // View order details
-  const handleViewOrder = async (orderId: string) => {
-    // Open the dialog immediately with loading state
+  // View order details - now using the cached hook
+  const handleViewOrder = (orderId: string) => {
+    // Set the selected order ID and open the dialog
+    // The hook will automatically fetch the data
+    setSelectedOrderId(orderId)
     setIsViewDialogOpen(true)
-    setLoadingOrderDetails(true)
-    setSelectedOrder(null)
-    setOrderItems([])
-
-    try {
-      const { data, error } = await getOrderById(orderId)
-
-      if (error) {
-        console.error('Error fetching order details:', error.message)
-        toast.error(`Failed to load order details: ${error.message}`)
-        setIsViewDialogOpen(false)
-        return
-      }
-
-      if (data) {
-        setSelectedOrder(data.order)
-        setOrderItems(data.items)
-      } else {
-        // No data returned
-        toast.error('Failed to load order details: No data found')
-        setIsViewDialogOpen(false)
-      }
-    } catch (err) {
-      console.error('Error viewing order:', err)
-      toast.error('An unexpected error occurred while loading the order details')
-      setIsViewDialogOpen(false)
-    } finally {
-      setLoadingOrderDetails(false)
-    }
   }
 
-  // View receipt
-  const handleViewReceipt = async (order: OrderWithUser) => {
-    // Open the receipt dialog immediately with loading state
+  // View receipt - now using the cached hook
+  const handleViewReceipt = (order: OrderWithUser) => {
+    // Set the selected order ID and open the receipt dialog
+    // The hook will automatically fetch the data
+    setSelectedOrderId(order.id)
     setIsReceiptDialogOpen(true)
-    setLoadingOrderDetails(true)
-    setSelectedOrder(null)
-    setOrderItems([])
-
-    try {
-      const { data, error } = await getOrderById(order.id)
-
-      if (error) {
-        console.error('Error fetching order details for receipt:', error.message)
-        toast.error(`Failed to load receipt: ${error.message}`)
-        setIsReceiptDialogOpen(false)
-        return
-      }
-
-      if (data) {
-        setSelectedOrder(data.order)
-        setOrderItems(data.items)
-      } else {
-        // No data returned
-        toast.error('Failed to load receipt: No data found')
-        setIsReceiptDialogOpen(false)
-      }
-    } catch (err) {
-      console.error('Error viewing receipt:', err)
-      toast.error('An unexpected error occurred while loading the receipt')
-      setIsReceiptDialogOpen(false)
-    } finally {
-      setLoadingOrderDetails(false)
-    }
   }
 
-  // Helper function to safely format currency values
-  const formatCurrency = (value?: number) => {
-    if (value === undefined || value === null) return 'Rp.0';
-    return `Rp.${value.toLocaleString('id-ID')}`;
-  }
+  // Using the global formatCurrency function from lib/utils.ts
 
   // Handle search for Order ID or Cashier
   const handleSearch = (query: string) => {
     // Show loading indicator immediately
     setFilterLoading(true);
 
-    // Update the search input - the useEffect will handle the filtering
+    // Update the search input
     setSearchInput(query);
+
+    // Reset to first page when search changes
+    setPage(1);
+
+    // Load orders with the new search query
+    loadOrders();
   }
 
   return (
@@ -259,18 +188,11 @@ export default function OrdersManagement() {
                     setSearchInput('');
                     setColumnFilters({});
                     setDateRange(undefined);
+                    setPage(1);
+                    setPageSize(10);
 
-                    // Use setTimeout to ensure the loading indicator is shown
-                    setTimeout(() => {
-                      // Reset to all orders without making a new API call
-                      if (allOrders.length > 0) {
-                        setOrders([...allOrders]);
-                        setFilterLoading(false);
-                      } else {
-                        // If we don't have any orders yet, reload them
-                        loadOrders();
-                      }
-                    }, 300); // Small delay for better UX
+                    // Reload orders with reset filters and pagination
+                    loadOrders();
                   }}
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
@@ -312,11 +234,44 @@ export default function OrdersManagement() {
                     ...prev,
                     payment_method: value
                   }));
+
+                  // Reset to first page when filter changes
+                  setPage(1);
+
+                  // Load orders with the new filter
+                  setTimeout(() => {
+                    loadOrders();
+                  }, 100);
                 }
               }}
               selectedFilters={columnFilters}
-              height={600}
+              height={560} // Reduced height to make room for pagination
             />
+
+            {/* Custom Pagination */}
+            {!loading && orders.length > 0 && (
+              <DataTablePagination
+                table={{
+                  getState: () => ({ pagination: { pageIndex: page - 1, pageSize } }),
+                  getFilteredRowModel: () => ({ rows: { length: totalItems } }),
+                  getPageCount: () => totalPages,
+                  getFilteredSelectedRowModel: () => ({ rows: { length: 0 } }),
+                  setPageIndex: () => {},
+                  setPageSize: () => {},
+                } as any}
+                customPagination={{
+                  page,
+                  pageSize,
+                  totalItems,
+                  totalPages,
+                  onPageChange: (newPage) => setPage(newPage),
+                  onPageSizeChange: (newSize) => {
+                    setPageSize(newSize);
+                    setPage(1); // Reset to first page when changing page size
+                  }
+                }}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -326,8 +281,8 @@ export default function OrdersManagement() {
         onOpenChange={(open) => {
           setIsViewDialogOpen(open);
           if (!open) {
-            setSelectedOrder(null);
-            setOrderItems([]);
+            // Reset the selected order ID when closing the dialog
+            setSelectedOrderId(null);
           }
         }}
       >
@@ -349,7 +304,7 @@ export default function OrdersManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Cashier</h3>
-                  <p>{selectedOrder.user?.name || selectedOrder.user?.email || 'Guest'}</p>
+                  <p>{selectedOrder.user?.name || selectedOrder.user?.email || 'Admin'}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Date</h3>
@@ -459,7 +414,13 @@ export default function OrdersManagement() {
 
       <ReceiptComponent
         open={isReceiptDialogOpen}
-        onOpenChange={setIsReceiptDialogOpen}
+        onOpenChange={(open) => {
+          setIsReceiptDialogOpen(open);
+          if (!open) {
+            // Reset the selected order ID when closing the receipt
+            setSelectedOrderId(null);
+          }
+        }}
         isLoading={loadingOrderDetails}
         order={selectedOrder && orderItems.length > 0 ? {
           id: selectedOrder.id,

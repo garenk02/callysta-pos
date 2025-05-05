@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
 import { Button } from '@/components/ui/button'
 import { ShoppingCart, Trash2, ArrowRight } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
 import {
   Popover,
   PopoverContent,
@@ -65,12 +66,12 @@ export default function CartSummary() {
                     <div className="flex-1">
                       <p className="text-sm font-medium line-clamp-1">{item.product.name}</p>
                       <div className="flex text-xs text-muted-foreground">
-                        <span>{item.quantity} × Rp. {item.product.price.toLocaleString('id-ID')}</span>
+                        <span>{item.quantity} × {formatCurrency(item.product.price)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">
-                        Rp. {(item.quantity * item.product.price).toLocaleString('id-ID')}
+                        {formatCurrency(item.quantity * item.product.price)}
                       </span>
                       <Button
                         variant="ghost"
@@ -89,13 +90,13 @@ export default function CartSummary() {
             <div className="p-4 border-t">
               <div className="flex justify-between py-1 text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>Rp. {summary.subtotal.toLocaleString('id-ID')}</span>
+                <span>{formatCurrency(summary.subtotal)}</span>
               </div>
               {/* Tax row removed */}
               <Separator className="my-2" />
               <div className="flex justify-between py-1 font-medium">
                 <span>Total</span>
-                <span>Rp. {summary.total.toLocaleString('id-ID')}</span>
+                <span>{formatCurrency(summary.total)}</span>
               </div>
 
               {/* Checkout button */}

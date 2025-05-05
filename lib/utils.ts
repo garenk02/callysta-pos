@@ -6,16 +6,24 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format a number as currency
+ * Format a value as Indonesian Rupiah currency
+ * @param value The number to format, or undefined/null
+ * @param defaultValue Optional default value to return if value is undefined/null (default: 'Rp. 0')
+ * @returns Formatted currency string with 'Rp. ' prefix
  */
-export function formatCurrency(amount: number): string {
+export function formatCurrency(value?: number | null, defaultValue: string = 'Rp. 0'): string {
+  // Return default value if undefined or null
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+
   // Format with IDR but replace the symbol with Rp.
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(amount).replace('Rp', 'Rp. ')
+  }).format(value).replace('Rp', 'Rp. ')
 }
 
 /**

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { useCart } from '@/hooks/useCart'
+import { formatCurrency } from '@/lib/utils'
 
 interface PaymentSectionProps {
   total: number
@@ -128,7 +129,7 @@ export default function PaymentSection({
     if (paymentMethod === 'cash') {
       const tenderedAmount = parseInt(amountTendered) || 0
       if (tenderedAmount < total) {
-        setValidationError(`Amount tendered must be at least Rp. ${total.toLocaleString('id-ID')}`)
+        setValidationError(`Amount tendered must be at least ${formatCurrency(total)}`)
         return false
       }
     } else if (paymentMethod === 'bank_transfer') {
@@ -351,7 +352,7 @@ export default function PaymentSection({
                           <Label htmlFor="change-due" className="text-xs whitespace-nowrap mr-1">Change:</Label>
                           <Input
                             id="change-due"
-                            value={`${changeDue.toLocaleString('id-ID')}`}
+                            value={formatCurrency(changeDue)}
                             disabled
                             className="bg-muted h-7 text-xs px-1 flex-1"
                           />
@@ -371,7 +372,7 @@ export default function PaymentSection({
                           disabled={disabled}
                           className="h-6 text-[10px] px-0.5"
                         >
-                          {amount.toLocaleString('id-ID')}
+                          {formatCurrency(amount).replace('Rp. ', '')}
                         </Button>
                       ))}
                     </div>
@@ -385,7 +386,7 @@ export default function PaymentSection({
                         disabled={disabled}
                         className="h-6 text-[10px] px-0.5"
                       >
-                        Exact: {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
+                        Exact: {formatCurrency(Math.ceil(total / 1000) * 1000).replace('Rp. ', '')}
                       </Button>
                       <Button
                         type="button"
@@ -395,7 +396,7 @@ export default function PaymentSection({
                         disabled={disabled}
                         className="h-6 text-[10px] px-0.5"
                       >
-                        Round: {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
+                        Round: {formatCurrency(Math.ceil(total / 5000) * 5000).replace('Rp. ', '')}
                       </Button>
                     </div>
                   </>
@@ -425,7 +426,7 @@ export default function PaymentSection({
                         <Label htmlFor="change-due" className="text-xs block mb-0.5">Change Due</Label>
                         <Input
                           id="change-due"
-                          value={`Rp. ${changeDue.toLocaleString('id-ID')}`}
+                          value={formatCurrency(changeDue)}
                           disabled
                           className="bg-muted h-8 text-xs px-2"
                         />
@@ -444,7 +445,7 @@ export default function PaymentSection({
                           disabled={disabled}
                           className="h-7 text-xs px-1 md:text-[10px] md:px-0.5"
                         >
-                          {amount.toLocaleString('id-ID')}
+                          {formatCurrency(amount).replace('Rp. ', '')}
                         </Button>
                       ))}
                     </div>
@@ -458,7 +459,7 @@ export default function PaymentSection({
                         disabled={disabled}
                         className="h-7 text-xs px-2 md:text-[10px] md:px-1"
                       >
-                        Exact: {(Math.ceil(total / 1000) * 1000).toLocaleString('id-ID')}
+                        Exact: {formatCurrency(Math.ceil(total / 1000) * 1000).replace('Rp. ', '')}
                       </Button>
                       <Button
                         type="button"
@@ -468,7 +469,7 @@ export default function PaymentSection({
                         disabled={disabled}
                         className="h-7 text-xs px-2 md:text-[10px] md:px-1"
                       >
-                        Round: {(Math.ceil(total / 5000) * 5000).toLocaleString('id-ID')}
+                        Round: {formatCurrency(Math.ceil(total / 5000) * 5000).replace('Rp. ', '')}
                       </Button>
                     </div>
                   </>

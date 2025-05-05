@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { getProductsClient } from '@/lib/supabase/client-queries'
 import { Product, PaymentMethod, PaymentDetails } from '@/types'
 import {
@@ -30,14 +30,17 @@ import ProductGrid from './ProductGrid'
 import CartList from './CartList'
 import PaymentSection from './PaymentSection'
 import { useProductSearch } from '@/hooks/useProductSearch'
+import { useProductsInfinite } from '@/hooks/useProductsInfinite'
 import { useCart } from '@/hooks/useCart'
 import { LoadingOverlay } from '@/components/ui/loading-overlay'
+import { formatCurrency } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 
 export default function CheckoutPage() {
-  // State for products
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  // State for UI
+  const [isPageLoading, setIsPageLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<string>('products')
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Use our cart context
   const {
@@ -45,61 +48,103 @@ export default function CheckoutPage() {
     summary: { total, itemCount }
   } = useCart()
 
-  // Use our custom product search hook
+  // Use our infinite products hook
   const {
-    filteredProducts,
+    products,
+    categories,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    loadMore,
     searchQuery,
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
-    isScanning,
-    scanBuffer,
-    handleSearchInputKeyDown,
-    searchInputRef
-  } = useProductSearch({
-    products,
-    onAddToCart: addItem,
-    autoFocus: false // Disable autofocus on search input
+    refresh
+  } = useProductsInfinite({
+    pageSize: 9
   })
 
-  // Fetch products on component mount
-  useEffect(() => {
-    async function loadProducts() {
-      setIsLoading(true)
-      try {
-        // Use cache with a 5-minute TTL for better performance
-        const { products: fetchedProducts, error: fetchError } = await getProductsClient({
-          useCache: true,
-          cacheTTL: 300, // 5 minutes
-          pageSize: 1000 // Load more products for checkout page
-        })
+  // Debug function to force refresh products
+  const debugProducts = async () => {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact' })
+        .or('is_active.is.null,is_active.eq.true')
+        .order('name', { ascending: true })
+        .range(0, 8)
 
-        if (fetchError) {
-          toast.error(`Failed to load products: ${fetchError.message}`)
-        } else if (fetchedProducts) {
-          setProducts(fetchedProducts)
-
-          // Extract unique categories
-          const uniqueCategories = [...new Set(fetchedProducts
-            .map(product => product.category)
-            .filter(Boolean) as string[])]
-
-          setCategories(uniqueCategories)
-        }
-      } catch (err) {
-        toast.error('Failed to load products: An unexpected error occurred')
-        console.error('Error loading products:', err)
-      } finally {
-        setIsLoading(false)
+      if (error) {
+        console.error('Direct Supabase error:', error)
       }
+    } catch (err) {
+      console.error('Error in direct API call:', err)
     }
 
-    loadProducts()
-  }, [])
+    // Force refresh
+    refresh()
+  }
 
-  // Handle search input change
+  // Debug function to manually load more products
+  const debugLoadMore = async () => {
+    // Check if we can load more
+    if (!hasMore) {
+      toast.info('No more products to load')
+      return
+    }
+
+    if (isLoadingMore || isLoading) {
+      toast.info('Already loading products, please wait')
+      return
+    }
+
+    try {
+      // Call the loadMore function
+      await loadMore()
+      toast.success('Loaded more products')
+    } catch (error) {
+      toast.error('Failed to load more products')
+    }
+  }
+
+  // State for barcode scanning
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanBuffer, setScanBuffer] = useState('')
+
+  // Handle keyboard input for barcode scanning
+  const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // If Enter key is pressed and we have a search query, treat it as a potential barcode
+    if (e.key === 'Enter' && searchQuery) {
+      const barcode = searchQuery.trim()
+
+      // Try to find the product by SKU in the current products array
+      const productBySku = products.find(
+        p => p.sku?.toLowerCase() === barcode.toLowerCase()
+      )
+
+      if (productBySku) {
+        // If found locally, add to cart
+        addItem(productBySku)
+        setSearchQuery('')
+        toast.success(`Added ${productBySku.name} to cart`)
+        return
+      }
+
+      // If not found locally, show a message
+      toast.error(`Product not found: ${barcode}`)
+    }
+  }
+
+  // Handle search input change - now properly connected to the search function
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
+    // Get the search value from the input
+    const value = e.target.value
+
+    // Call the search function from the hook
+    // This will trigger the debounced search in the hook
+    setSearchQuery(value)
   }
 
   // Handle payment completion - now handled in PaymentSection
@@ -109,7 +154,7 @@ export default function CheckoutPage() {
 
     // Show change due message for cash payments
     if (paymentMethod === 'cash' && paymentDetails?.change_due && paymentDetails.change_due > 0) {
-      toast.success(`Change due: Rp. ${paymentDetails.change_due.toLocaleString('id-ID')}`)
+      toast.success(`Change due: ${formatCurrency(paymentDetails.change_due)}`)
     }
 
     // Switch back to Products tab after successful order
@@ -121,11 +166,7 @@ export default function CheckoutPage() {
     }, 1500)
   }
 
-  // State for mobile view tabs
-  const [activeTab, setActiveTab] = useState<string>('products')
-
-  // State for page loading indicator
-  const [isPageLoading, setIsPageLoading] = useState(false)
+  // Mobile view tabs and page loading are managed by the state at the top of the component
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
@@ -200,16 +241,49 @@ export default function CheckoutPage() {
                         {category}
                       </Button>
                     ))}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={debugProducts}
+                      className="text-xs h-7 ml-2"
+                    >
+                      Refresh
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={debugLoadMore}
+                      className="text-xs h-7 ml-2"
+                      disabled={isLoadingMore || !hasMore}
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        'Load More'
+                      )}
+                    </Button>
                   </div>
                 </div>
 
-                {/* Product grid */}
-                <div className="mt-2 overflow-auto" style={{ height: 'min(calc(100vh - 14rem), 500px)' }}>
+                {/* Product grid with improved scroll container */}
+                <div
+                  className="mt-2 overflow-y-auto overflow-x-hidden"
+                  style={{
+                    height: 'min(calc(100vh - 14rem), 500px)',
+                    scrollBehavior: 'smooth'
+                  }}
+                >
                   <ProductGrid
-                    products={filteredProducts}
+                    products={products}
                     isLoading={isLoading}
                     onAddToCart={addItem}
                     searchQuery={searchQuery}
+                    hasMore={hasMore}
+                    isLoadingMore={isLoadingMore}
+                    onLoadMore={loadMore}
                   />
                 </div>
               </CardContent>
@@ -242,7 +316,7 @@ export default function CheckoutPage() {
                 <div className="px-3 py-2">
                   <div className="flex justify-between py-0.5 font-bold text-sm">
                     <span>Total</span>
-                    <span>Rp. {total.toLocaleString('id-ID')}</span>
+                    <span>{formatCurrency(total)}</span>
                   </div>
 
                   {/* Ensure payment section has enough space and proper overflow handling */}
@@ -330,12 +404,18 @@ export default function CheckoutPage() {
                   ))}
                 </TabsList>
 
-                <div className="flex-1 overflow-auto">
+                <div
+                  className="flex-1 overflow-y-auto overflow-x-hidden"
+                  style={{ scrollBehavior: 'smooth' }}
+                >
                   <ProductGrid
-                    products={filteredProducts}
+                    products={products}
                     isLoading={isLoading}
                     onAddToCart={addItem}
                     searchQuery={searchQuery}
+                    hasMore={hasMore}
+                    isLoadingMore={isLoadingMore}
+                    onLoadMore={loadMore}
                   />
                 </div>
               </Tabs>
@@ -369,7 +449,7 @@ export default function CheckoutPage() {
               <div className="px-4 py-3">
                 <div className="flex justify-between py-1 font-bold text-sm">
                   <span>Total</span>
-                  <span>Rp. {total.toLocaleString('id-ID')}</span>
+                  <span>{formatCurrency(total)}</span>
                 </div>
 
                 {/* Ensure payment section has enough space and proper overflow handling */}

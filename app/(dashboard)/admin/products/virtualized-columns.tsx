@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
+import { formatCurrency } from "@/lib/utils"
 
 interface ProductsColumnProps {
   onEdit: (product: Product) => void
@@ -23,49 +24,23 @@ interface ProductsColumnProps {
 }
 
 export const virtualizedColumns = ({ onEdit, onDelete, onAdjustStock, isAdmin }: ProductsColumnProps): ColumnDef<Product>[] => [
-  // 1. Image column
-  {
-    accessorKey: "image_url",
-    header: "Image",
-    cell: ({ row }) => {
-      const imageUrl = row.original.image_url
-      return (
-        <div className="flex items-center">
-          <div className="h-10 w-10 rounded-md border overflow-hidden bg-muted flex items-center justify-center">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt="Product"
-                width={40}
-                height={40}
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="text-xs text-muted-foreground">No image</div>
-            )}
-          </div>
-        </div>
-      )
-    },
-    meta: {
-      className: "w-[80px] flex-shrink-0"
-    }
-  },
-
-  // 2. Name column
+  // 1. Name column
   {
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => {
-      return <div className="font-medium">{row.original.name}</div>
+      return (
+        <div className="font-medium line-clamp-2 text-ellipsis overflow-hidden w-full">
+          {row.original.name}
+        </div>
+      )
     },
     meta: {
-      className: "flex-1 min-w-[200px]"
+      className: "w-[400px]"
     }
   },
 
-  // 3. SKU column
+  // 2. SKU column
   {
     accessorKey: "sku",
     header: "SKU",
@@ -77,7 +52,7 @@ export const virtualizedColumns = ({ onEdit, onDelete, onAdjustStock, isAdmin }:
     }
   },
 
-  // 4. Category column
+  // 3. Category column
   {
     accessorKey: "category",
     header: "Category",
@@ -85,25 +60,24 @@ export const virtualizedColumns = ({ onEdit, onDelete, onAdjustStock, isAdmin }:
       return <div className="text-sm text-center">{row.original.category || "-"}</div>
     },
     meta: {
-      className: "text-center w-[120px]"
+      className: "text-center w-[200px]"
     }
   },
 
-  // 5. Price column
+  // 4. Price column
   {
     accessorKey: "price",
-    header: "Price",
+    header: () => <div className="text-right">Price</div>,
     cell: ({ row }) => {
       const price = parseFloat(row.original.price.toString())
-      const formatted = `Rp.${price.toLocaleString('id-ID')}`
-      return <div className="text-right">{formatted}</div>
+      return <div className="text-right">{formatCurrency(price)}</div>
     },
     meta: {
-      className: "text-right w-[100px]"
+      className: "text-right w-[150px]"
     }
   },
 
-  // 6. Stock column
+  // 5. Stock column
   {
     accessorKey: "stock_quantity",
     header: "Stock",
@@ -116,7 +90,7 @@ export const virtualizedColumns = ({ onEdit, onDelete, onAdjustStock, isAdmin }:
     }
   },
 
-  // 7. Status column
+  // 6. Status column
   {
     accessorKey: "is_active",
     header: "Status",
@@ -133,7 +107,7 @@ export const virtualizedColumns = ({ onEdit, onDelete, onAdjustStock, isAdmin }:
     }
   },
 
-  // 8. Actions column
+  // 7. Actions column
   {
     id: "actions",
     header: "Actions",

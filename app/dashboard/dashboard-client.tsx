@@ -116,7 +116,7 @@ export default function DashboardClient() {
             ) : (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">{totalSales ? formatCurrency(totalSales.total) : 'Rp.0'}</p>
+                  <p className="text-2xl font-bold">{totalSales ? formatCurrency(totalSales.total) : 'Rp. 0'}</p>
                   <p className={`text-xs flex items-center ${totalSales && totalSales.percentChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {totalSales && totalSales.percentChange >= 0 ? (
                       <ArrowUp className="h-3 w-3 mr-1" />
@@ -204,7 +204,7 @@ export default function DashboardClient() {
             ) : (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold">{todaySales ? formatCurrency(todaySales.total) : 'Rp.0'}</p>
+                  <p className="text-2xl font-bold">{todaySales ? formatCurrency(todaySales.total) : 'Rp. 0'}</p>
                   <p className="text-xs text-muted-foreground">
                     {todaySales ? todaySales.count : '0'} transactions
                   </p>

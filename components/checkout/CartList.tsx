@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, Minus, Trash2, ShoppingCart } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useCart } from '@/hooks/useCart'
+import { formatCurrency } from '@/lib/utils'
 
 export default function CartList() {
   const { cart } = useCart()
@@ -117,10 +118,10 @@ function CartItemRow({
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <h4 className="text-xs font-medium line-clamp-2">{name}</h4>
-          <p className="text-xs text-muted-foreground mt-0.5">Rp. {price.toLocaleString('id-ID')} each</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{formatCurrency(price)} each</p>
         </div>
         <div className="text-right">
-          <p className="text-xs font-semibold">Rp. {itemTotal.toLocaleString('id-ID')}</p>
+          <p className="text-xs font-semibold">{formatCurrency(itemTotal)}</p>
         </div>
       </div>
 

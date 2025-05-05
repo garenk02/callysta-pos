@@ -29,6 +29,16 @@ export async function getProductsClient(options?: {
     const useCache = options?.useCache !== false; // Default to using cache
     const cacheTTL = options?.cacheTTL || 60; // Default cache TTL is 60 seconds
 
+    console.log(`getProductsClient called with:`, {
+      page,
+      pageSize,
+      searchQuery,
+      category,
+      isActive,
+      useCache,
+      cacheTTL
+    });
+
     // Generate a cache key based on the query parameters
     const cacheKey = `products:${page}:${pageSize}:${searchQuery}:${category}:${isActive}`;
 
@@ -57,6 +67,13 @@ export async function getProductsClient(options?: {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
+    console.log(`Pagination calculation: from=${from}, to=${to}, page=${page}, pageSize=${pageSize}`);
+
+    // Force a small delay to ensure we don't hit rate limits
+    if (page > 1) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
     // Start building the query
     let query = supabase
       .from('products')
@@ -64,7 +81,8 @@ export async function getProductsClient(options?: {
 
     // Apply filters
     if (searchQuery) {
-      query = query.ilike('name', `%${searchQuery}%`);
+      // Search in name, sku, and description
+      query = query.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
     }
 
     if (category) {
@@ -88,7 +106,8 @@ export async function getProductsClient(options?: {
 
       // Apply the same filters as the main query
       if (searchQuery) {
-        countQuery.ilike('name', `%${searchQuery}%`);
+        // Search in name, sku, and description
+        countQuery.or(`name.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
 
       if (category) {
@@ -118,6 +137,7 @@ export async function getProductsClient(options?: {
     }
 
     // Then get paginated data
+    console.log(`Fetching products with range: ${from} to ${to}`);
     const { data, error } = await query
       .order('name', { ascending: true })
       .range(from, to);
@@ -126,6 +146,11 @@ export async function getProductsClient(options?: {
     if (error) {
       console.error("Supabase query error:", error.message);
       return { products: null, error: new Error(error.message) };
+    }
+
+    console.log(`Fetched ${data?.length || 0} products`);
+    if (data && data.length > 0) {
+      console.log('First product:', data[0]);
     }
 
     // Calculate total pages

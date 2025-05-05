@@ -129,6 +129,35 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Make all clickable elements show a hand cursor */
+  button,
+  a,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  .cursor-pointer,
+  select,
+  .SelectTrigger,
+  .SelectItem,
+  input[type="checkbox"],
+  input[type="radio"],
+  .TableRow:hover,
+  /* Pagination components */
+  [data-slot="pagination-link"],
+  [data-slot="pagination-previous"],
+  [data-slot="pagination-next"],
+  /* Data table components */
+  [data-slot="data-table-row"]:hover,
+  [data-slot="data-table-pagination-item"],
+  /* Specific shadcn components */
+  [data-radix-collection-item],
+  [data-state],
+  [data-highlighted],
+  [data-selected] {
+    cursor: pointer !important;
+  }
 }
 
 @keyframes fadeIn {

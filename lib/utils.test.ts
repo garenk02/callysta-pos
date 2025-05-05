@@ -14,17 +14,32 @@ describe('cn utility', () => {
 describe('formatCurrency utility', () => {
   it('should format currency correctly', () => {
     const result = formatCurrency(1000);
-    expect(result).toBe('Rp.1.000');
+    expect(result).toBe('Rp. 1.000');
   });
 
   it('should format large numbers correctly', () => {
     const result = formatCurrency(1000000);
-    expect(result).toBe('Rp.1.000.000');
+    expect(result).toBe('Rp. 1.000.000');
   });
 
   it('should handle zero correctly', () => {
     const result = formatCurrency(0);
-    expect(result).toBe('Rp.0');
+    expect(result).toBe('Rp. 0');
+  });
+
+  it('should handle undefined values', () => {
+    const result = formatCurrency(undefined);
+    expect(result).toBe('Rp. 0');
+  });
+
+  it('should handle null values', () => {
+    const result = formatCurrency(null);
+    expect(result).toBe('Rp. 0');
+  });
+
+  it('should use custom default value when provided', () => {
+    const result = formatCurrency(undefined, 'N/A');
+    expect(result).toBe('N/A');
   });
 });
 
@@ -33,7 +48,7 @@ describe('formatDate utility', () => {
     // Create a fixed date for testing
     const date = new Date('2023-01-15T14:30:00');
     const result = formatDate(date);
-    
+
     // Check that the result contains the expected parts
     expect(result).toContain('Jan');
     expect(result).toContain('15');
