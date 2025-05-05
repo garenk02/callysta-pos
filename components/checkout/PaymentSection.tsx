@@ -292,7 +292,7 @@ export default function PaymentSection({
   }
 
   return (
-    <div className={`w-full mt-1 max-w-full pb-2 ${isCompact ? 'compact-payment' : ''}`}>
+    <div className={`w-full mt-1 max-w-full pb-2 ${isCompact ? 'compact-payment' : ''}`} style={{ position: 'relative' }}>
       {/* Receipt Modal */}
       {receiptData && (
         <Receipt
@@ -305,13 +305,13 @@ export default function PaymentSection({
       {currentStep === 'payment' ? (
         /* Payment Step */
         <>
-          <div className={`${isCompact ? 'mb-0.5' : 'mb-1'}`}>
+          <div className={`${isCompact ? 'mb-0' : 'mb-1'}`}>
             <Tabs
               value={paymentMethod}
               onValueChange={handlePaymentMethodChange}
               className="w-full"
             >
-              <TabsList className={`grid grid-cols-2 ${isCompact ? 'h-7' : 'h-8'} ${isCompact ? 'mb-0.5' : 'mb-1'}`}>
+              <TabsList className={`grid grid-cols-2 ${isCompact ? 'h-6' : 'h-8'} ${isCompact ? 'mb-0' : 'mb-1'}`}>
                 <TabsTrigger value="cash" className="text-xs py-0 px-2 flex items-center">
                   <Banknote className={`${isCompact ? 'h-3 w-3 mr-0.5' : 'h-3.5 w-3.5 mr-1'}`} />
                   Cash
@@ -370,7 +370,7 @@ export default function PaymentSection({
                           size="sm"
                           onClick={() => handleQuickCashAmount(amount)}
                           disabled={disabled}
-                          className="h-6 text-[10px] px-0.5"
+                          className="h-5 text-[9px] px-0.5"
                         >
                           {formatCurrency(amount).replace('Rp. ', '')}
                         </Button>
@@ -384,7 +384,7 @@ export default function PaymentSection({
                         size="sm"
                         onClick={() => handleQuickCashAmount(Math.ceil(total / 1000) * 1000)}
                         disabled={disabled}
-                        className="h-6 text-[10px] px-0.5"
+                        className="h-5 text-[9px] px-0.5"
                       >
                         Exact: {formatCurrency(Math.ceil(total / 1000) * 1000).replace('Rp. ', '')}
                       </Button>
@@ -394,7 +394,7 @@ export default function PaymentSection({
                         size="sm"
                         onClick={() => handleQuickCashAmount(Math.ceil(total / 5000) * 5000)}
                         disabled={disabled}
-                        className="h-6 text-[10px] px-0.5"
+                        className="h-5 text-[9px] px-0.5"
                       >
                         Round: {formatCurrency(Math.ceil(total / 5000) * 5000).replace('Rp. ', '')}
                       </Button>
@@ -477,16 +477,16 @@ export default function PaymentSection({
               </TabsContent>
 
               <TabsContent value="bank_transfer" className="mt-0 pt-0">
-                <div className={`text-xs ${isCompact ? 'mb-0.5 p-1.5' : 'mb-1 p-2'} bg-muted/50 rounded-md`}>
-                  <p className="font-medium mb-0.5">Bank Transfer Instructions:</p>
-                  <p className={`${isCompact ? 'mt-0.5' : 'mt-1'} text-xs text-muted-foreground`}>Make sure to transfer to correct bank account</p>
+                <div className={`text-xs ${isCompact ? 'mb-0.5 p-1' : 'mb-1 p-2'} bg-muted/50 rounded-md`}>
+                  <p className="font-medium mb-0.5 text-[10px]">Bank Transfer Instructions:</p>
+                  <p className={`${isCompact ? 'mt-0' : 'mt-1'} text-[9px] text-muted-foreground`}>Make sure to transfer to correct bank account</p>
                 </div>
               </TabsContent>
             </Tabs>
           </div>
 
           {/* Customer Information Section */}
-          <div className={`${isCompact ? 'mb-1 mt-1 border-t pt-1' : 'mb-2 mt-3 border-t pt-2'}`}>
+          <div className={`${isCompact ? 'mb-0.5 mt-0.5 border-t pt-0.5' : 'mb-2 mt-3 border-t pt-2'}`}>
             <CustomerInfo
               customerInfo={customerInfo}
               onChange={setCustomerInfo}
@@ -507,7 +507,14 @@ export default function PaymentSection({
             size="sm"
             onClick={handleProceedToReview}
             disabled={disabled || !isPaymentValid() || isProcessing}
-            style={{ height: isCompact ? "36px" : "40px", backgroundColor: "#FF54BB", color: "white" }}
+            style={{
+              height: isCompact ? "36px" : "40px",
+              backgroundColor: "#FF54BB",
+              color: "white",
+              position: "sticky",
+              bottom: "0",
+              zIndex: 10
+            }}
           >
             {isProcessing ? (
               <>

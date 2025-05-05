@@ -437,8 +437,8 @@ export default function CheckoutPage() {
 
             {/* Cart area with better height control */}
             <div className="flex-1 overflow-hidden" style={{
-              maxHeight: 'min(calc(100vh - 24rem), 400px)',
-              minHeight: '200px'
+              maxHeight: 'min(calc(100vh - 26rem), 350px)',
+              minHeight: '180px'
             }}>
               <CardContent className="h-full overflow-auto py-2 px-4">
                 <CartList />
@@ -454,9 +454,9 @@ export default function CheckoutPage() {
 
                 {/* Ensure payment section has enough space and proper overflow handling */}
                 <div className="payment-section-container lg:compact-payment" style={{
-                  minHeight: '180px',
-                  maxHeight: '250px',
-                  overflowY: 'auto'
+                  minHeight: '150px',
+                  maxHeight: '300px',
+                  overflowY: 'visible'
                 }}>
                   <PaymentSection
                     total={total}
